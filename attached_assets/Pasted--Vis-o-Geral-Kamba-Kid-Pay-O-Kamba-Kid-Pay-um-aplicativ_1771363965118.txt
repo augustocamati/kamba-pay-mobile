@@ -1,0 +1,55 @@
+📱 Visão Geral: Kamba Kid Pay
+O Kamba Kid Pay é um aplicativo de educação financeira para crianças, focado em gamificação. Ele permite que pais gerenciem tarefas, recompensas e acompanhem o progresso financeiro dos filhos em um ambiente lúdico e seguro.
+
+🎨 Identidade Visual e UI
+Paleta de Cores: Vibrante e moderna. Usa degradês de laranja/amarelo para áreas infantis e tons de azul escuro/profundo para o painel de gestão. Cores de destaque: Verde (sucesso), Vermelho/Rosa (campanhas/solidariedade) e Roxo (tarefas).
+
+Estilo: Card-based design (design baseado em cartões) com cantos muito arredondados, ícones amigáveis (emojis e ilustrações simples) e tipografia sem serifa de fácil leitura.
+
+🛠️ Estrutura de Telas (User Flow)
+1. Telas de Onboarding e Login
+Splash/Landing: Logo central (leãozinho), fundo amarelo degradê com elementos flutuantes (moedas, corações, estrelas). Botão principal: "Começar Agora".
+
+Seleção de Acesso: Opções para "Entrar" ou "Criar conta de Responsável".
+
+Login: Formulário limpo para E-mail/Usuário e Senha. Distinção clara entre acesso do responsável e lembrete para a criança pedir ajuda ao adulto.
+
+2. Painel dos Pais (Dashboard de Gestão)
+O coração do app para o adulto. Contém:
+
+Header: Saudação e botão rápido "Adicionar Novo Dependente".
+
+Cards de Status:
+
+Saldo Total: Exibido em Kz (Kwanza).
+
+Tarefas Completas: Contador mensal.
+
+Taxa de Poupança: Indicador percentual com feedback positivo (ex: "Excelente!").
+
+Gráfico de Desempenho Mensal: Barras horizontais segmentadas por cores: Verde (Poupou), Laranja (Gastou) e Amarelo (Ajudou/Solidariedade).
+
+3. Gestão de Atividades
+Ações Rápidas: Botões grandes para "Criar Nova Tarefa" e "Criar Nova Campanha" (Solidariedade).
+
+Aprovação de Tarefas: Lista de itens pendentes onde o pai vê a prova (foto da tarefa feita, ex: lição de casa) e decide entre aprovar (✔) ou rejeitar (✖).
+
+Progresso das Missões: Barras de progresso para metas específicas (ex: "Novo Jogo" com 72% concluído).
+
+💡 Funcionalidades Principais para implementar no Rork
+Sistema de Recompensas: Conversão de tarefas domésticas ou escolares em saldo na carteira digital da criança.
+
+Educação por Pilares: Divisão do dinheiro em três categorias:
+
+Poupar: Para objetivos de longo prazo.
+
+Consumir: Para gastos imediatos.
+
+Solidariedade: Para doações e ajuda ao próximo.
+
+Gamificação: Uso de níveis (ex: Nível 5) e barras de progresso para manter o engajamento.
+
+Social/Compartilhamento: Botão dedicado para "Compartilhar no WhatsApp" os relatórios de desempenho, incentivando o reforço positivo da família.
+
+📝 Prompt Sugerido para a IA (Rork/GPT):
+"Crie um aplicativo de educação financeira infantil chamado Kamba Kid Pay. O design deve ser moderno com modo escuro (azul marinho) para o painel dos pais e temas vibrantes (laranja/amarelo) para as crianças. O app deve ter um sistema de login para pais e filhos, um painel de controle com gráficos de barras horizontais divididos por 'Poupar, Gastar e Ajudar', e uma área de aprovação de tarefas onde o pai valida fotos enviadas pelo filho. Use o Kwanza (Kz) como moeda e foque em uma interface baseada em cards arredondados."
