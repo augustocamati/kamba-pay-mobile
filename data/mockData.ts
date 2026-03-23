@@ -15,6 +15,7 @@ export const mockCrianca: Crianca = {
   nome: 'Kiala',
   idade: 9,
   nivel: 5,
+  xp: 120,
   paiId: 'pai-1',
   avatar: {
     id: 'avatar-1',
@@ -340,6 +341,7 @@ export const mockCrianca2: Crianca = {
   nome: 'Ngola',
   idade: 7,
   nivel: 3,
+  xp: 45,
   paiId: 'pai-1',
   avatar: {
     id: 'avatar-2',

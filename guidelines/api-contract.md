@@ -12,20 +12,21 @@
 ## Índice
 
 1. [Autenticação](#1-autenticação)
-2. [Responsável (Parent) — Dashboard](#2-responsável-parent--dashboard)
+2. [Responsável — Dashboard e Estatísticas](#2-responsável--dashboard-e-estatísticas)
 3. [Responsável — Gestão de Dependentes](#3-responsável--gestão-de-dependentes)
-4. [Responsável — Tarefas](#4-responsável--tarefas)
+4. [Responsável — Tarefas e Aprovações](#4-responsável--tarefas-e-aprovações)
 5. [Responsável — Missões](#5-responsável--missões)
 6. [Responsável — Campanhas](#6-responsável--campanhas)
 7. [Responsável — Finanças e Histórico](#7-responsável--finanças-e-histórico)
-8. [Criança — Dashboard](#8-criança--dashboard)
-9. [Criança — Tarefas](#9-criança--tarefas)
-10. [Criança — Missões](#10-criança--missões)
-11. [Criança — Solidariedade (Campanhas)](#11-criança--solidariedade-campanhas)
-12. [Criança — Escola (Conteúdo Educativo)](#12-criança--escola-conteúdo-educativo)
-13. [Avatar e Loja](#13-avatar-e-loja)
-14. [Relatórios](#14-relatórios)
-15. [Códigos de Erro Padrão](#15-códigos-de-erro-padrão)
+8. [Responsável — Família e Perfil](#8-responsável--família-e-perfil)
+9. [Criança — Dashboard](#9-criança--dashboard)
+10. [Criança — Tarefas](#10-criança--tarefas)
+11. [Criança — Missões](#11-criança--missões)
+12. [Criança — Solidariedade (Campanhas)](#12-criança--solidariedade-campanhas)
+13. [Criança — Escola (Conteúdo Educativo)](#13-criança--escola-conteúdo-educativo)
+14. [Avatar e Loja](#14-avatar-e-loja)
+15. [Relatórios](#15-relatórios)
+16. [Códigos de Erro Padrão](#16-códigos-de-erro-padrão)
 
 ---
 
@@ -161,7 +162,7 @@ POST /api/auth/logout
 
 ---
 
-## 2. Responsável (Parent) — Dashboard
+## 2. Responsável — Dashboard e Estatísticas
 
 ### 2.1 Carregar Painel do Responsável
 
@@ -243,7 +244,7 @@ GET /api/parent/dashboard
 
 ---
 
-### 2.2 Estatísticas de um Dependente
+### 2.2 Estatísticas Detalhadas de um Dependente
 
 **Tela:** `app/parent/child-stats/[id].tsx`
 
@@ -259,14 +260,6 @@ GET /api/parent/children/:childId/stats
     "nome": "Kiala",
     "idade": 9,
     "nivel": 5,
-    "avatar": {
-      "id": "avatar-1",
-      "cabelo": "afro",
-      "roupa": "casual_colorida",
-      "acessorio": "oculos_sol",
-      "cor_pele": "marrom",
-      "expressao": "feliz"
-    },
     "potes": {
       "saldo_gastar": 3200,
       "saldo_poupar": 4300,
@@ -277,6 +270,11 @@ GET /api/parent/children/:childId/stats
   "tarefas_concluidas_mes": 8,
   "missoes_completas": 1,
   "doacoes_realizadas": 3,
+  "desempenho_semanal": [
+    { "semana": "S1", "tarefas": 3, "ganhou": 450 },
+    { "semana": "S2", "tarefas": 2, "ganhou": 300 },
+    { "semana": "S3", "tarefas": 5, "ganhou": 750 }
+  ],
   "historico_recente": [
     {
       "id": "hist-1",
@@ -285,6 +283,14 @@ GET /api/parent/children/:childId/stats
       "valor": 100,
       "data": "2026-01-22T00:00:00Z",
       "pote_afetado": "gastar"
+    },
+    {
+      "id": "hist-2",
+      "tipo": "doacao",
+      "descricao": "Campanha Merenda Escolar",
+      "valor": -200,
+      "data": "2026-01-20T00:00:00Z",
+      "pote_afetado": "ajudar"
     }
   ]
 }
@@ -296,7 +302,7 @@ GET /api/parent/children/:childId/stats
 
 ### 3.1 Adicionar Dependente
 
-**Tela:** `app/parent/add-child.tsx`
+**Tela:** `components/AdicionarDependente.tsx` (modal em `app/parent/(tabs)/index.tsx`)
 
 ```
 POST /api/parent/children
@@ -305,43 +311,65 @@ POST /api/parent/children
 **Request:**
 ```json
 {
-  "nome": "Maria",
-  "idade": 8
+  "nome": "Kiala Silva",
+  "idade": 9,
+  "username": "kiala123",
+  "pin": "1234",
+  "distribuicao_potes": {
+    "poupar_pct": 30,
+    "ajudar_pct": 10,
+    "gastar_pct": 60
+  }
 }
 ```
+> - `username`: nome de utilizador escolhido pelo responsável (usado para login da criança)
+> - `pin`: senha mínima de 4 caracteres criada pelo responsável para a criança
+> - `distribuicao_potes`: percentagens de como o dinheiro ganho será distribuído automaticamente (`poupar_pct` + `ajudar_pct` + `gastar_pct` = 100)
 
 **Response 201:**
 ```json
 {
   "id": "crianca-3",
-  "nome": "Maria",
-  "idade": 8,
+  "nome": "Kiala Silva",
+  "idade": 9,
   "nivel": 1,
-  "paiId": "usr-abc123",
-  "nome_utilizador_gerado": "maria_kamba",
-  "senha_temporaria": "kamba123",
-  "avatar": {
-    "id": "avatar-3",
-    "cabelo": "padrao",
-    "roupa": "padrao",
-    "acessorio": "nenhum",
-    "cor_pele": "marrom",
-    "expressao": "feliz"
-  },
+  "pai_id": "usr-abc123",
+  "username": "kiala123",
   "potes": {
     "saldo_gastar": 0,
     "saldo_poupar": 0,
     "saldo_ajudar": 0,
-    "total": 0
+    "total": 0,
+    "config": {
+      "gastar_pct": 60,
+      "poupar_pct": 30,
+      "ajudar_pct": 10
+    }
   }
 }
 ```
 
-**Response 400 — Dados inválidos:**
+**Response 400 — Campos obrigatórios em falta:**
 ```json
 {
-  "erro": "DADOS_INVALIDOS",
-  "mensagem": "Informe o nome da criança."
+  "erro": "CAMPOS_OBRIGATORIOS",
+  "mensagem": "Preencha todos os campos obrigatórios."
+}
+```
+
+**Response 400 — PIN muito curto:**
+```json
+{
+  "erro": "PIN_INVALIDO",
+  "mensagem": "O PIN deve ter pelo menos 4 caracteres."
+}
+```
+
+**Response 409 — Username já em uso:**
+```json
+{
+  "erro": "USERNAME_JA_REGISTADO",
+  "mensagem": "Este nome de utilizador já está em uso."
 }
 ```
 
@@ -408,7 +436,7 @@ POST /api/parent/children/:childId/add-balance
 
 ---
 
-## 4. Responsável — Tarefas
+## 4. Responsável — Tarefas e Aprovações
 
 ### 4.1 Criar Tarefa
 
@@ -546,6 +574,39 @@ PATCH /api/tasks/:taskId/reject
     "rejeitado_em": "2026-01-24T09:00:00Z",
     "motivo_rejeicao": "A foto não mostra o quarto organizado."
   }
+}
+```
+
+---
+
+### 4.5 Listar Tarefas Pendentes de Aprovação
+
+**Tela:** `app/parent/approve.tsx`
+
+```
+GET /api/tasks?status=aguardando_aprovacao
+```
+
+**Response 200:**
+```json
+{
+  "tarefas": [
+    {
+      "id": "tarefa-4",
+      "titulo": "Fazer dever de casa",
+      "descricao": "Completar todas as tarefas de matemática",
+      "recompensa": 250,
+      "status": "aguardando_aprovacao",
+      "crianca_id": "crianca-1",
+      "crianca_nome": "Kiala",
+      "foto_url": "https://cdn.kambapay.ao/tarefas/tarefa-4-prova.jpg",
+      "icone": "pencil",
+      "categoria": "save",
+      "criado_em": "2026-01-23T00:00:00Z",
+      "concluido_em": "2026-01-23T14:00:00Z"
+    }
+  ],
+  "total": 1
 }
 ```
 
@@ -774,9 +835,68 @@ GET /api/parent/children/:childId/finance
 
 ---
 
-## 8. Criança — Dashboard
+## 8. Responsável — Família e Perfil
 
-### 8.1 Carregar Dashboard da Criança
+**Tela:** `app/parent/(tabs)/family.tsx`
+
+### 8.1 Atualizar Dados do Dependente
+
+```
+PATCH /api/parent/children/:childId
+```
+
+**Request:**
+```json
+{
+  "nome": "Kiala da Silva",
+  "idade": 10
+}
+```
+
+**Response 200:**
+```json
+{
+  "id": "crianca-1",
+  "nome": "Kiala da Silva",
+  "idade": 10,
+  "nivel": 5
+}
+```
+
+---
+
+### 8.2 Atualizar Distribuição de Potes do Dependente
+
+```
+PATCH /api/parent/children/:childId/potes-config
+```
+
+**Request:**
+```json
+{
+  "poupar_pct": 40,
+  "ajudar_pct": 15,
+  "gastar_pct": 45
+}
+```
+
+**Response 200:**
+```json
+{
+  "mensagem": "Configuração dos potes atualizada.",
+  "config": {
+    "gastar_pct": 45,
+    "poupar_pct": 40,
+    "ajudar_pct": 15
+  }
+}
+```
+
+---
+
+## 9. Criança — Dashboard
+
+### 9.1 Carregar Dashboard da Criança
 
 **Tela:** `app/child/(tabs)/index.tsx`
 

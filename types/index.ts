@@ -17,6 +17,7 @@ export interface Crianca {
   nome: string;
   idade: number;
   nivel: number;
+  xp: number;
   paiId: string;
   avatar: Avatar;
   potes: Potes;
@@ -122,9 +123,10 @@ export interface ItemLoja {
 
 export interface HistoricoTransacao {
   id: string;
-  tipo: 'tarefa' | 'compra' | 'doacao' | 'missao';
+  tipo: 'tarefa' | 'compra' | 'doacao' | 'missao' | 'bonus_gestao' | 'escola';
   descricao: string;
   valor: number;
+  xp_ganho?: number;
   data: Date;
   pote_afetado?: 'gastar' | 'poupar' | 'ajudar';
 }

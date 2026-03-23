@@ -20,6 +20,7 @@ interface AppContextType {
   conteudoEducativo: ConteudoEducativo[];
   itensLoja: ItemLoja[];
   historico: HistoricoTransacao[];
+  aulaVistaHoje: boolean;
   
   // Ações para Criança
   atualizarSaldo: (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => void;
@@ -28,6 +29,7 @@ interface AppContextType {
   comprarItem: (itemId: string) => void;
   atualizarAvatar: (parte: string, valor: string) => void;
   marcarConteudoCompleto: (conteudoId: string) => void;
+  adicionarXP: (valor: number) => void;
   
   // Ações para Pai
   criarTarefa: (tarefa: Omit<Tarefa, 'id' | 'criado_em'>) => void;
@@ -36,6 +38,7 @@ interface AppContextType {
   adicionarSaldo: (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => void;
   atualizarDadosCrianca: (nome: string, idade: number) => void;
   criarCampanha: (campanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => void;
+  concluirAula: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -59,6 +62,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [conteudoEducativo, setConteudoEducativo] = useState<ConteudoEducativo[]>(mockConteudoEducativo);
   const [itensLoja, setItensLoja] = useState<ItemLoja[]>(mockItensLoja);
   const [historico, setHistorico] = useState<HistoricoTransacao[]>(mockHistorico);
+  const [aulaVistaHoje, setAulaVistaHoje] = useState<boolean>(false);
 
   // Atualizar saldo dos potes
   const atualizarSaldo = (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => {
@@ -106,9 +110,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tipo: 'doacao',
         descricao: campanhaEncontrada?.titulo || 'Doação',
         valor: -valor,
+        xp_ganho: valor * 2, // XP em Dobro
         data: new Date(),
         pote_afetado: 'ajudar'
       }, ...prev]);
+      
+      // Ganhar XP em dobro
+      adicionarXP(valor * 2);
     }
   };
 
@@ -171,18 +179,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
           : t
       ));
       
-      // Adicionar recompensa
-      atualizarSaldo('gastar', tarefa.recompensa);
+      // Divisão Automática
+      const gastarPct = crianca.potes.config?.gastar?.label ? 60 : 60; // usando hardcode para fallback
+      const pouparPct = crianca.potes.config?.poupar?.label ? 30 : 30;
+      const ajudarPct = 100 - gastarPct - pouparPct;
       
-      // Adicionar ao histórico
-      setHistorico(prev => [{
-        id: `hist-${Date.now()}`,
-        tipo: 'tarefa',
-        descricao: tarefa.titulo,
-        valor: tarefa.recompensa,
-        data: new Date(),
-        pote_afetado: 'gastar'
-      }, ...prev]);
+      const valGastar = Math.round((tarefa.recompensa * gastarPct) / 100);
+      const valPoupar = Math.round((tarefa.recompensa * pouparPct) / 100);
+      const valAjudar = tarefa.recompensa - valGastar - valPoupar;
+
+      setCrianca(prev => {
+        const np = { ...prev.potes };
+        np.saldo_gastar += valGastar;
+        np.saldo_poupar += valPoupar;
+        np.saldo_ajudar += valAjudar;
+        np.total = np.saldo_gastar + np.saldo_poupar + np.saldo_ajudar;
+        return { ...prev, potes: np };
+      });
+      
+      // Adicionar ao histórico - múltiplos registos para refletir a divisão
+      setHistorico(prev => [
+        {
+          id: `hist-${Date.now()}-1`,
+          tipo: 'tarefa',
+          descricao: `${tarefa.titulo} (Gastar)`,
+          valor: valGastar,
+          data: new Date(),
+          pote_afetado: 'gastar'
+        },
+        {
+          id: `hist-${Date.now()}-2`,
+          tipo: 'tarefa',
+          descricao: `${tarefa.titulo} (Poupar)`,
+          valor: valPoupar,
+          data: new Date(),
+          pote_afetado: 'poupar'
+        },
+        {
+          id: `hist-${Date.now()}-3`,
+          tipo: 'tarefa',
+          descricao: `${tarefa.titulo} (Ajudar)`,
+          valor: valAjudar,
+          data: new Date(),
+          pote_afetado: 'ajudar'
+        }, ...prev
+      ]);
     }
   };
 
@@ -228,6 +269,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCampanhas(prev => [campanha, ...prev]);
   };
 
+  // Adicionar XP
+  const adicionarXP = (valor: number) => {
+    setCrianca(prev => ({
+      ...prev,
+      xp: (prev.xp || 0) + valor,
+      nivel: Math.floor(((prev.xp || 0) + valor) / 100) + 1 // Regra simples: 1 nível a cada 100 XP
+    }));
+  };
+
+  const concluirAula = () => {
+    setAulaVistaHoje(true);
+  };
+
   return (
     <AppContext.Provider value={{
       crianca,
@@ -238,6 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       conteudoEducativo,
       itensLoja,
       historico,
+      aulaVistaHoje,
       atualizarSaldo,
       enviarFotoTarefa,
       realizarDoacao,
@@ -249,7 +304,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejeitarTarefa,
       adicionarSaldo,
       atualizarDadosCrianca,
-      criarCampanha
+      criarCampanha,
+      adicionarXP,
+      concluirAula
     }}>
       {children}
     </AppContext.Provider>

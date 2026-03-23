@@ -108,7 +108,49 @@ export function AuthProvider({ children: childrenProp }: { children: ReactNode }
         AsyncStorage.getItem(STORAGE_KEYS.CAMPAIGNS),
       ]);
       if (userData) setUser(JSON.parse(userData));
-      if (usersData) setAllUsers(JSON.parse(usersData));
+      
+      let parsedUsers: UserProfile[] = [];
+      if (usersData) {
+        parsedUsers = JSON.parse(usersData);
+      }
+      
+      // Garante que as contas de teste existem sempre
+      const hasTestParent = parsedUsers.some(u => u.email === 'pai@teste.com');
+      const hasTestChild = parsedUsers.some(u => u.email === 'filho@teste.com');
+      
+      let needsSave = false;
+      
+      if (!hasTestParent) {
+        parsedUsers.push({
+          id: 'pai-teste',
+          name: 'Pai Kamba',
+          email: 'pai@teste.com',
+          role: 'parent',
+          level: 1,
+          avatar: 'parent',
+        });
+        needsSave = true;
+      }
+      
+      if (!hasTestChild) {
+        parsedUsers.push({
+          id: 'filho-teste',
+          name: 'Filho Kamba',
+          email: 'filho@teste.com',
+          role: 'child',
+          parentId: 'pai-teste',
+          level: 5,
+          avatar: 'child',
+        });
+        needsSave = true;
+      }
+      
+      if (needsSave) {
+        await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(parsedUsers));
+      }
+      
+      setAllUsers(parsedUsers);
+      
       if (tasksData) setTasks(JSON.parse(tasksData));
       if (missionsData) setMissions(JSON.parse(missionsData));
       if (campaignsData) setCampaigns(JSON.parse(campaignsData));

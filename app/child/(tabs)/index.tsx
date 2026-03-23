@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 
 export default function ChildDashboard() {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
-  const { crianca, tarefas, missoes } = useApp();
+  const { crianca, tarefas, missoes, aulaVistaHoje } = useApp();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!aulaVistaHoje) {
+        // Redireciona logo caso ainda não tenha feito a aula/quiz diário
+        router.replace('/child/aula');
+      }
+    }, [aulaVistaHoje])
+  );
 
   // For the demo/image fidelity, we use the 'crianca' from AppContext if it matches the name
   // or just use the mock data since the image is very specific.
@@ -39,7 +48,10 @@ export default function ChildDashboard() {
           </View>
           <View style={styles.headerText}>
             <Text style={styles.greeting}>Olá, {name}! 👋</Text>
-            <Text style={styles.welcome}>Bem-vinda ao Kamba Kid Pay</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+              <Ionicons name="star" size={14} color="#f59e0b" />
+              <Text style={styles.xpTextStatus}>{crianca.xp || 0} XP</Text>
+            </View>
           </View>
           <TouchableOpacity 
             style={styles.logoutBtn} 
@@ -226,9 +238,22 @@ const styles = StyleSheet.create({
     borderColor: '#FFFCE8',
   },
   levelText: { fontSize: 14, fontWeight: '800', color: '#000' },
-  headerText: { marginLeft: 16 },
-  greeting: { fontSize: 24, fontWeight: '800', color: '#000' },
-  welcome: { fontSize: 14, color: '#b5b5b5', marginTop: 2 },
+  headerText: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#1E293B',
+    marginBottom: 2,
+  },
+  xpTextStatus: {
+    fontSize: 14,
+    color: '#f59e0b',
+    fontWeight: '700',
+    marginLeft: 4,
+  },
   logoutBtn: {
     padding: 10,
     backgroundColor: '#fff',
