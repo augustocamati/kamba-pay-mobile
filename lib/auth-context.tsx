@@ -52,7 +52,7 @@ interface WalletBreakdown {
   spend: number;
   help: number;
 }
-
+  
 interface AuthContextValue {
   user: UserProfile | null;
   children: UserProfile[];
