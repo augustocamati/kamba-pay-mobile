@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Image, Pressable, TouchableOpacity 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated from 'react-native-reanimated';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
 import { router, useFocusEffect } from 'expo-router';
@@ -48,9 +49,9 @@ export default function ChildDashboard() {
           </View>
           <View style={styles.headerText}>
             <Text style={styles.greeting}>Olá, {name}! 👋</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-              <Ionicons name="star" size={14} color="#f59e0b" />
-              <Text style={styles.xpTextStatus}>{crianca.xp || 0} XP</Text>
+            <View style={styles.xpPill}>
+              <Ionicons name="star" size={14} color="#FF8C00" />
+              <Text style={styles.xpTextStatus}>{crianca.xp || 0} XP — Mestre</Text>
             </View>
           </View>
           <TouchableOpacity 
@@ -76,8 +77,29 @@ export default function ChildDashboard() {
             <Text style={styles.balanceLabel}>Saldo Total</Text>
           </View>
           <Text style={styles.balanceValue}>{saldoTotal.toLocaleString()} Kz</Text>
-          <Text style={styles.balanceHint}>Continue economizando! 🎯</Text>
         </LinearGradient>
+
+        {/* Quick Actions Row */}
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => alert('Em Breve: Efetuar pagamento/compra!')}>
+            <View style={[styles.actionIconBg, { backgroundColor: '#FFF3E0' }]}>
+              <Ionicons name="cart-outline" size={24} color="#FF8C00" />
+            </View>
+            <Text style={styles.actionText}>Gastar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => alert('Em Breve: Transferir do Geral para o Poupar!')}>
+            <View style={[styles.actionIconBg, { backgroundColor: '#E8F5E9' }]}>
+              <Ionicons name="wallet-outline" size={24} color="#4ADE80" />
+            </View>
+            <Text style={styles.actionText}>Poupar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/child/(tabs)/help' as any)}>
+            <View style={[styles.actionIconBg, { backgroundColor: '#FCE7F3' }]}>
+              <Ionicons name="heart-outline" size={24} color="#EC4899" />
+            </View>
+            <Text style={styles.actionText}>Doar</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Meus Potes Section */}
         <View style={styles.sectionHeader}>
@@ -146,6 +168,19 @@ export default function ChildDashboard() {
             </LinearGradient>
           )}
         </View>
+
+        {/* Bónus Alert */}
+        <Animated.View style={styles.bonusBanner}>
+          <View style={styles.bonusIcon}>
+            <Text style={{ fontSize: 24 }}>⏳</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bonusTitle}>Bónus Mestre da Poupança!</Text>
+            <Text style={styles.bonusText}>
+              Não gastes do teu Pote Poupar por mais <Text style={{fontWeight: '800'}}>3 dias</Text> e ganha +5% de juros da Kamba!
+            </Text>
+          </View>
+        </Animated.View>
 
         {/* Tarefas do Dia Section */}
         <View style={styles.sectionHeaderRow}>
@@ -248,10 +283,22 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 2,
   },
+  xpPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+  },
   xpTextStatus: {
-    fontSize: 14,
-    color: '#f59e0b',
-    fontWeight: '700',
+    fontSize: 13,
+    color: '#FF8C00',
+    fontWeight: '800',
     marginLeft: 4,
   },
   logoutBtn: {
@@ -269,6 +316,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     padding: 24,
     marginBottom: 24,
+    shadowColor: '#FF6B00',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   balanceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   balanceLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
@@ -331,4 +383,56 @@ const styles = StyleSheet.create({
   metaContent: { flex: 1 },
   metaTitle: { color: '#fff', fontSize: 17, fontWeight: '800' },
   metaDesc: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600', marginTop: 2 },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    marginBottom: 28,
+  },
+  actionBtn: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionIconBg: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  bonusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  bonusIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#E0E7FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  bonusTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#4338CA',
+    marginBottom: 2,
+  },
+  bonusText: {
+    fontSize: 13,
+    color: '#4F46E5',
+    lineHeight: 18,
+  },
 });

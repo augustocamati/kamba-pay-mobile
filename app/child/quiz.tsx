@@ -4,25 +4,37 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown, SlideInDown, ZoomIn } from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 
 const { width } = Dimensions.get('window');
 
-const QUESTIONS = [
-  {
-    text: 'Qual é o objetivo principal do Pote Poupar?',
-    options: [
-      { id: '1', text: 'Gastar em doces hoje mesmo', correct: false },
-      { id: '2', text: 'Guardar para um objetivo maior no futuro', correct: true },
-    ]
-  }
-];
+type QuizQuestion = {
+  text: string;
+  options: { id: string; text: string; correct: boolean }[];
+};
+
+const QUIZ_LIBRARY: Record<string, QuizQuestion[]> = {
+  'conteudo-1': [
+    { text: 'A moeda usada em Angola chama-se...', options: [{ id: '1', text: 'Dólar', correct: false }, { id: '2', text: 'Kwanza', correct: true }] }
+  ],
+  'conteudo-2': [
+    { text: 'Qual é o principal objetivo do Pote Poupar?', options: [{ id: '1', text: 'Gastar em doces hoje', correct: false }, { id: '2', text: 'Guardar para um objetivo maior no futuro', correct: true }] }
+  ],
+  'conteudo-3': [
+    { text: 'O que é um Orçamento?', options: [{ id: '1', text: 'Um plano de como vais usar o teu dinheiro', correct: true }, { id: '2', text: 'Um lugar para guardar moedas', correct: false }] }
+  ],
+};
 
 export default function QuizScreen() {
   const insets = useSafeAreaInsets();
-  const { adicionarXP, concluirAula } = useApp();
+  const { id } = useLocalSearchParams();
+  const { adicionarXP, concluirAula, marcarConteudoCompleto } = useApp();
   
+  // Encontrar questionário da biblioteca ou fallback
+  const contentId = typeof id === 'string' ? id : 'conteudo-2';
+  const QUESTIONS = QUIZ_LIBRARY[contentId] || QUIZ_LIBRARY['conteudo-2'];
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
@@ -43,7 +55,10 @@ export default function QuizScreen() {
         // Concluir 
         const totalXP = isPerfect ? 30 : 10; // 10 Base + 20 Bonus se perfeito
         adicionarXP(totalXP);
-        concluirAula();
+        concluirAula(); // Se for a lesson diária
+        if (typeof id === 'string') {
+           marcarConteudoCompleto(id);
+        }
         setIsFinished(true);
       }
     }, 1500);

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 
 export default function ChildSchoolScreen() {
@@ -19,7 +20,10 @@ export default function ChildSchoolScreen() {
 
         {/* Featured Content */}
         {conteudoEducativo.length > 0 && (
-          <Pressable style={styles.featuredCard}>
+          <Pressable 
+            style={styles.featuredCard}
+            onPress={() => router.push({ pathname: '/child/aula', params: { id: conteudoEducativo[0].id } } as any)}
+          >
             <Image 
               source={{ uri: conteudoEducativo[0].thumbnail_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800' }} 
               style={styles.featuredImage} 
@@ -44,7 +48,11 @@ export default function ChildSchoolScreen() {
 
         {/* List of Content */}
         {conteudoEducativo.map(item => (
-          <Pressable key={item.id} style={styles.contentItem}>
+          <Pressable 
+            key={item.id} 
+            style={styles.contentItem}
+            onPress={() => router.push({ pathname: '/child/aula', params: { id: item.id } } as any)}
+          >
             <Image source={{ uri: item.thumbnail_url }} style={styles.itemThumb} />
             <View style={styles.itemInfo}>
               <View style={styles.typeBadge}>

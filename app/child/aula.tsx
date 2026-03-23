@@ -4,14 +4,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useApp } from '@/context/AppContext';
 
 const { width } = Dimensions.get('window');
 
 export default function AulaScreen() {
   const insets = useSafeAreaInsets();
+  const { id } = useLocalSearchParams();
+  const { conteudoEducativo } = useApp();
+  
   const [isVideoFinished, setIsVideoFinished] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Buscar conteúdo com base no ID
+  const conteudo = typeof id === 'string' 
+    ? conteudoEducativo.find(c => c.id === id) 
+    : conteudoEducativo[0] || { // fallback se não vier ID
+        titulo: 'O que é o Pote Poupar?',
+        descricao: 'Vais aprender como e porquê guardar o teu dinheiro para poderes comprar coisas maiores no futuro.',
+        thumbnail_url: 'https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?auto=format&fit=crop&q=80&w=800'
+      };
 
   // Simulando a duração do vídeo
   const handlePlayVideo = () => {
@@ -32,7 +45,7 @@ export default function AulaScreen() {
       <Animated.View entering={FadeInDown.delay(200)} style={styles.content}>
         <View style={styles.videoCard}>
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?auto=format&fit=crop&q=80&w=800' }} 
+            source={{ uri: conteudo?.thumbnail_url || 'https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?auto=format&fit=crop&q=80&w=800' }} 
             style={styles.thumbnail}
           />
           <View style={styles.videoOverlay}>
@@ -60,9 +73,9 @@ export default function AulaScreen() {
         </View>
 
         <View style={styles.lessonInfo}>
-          <Text style={styles.lessonTitle}>Tema: O que é o Pote Poupar?</Text>
+          <Text style={styles.lessonTitle}>Tema: {conteudo?.titulo}</Text>
           <Text style={styles.lessonDesc}>
-            Vais aprender como e porquê guardar o teu dinheiro para poderes comprar coisas maiores no futuro.
+            {conteudo?.descricao}
           </Text>
         </View>
       </Animated.View>
@@ -71,7 +84,7 @@ export default function AulaScreen() {
         <Animated.View entering={SlideInDown} style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
           <Pressable 
             style={styles.quizButton}
-            onPress={() => router.replace('/child/quiz')}
+            onPress={() => router.replace({ pathname: '/child/quiz', params: { id } } as any)}
           >
             <LinearGradient 
               colors={['#f97316', '#ea580c']} 
