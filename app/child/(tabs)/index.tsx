@@ -25,22 +25,25 @@ const TILE_W = (width - 40 - TILE_GAP) / 2;
 function StarParticle({ x, y, delay, size, color }: { x: number; y: number; delay: number; size: number; color: string }) {
   const opacity = useRef(new RNAnimated.Value(0)).current;
   const translateY = useRef(new RNAnimated.Value(0)).current;
-  const scale = useRef(new RNAnimated.Value(0.3)).current;
+  const rotate = useRef(new RNAnimated.Value(0)).current;
 
   React.useEffect(() => {
     const anim = RNAnimated.sequence([
       RNAnimated.delay(delay),
+      RNAnimated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }),
       RNAnimated.parallel([
-        RNAnimated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        RNAnimated.timing(scale, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]),
-      RNAnimated.parallel([
-        RNAnimated.timing(translateY, { toValue: -80, duration: 800, useNativeDriver: true }),
-        RNAnimated.timing(opacity, { toValue: 0, duration: 800, useNativeDriver: true }),
+        RNAnimated.timing(translateY, { toValue: height * 0.85, duration: 1600 + Math.random() * 600, useNativeDriver: true }),
+        RNAnimated.timing(rotate, { toValue: 1, duration: 1800, useNativeDriver: true }),
+        RNAnimated.sequence([
+          RNAnimated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+          RNAnimated.timing(opacity, { toValue: 0, duration: 900, useNativeDriver: true }),
+        ]),
       ]),
     ]);
     anim.start();
   }, []);
+
+  const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
     <RNAnimated.View
@@ -49,10 +52,10 @@ function StarParticle({ x, y, delay, size, color }: { x: number; y: number; dela
         left: x,
         top: y,
         opacity,
-        transform: [{ translateY }, { scale }],
+        transform: [{ translateY }, { rotate: spin }],
       }}
     >
-      <Text style={{ fontSize: size, color }}>✦</Text>
+      <Text style={{ fontSize: size, color }}>{'★'}</Text>
     </RNAnimated.View>
   );
 }
@@ -104,21 +107,23 @@ export default function ChildDashboard() {
   const paraFazer = tarefas.filter(t => t.status === 'pendente').slice(0, 3);
 
   const handleSparkle = () => {
-    const COLORS = ['#FFD700', '#FF8C00', '#FF6B6B', '#A78BFA', '#34D399', '#60A5FA'];
-    const cx = width / 2 - 30;
-    const cy = height * 0.42;
-    const newStars = Array.from({ length: 12 }).map((_, i) => ({
+    const COLORS = ['#FFD700', '#FF8C00', '#FF6B6B', '#A78BFA', '#34D399', '#60A5FA', '#F9A8D4', '#FCD34D', '#86EFAC'];
+    const COUNT = 28;
+    const newStars = Array.from({ length: COUNT }).map((_, i) => ({
       id: ++starKey.current,
-      x: cx + (Math.random() - 0.5) * 200,
-      y: cy + (Math.random() - 0.5) * 80,
-      delay: i * 60,
-      size: 10 + Math.random() * 18,
+      // distribute randomly across the full screen width
+      x: Math.random() * (width - 30),
+      // start from random vertical positions in the top ~30% of the screen
+      y: Math.random() * height * 0.25,
+      delay: i * 55,
+      size: 12 + Math.random() * 22,
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
     }));
     setStars(prev => [...prev, ...newStars]);
+    // clean up after animation completes
     setTimeout(() => {
       setStars(prev => prev.filter(s => !newStars.find(ns => ns.id === s.id)));
-    }, 1400);
+    }, 2800);
   };
 
   return (
