@@ -17,7 +17,10 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false, headerBackTitle: "Back" }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="role-select" />
       <Stack.Screen name="login" />
+      <Stack.Screen name="login-parent" />
+      <Stack.Screen name="login-child" />
       <Stack.Screen name="register" />
       <Stack.Screen name="parent/(tabs)" />
       <Stack.Screen name="parent/create-task" options={{ presentation: "modal" }} />

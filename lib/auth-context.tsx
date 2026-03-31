@@ -144,6 +144,21 @@ export function AuthProvider({ children: childrenProp }: { children: ReactNode }
         });
         needsSave = true;
       }
+
+      // Conta de teste: criança "kamba" com PIN 1234
+      const hasKamba = parsedUsers.some(u => u.email === 'kamba@child.kamba');
+      if (!hasKamba) {
+        parsedUsers.push({
+          id: 'kamba-teste',
+          name: 'Kamba',
+          email: 'kamba@child.kamba',
+          role: 'child',
+          parentId: 'pai-teste',
+          level: 3,
+          avatar: 'child',
+        });
+        needsSave = true;
+      }
       
       if (needsSave) {
         await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(parsedUsers));

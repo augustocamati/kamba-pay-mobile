@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
+import { router } from 'expo-router';
 
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', icon: 'apps' },
@@ -15,6 +16,7 @@ export default function ChildMissionsScreen() {
   const insets = useSafeAreaInsets();
   const { missoes } = useApp();
   const [activeTab, setActiveTab] = useState('todas');
+  const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const filteredMissions = activeTab === 'todas' 
     ? missoes 
@@ -22,7 +24,13 @@ export default function ChildMissionsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={{ paddingTop: insets.top + 10 }}>
+      <View style={[styles.topBar, { paddingTop: (insets.top || webTop) + 8 }]}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#FF6B00" />
+        </Pressable>
+        <Text style={styles.topBarTitle}>Missões 🎯</Text>
+        <View style={{ width: 40 }} />
+      </View>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -51,7 +59,6 @@ export default function ChildMissionsScreen() {
             </Pressable>
           ))}
         </ScrollView>
-      </View>
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -99,6 +106,16 @@ export default function ChildMissionsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFCE8' },
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 8,
+  },
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center',
+  },
+  topBarTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
+  tabsWrap: {},
   tabsContainer: { paddingHorizontal: 20, gap: 10, paddingBottom: 10 },
   tab: {
     flexDirection: 'row',

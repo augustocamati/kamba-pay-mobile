@@ -1,438 +1,381 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+  Animated as RNAnimated,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated from 'react-native-reanimated';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
+const { width, height } = Dimensions.get('window');
+const TILE_GAP = 10;
+const TILE_W = (width - 40 - TILE_GAP) / 2;
+
+// ─── Floating star particle ───────────────────────────────────────────────────
+function StarParticle({ x, y, delay, size, color }: { x: number; y: number; delay: number; size: number; color: string }) {
+  const opacity = useRef(new RNAnimated.Value(0)).current;
+  const translateY = useRef(new RNAnimated.Value(0)).current;
+  const scale = useRef(new RNAnimated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    const anim = RNAnimated.sequence([
+      RNAnimated.delay(delay),
+      RNAnimated.parallel([
+        RNAnimated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        RNAnimated.timing(scale, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]),
+      RNAnimated.parallel([
+        RNAnimated.timing(translateY, { toValue: -80, duration: 800, useNativeDriver: true }),
+        RNAnimated.timing(opacity, { toValue: 0, duration: 800, useNativeDriver: true }),
+      ]),
+    ]);
+    anim.start();
+  }, []);
+
+  return (
+    <RNAnimated.View
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        opacity,
+        transform: [{ translateY }, { scale }],
+      }}
+    >
+      <Text style={{ fontSize: size, color }}>✦</Text>
+    </RNAnimated.View>
+  );
+}
+
+// ─── Jar illustration (pote) ──────────────────────────────────────────────────
+function PoteJar({ icon, iconColor, label, value, labelColor }: {
+  icon: string; iconColor: string; label: string; value: string; labelColor: string;
+}) {
+  return (
+    <View style={jar.container}>
+      <View style={jar.lid} />
+      <View style={jar.body}>
+        <Ionicons name={icon as any} size={20} color={iconColor} style={{ opacity: 0.55 }} />
+      </View>
+      <Text style={[jar.label, { color: labelColor }]}>{label}</Text>
+      <Text style={jar.value}>{value}</Text>
+    </View>
+  );
+}
+
+const jar = StyleSheet.create({
+  container: { alignItems: 'center', flex: 1 },
+  lid: { width: 34, height: 10, borderRadius: 8, backgroundColor: '#C9BFAF', marginBottom: -2 },
+  body: {
+    width: 52, height: 58, borderRadius: 14,
+    backgroundColor: '#F0EAE0', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: '#DDD4C4',
+  },
+  label: { fontSize: 11, fontFamily: 'Nunito_700Bold', marginTop: 5 },
+  value: { fontSize: 11, fontFamily: 'Nunito_600SemiBold', color: '#6B7280' },
+});
+
+// ─── Main screen ─────────────────────────────────────────────────────────────
 export default function ChildDashboard() {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
-  const { crianca, tarefas, missoes, aulaVistaHoje } = useApp();
+  const { crianca, tarefas, missoes } = useApp();
+  const [stars, setStars] = useState<{ id: number; x: number; y: number; delay: number; size: number; color: string }[]>([]);
+  const starKey = useRef(0);
+  const sparkleRef = useRef<View>(null);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      if (!aulaVistaHoje) {
-        // Redireciona logo caso ainda não tenha feito a aula/quiz diário
-        router.replace('/child/aula');
-      }
-    }, [aulaVistaHoje])
-  );
-
-  // For the demo/image fidelity, we use the 'crianca' from AppContext if it matches the name
-  // or just use the mock data since the image is very specific.
   const name = user?.name || crianca.nome;
-  const saldoTotal = crianca.potes.total;
-  const saldoGastar = crianca.potes.saldo_gastar;
+  const saldoGeral = crianca.potes.total;
   const saldoPoupar = crianca.potes.saldo_poupar;
+  const saldoGastar = crianca.potes.saldo_gastar;
   const saldoAjudar = crianca.potes.saldo_ajudar;
+  const webTop = Platform.OS === 'web' ? 67 : 0;
+
+  const paraFazer = tarefas.filter(t => t.status === 'pendente').slice(0, 3);
+
+  const handleSparkle = () => {
+    const COLORS = ['#FFD700', '#FF8C00', '#FF6B6B', '#A78BFA', '#34D399', '#60A5FA'];
+    const cx = width / 2 - 30;
+    const cy = height * 0.42;
+    const newStars = Array.from({ length: 12 }).map((_, i) => ({
+      id: ++starKey.current,
+      x: cx + (Math.random() - 0.5) * 200,
+      y: cy + (Math.random() - 0.5) * 80,
+      delay: i * 60,
+      size: 10 + Math.random() * 18,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    }));
+    setStars(prev => [...prev, ...newStars]);
+    setTimeout(() => {
+      setStars(prev => prev.filter(s => !newStars.find(ns => ns.id === s.id)));
+    }, 1400);
+  };
 
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20, paddingBottom: 40 }]}
+    <View style={s.root}>
+      {/* Star particles layer */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {stars.map(st => (
+          <StarParticle key={st.id} x={st.x} y={st.y} delay={st.delay} size={st.size} color={st.color} />
+        ))}
+      </View>
+
+      <ScrollView
+        contentContainerStyle={[s.scroll, { paddingTop: (insets.top || webTop) + 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header - Olá, Kiala! */}
-        <View style={styles.header}>
-          <View style={styles.avatarBorder}>
-            <Image 
-              source={{ uri: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kiala' }} 
-              style={styles.avatar} 
-            />
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>{crianca.nivel}</Text>
+        {/* ── Header ── */}
+        <Animated.View entering={FadeInDown.duration(400)} style={s.header}>
+          <View>
+            <Text style={s.greeting}>Olá, {name}! 👋</Text>
+            <View style={s.xpPill}>
+              <Ionicons name="star" size={13} color="#FF8C00" />
+              <Text style={s.xpText}>{crianca.xp || 0} XP</Text>
             </View>
           </View>
-          <View style={styles.headerText}>
-            <Text style={styles.greeting}>Olá, {name}! 👋</Text>
-            <View style={styles.xpPill}>
-              <Ionicons name="star" size={14} color="#FF8C00" />
-              <Text style={styles.xpTextStatus}>{crianca.xp || 0} XP — Mestre</Text>
-            </View>
-          </View>
-          <TouchableOpacity 
-            style={styles.logoutBtn} 
-            onPress={async () => {
-              await logout();
-              router.replace('/');
-            }}
+          <TouchableOpacity
+            style={s.logoutBtn}
+            onPress={async () => { await logout(); router.replace('/'); }}
           >
-            <Ionicons name="log-out-outline" size={24} color="#FF6B00" />
+            <Ionicons name="log-out-outline" size={22} color="#FF6B00" />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
-        {/* Saldo Total Card */}
-        <LinearGradient
-          colors={['#FF6B00', '#FF9900']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.balanceCard}
-        >
-          <View style={styles.balanceHeader}>
-            <MaterialCommunityIcons name="wallet-outline" size={20} color="#fff" />
-            <Text style={styles.balanceLabel}>Saldo Total</Text>
-          </View>
-          <Text style={styles.balanceValue}>{saldoTotal.toLocaleString()} Kz</Text>
-        </LinearGradient>
-
-        {/* Quick Actions Row */}
-        <View style={styles.quickActionsRow}>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => alert('Em Breve: Efetuar pagamento/compra!')}>
-            <View style={[styles.actionIconBg, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="cart-outline" size={24} color="#FF8C00" />
-            </View>
-            <Text style={styles.actionText}>Gastar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => alert('Em Breve: Transferir do Geral para o Poupar!')}>
-            <View style={[styles.actionIconBg, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="wallet-outline" size={24} color="#4ADE80" />
-            </View>
-            <Text style={styles.actionText}>Poupar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/child/(tabs)/help' as any)}>
-            <View style={[styles.actionIconBg, { backgroundColor: '#FCE7F3' }]}>
-              <Ionicons name="heart-outline" size={24} color="#EC4899" />
-            </View>
-            <Text style={styles.actionText}>Doar</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Meus Potes Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Meus Potes 🏺</Text>
-        </View>
-
-        {/* Pote Gastar (Full Width) */}
-        {crianca.potes.config?.gastar && (
-          <LinearGradient
-            colors={crianca.potes.config.gastar.cor as any}
-            style={styles.poteFull}
-          >
-            <View style={styles.poteHeader}>
-              <View style={styles.poteIconBg}>
-                <MaterialCommunityIcons 
-                  name={crianca.potes.config.gastar.icone as any} 
-                  size={24} 
-                  color={crianca.potes.config.gastar.cor[0]} 
-                />
-              </View>
-              <View style={styles.poteBadge}>
-                <Text style={styles.poteBadgeText}>50%</Text>
-              </View>
-            </View>
-            <Text style={styles.poteLabel}>{crianca.potes.config.gastar.label}</Text>
-            <Text style={styles.poteValue}>{saldoGastar.toLocaleString()} Kz</Text>
-            <Text style={styles.poteDesc}>{crianca.potes.config.gastar.descricao}</Text>
-          </LinearGradient>
-        )}
-
-        {/* Potes (Double Column) */}
-        <View style={styles.poteRow}>
-          {crianca.potes.config?.poupar && (
-            <LinearGradient
-              colors={crianca.potes.config.poupar.cor as any}
-              style={styles.poteHalf}
+        {/* ── 2×2 menu grid ── */}
+        <Animated.View entering={FadeInDown.delay(80).duration(450)} style={s.grid}>
+          {/* Row 1 */}
+          <View style={s.gridRow}>
+            <Pressable
+              style={({ pressed }) => [s.tile, s.tileOrange, pressed && s.tilePressed]}
+              onPress={() => router.push('/child/(tabs)/school' as any)}
             >
-              <View style={styles.poteIconBg}>
-                <MaterialCommunityIcons 
-                  name={crianca.potes.config.poupar.icone as any} 
-                  size={24} 
-                  color={crianca.potes.config.poupar.cor[0]} 
-                />
+              <View style={s.tileIconBox}>
+                <MaterialCommunityIcons name="school-outline" size={30} color="#fff" />
               </View>
-              <Text style={styles.poteLabel}>{crianca.potes.config.poupar.label}</Text>
-              <Text style={styles.poteHalfValue}>{saldoPoupar.toLocaleString()} Kz</Text>
-              <Text style={styles.poteDesc}>{crianca.potes.config.poupar.descricao}</Text>
-            </LinearGradient>
-          )}
+              <Text style={s.tileLabel}>Aprender</Text>
+            </Pressable>
 
-          {crianca.potes.config?.ajudar && (
-            <LinearGradient
-              colors={crianca.potes.config.ajudar.cor as any}
-              style={styles.poteHalf}
+            <Pressable
+              style={({ pressed }) => [s.tile, s.tileBlue, pressed && s.tilePressed]}
+              onPress={() => router.push('/child/(tabs)/tasks' as any)}
             >
-              <View style={styles.poteIconBg}>
-                <Ionicons 
-                  name={crianca.potes.config.ajudar.icone as any} 
-                  size={24} 
-                  color={crianca.potes.config.ajudar.cor[0]} 
-                />
+              <View style={s.tileIconBox}>
+                <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
               </View>
-              <Text style={styles.poteLabel}>{crianca.potes.config.ajudar.label}</Text>
-              <Text style={styles.poteHalfValue}>{saldoAjudar.toLocaleString()} Kz</Text>
-              <Text style={styles.poteDesc}>{crianca.potes.config.ajudar.descricao}</Text>
-            </LinearGradient>
-          )}
-        </View>
-
-        {/* Bónus Alert */}
-        <Animated.View style={styles.bonusBanner}>
-          <View style={styles.bonusIcon}>
-            <Text style={{ fontSize: 24 }}>⏳</Text>
+              <Text style={s.tileLabel}>Tarefas</Text>
+            </Pressable>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bonusTitle}>Bónus Mestre da Poupança!</Text>
-            <Text style={styles.bonusText}>
-              Não gastes do teu Pote Poupar por mais <Text style={{fontWeight: '800'}}>3 dias</Text> e ganha +5% de juros da Kamba!
-            </Text>
+
+          {/* Central sparkle */}
+          <View style={s.sparkleWrapper}>
+            <Pressable style={({ pressed }) => [s.sparkleBtn, pressed && s.sparklePrs]} onPress={handleSparkle}>
+              <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
+            </Pressable>
+          </View>
+
+          {/* Row 2 */}
+          <View style={s.gridRow}>
+            <Pressable
+              style={({ pressed }) => [s.tile, s.tileTeal, pressed && s.tilePressed]}
+              onPress={() => router.push('/child/(tabs)/missions' as any)}
+            >
+              <View style={s.tileIconBox}>
+                <MaterialCommunityIcons name="flag-checkered" size={30} color="#fff" />
+              </View>
+              <Text style={s.tileLabel}>Missões</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [s.tile, s.tileYellow, pressed && s.tilePressed]}
+              onPress={() => router.push('/child/(tabs)/help' as any)}
+            >
+              <View style={s.tileIconBox}>
+                <Ionicons name="heart-outline" size={30} color="#fff" />
+              </View>
+              <Text style={s.tileLabel}>Ajudar</Text>
+            </Pressable>
           </View>
         </Animated.View>
 
-        {/* Tarefas do Dia Section */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Tarefas do Dia ⭐</Text>
-          <Text style={styles.sectionSubtitle}>1/3 aguardando</Text>
-        </View>
-
-        {/* Task Cards */}
-        {tarefas.filter(t => t.status !== 'concluida').map((task, index) => (
-          <View 
-            key={task.id} 
-            style={[
-              styles.taskCard,
-              task.status === 'aguardando_aprovacao' && styles.taskCardAwaiting
-            ]}
-          >
-            <View style={styles.taskIconBg}>
-              <MaterialCommunityIcons 
-                name={task.icone as any || 'clipboard-text'} 
-                size={24} 
-                color="#FF9900" 
-              />
-            </View>
-            <View style={styles.taskContent}>
-              <Text style={styles.taskTitle}>{task.titulo}</Text>
-              <Text style={styles.taskDesc} numberOfLines={2}>{task.descricao}</Text>
-              <View style={styles.taskFooter}>
-                <Text style={styles.taskReward}>Recompensa: <Text style={styles.taskRewardAmt}>{task.recompensa} Kz</Text></Text>
-                {task.status === 'aguardando_aprovacao' && (
-                  <View style={styles.awaitingBadge}>
-                    <MaterialCommunityIcons name="timer-sand" size={14} color="#3498DB" />
-                    <Text style={styles.awaitingText}>Aguardando aprovação</Text>
-                  </View>
-                )}
-              </View>
-            </View>
+        {/* ── Os Meus Potes ── */}
+        <Animated.View entering={FadeInDown.delay(140).duration(450)}>
+          <Text style={s.sectionTitle}>Os Meus Potes 🪙</Text>
+          <View style={s.potesRow}>
+            <PoteJar icon="apps-outline" iconColor="#FF6B6B" label="Geral" value={`${saldoGeral} Kz`} labelColor="#FF6B6B" />
+            <PoteJar icon="wallet-outline" iconColor="#4ADE80" label="Poupar" value={`${saldoPoupar} Kz`} labelColor="#4ADE80" />
+            <PoteJar icon="card-outline" iconColor="#FB923C" label="Gastar" value={`${saldoGastar} Kz`} labelColor="#FB923C" />
+            <PoteJar icon="heart-outline" iconColor="#F472B6" label="Ajudar" value={`${saldoAjudar} Kz`} labelColor="#F472B6" />
           </View>
-        ))}
+        </Animated.View>
 
-        {/* Meta Link (From data) */}
+        {/* ── Tarefas para fazer ── */}
+        <Animated.View entering={FadeInDown.delay(200).duration(450)}>
+          <View style={s.rowBetween}>
+            <Text style={s.sectionTitle}>Tarefas do Dia ⭐</Text>
+            <Pressable onPress={() => router.push('/child/(tabs)/tasks' as any)}>
+              <Text style={s.seeAll}>Ver todas</Text>
+            </Pressable>
+          </View>
+          {paraFazer.length === 0 ? (
+            <View style={s.emptyCard}>
+              <Text style={s.emptyText}>🎉 Todas as tarefas concluídas!</Text>
+            </View>
+          ) : (
+            paraFazer.map(task => (
+              <Pressable
+                key={task.id}
+                style={s.taskCard}
+                onPress={() => router.push({ pathname: '/child/submit-task', params: { taskId: task.id } } as any)}
+              >
+                <View style={s.taskIconBg}>
+                  <MaterialCommunityIcons name={(task.icone as any) || 'clipboard-text'} size={22} color="#FF9900" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.taskTitle}>{task.titulo}</Text>
+                  <Text style={s.taskDesc} numberOfLines={1}>{task.descricao}</Text>
+                </View>
+                <View style={s.rewardBadge}>
+                  <Text style={s.rewardText}>+{task.recompensa} Kz</Text>
+                </View>
+              </Pressable>
+            ))
+          )}
+        </Animated.View>
+
+        {/* ── Missões ── */}
         {missoes.length > 0 && (
-          <LinearGradient
-            colors={['#BF5AF2', '#A335EE']}
-            style={styles.metaCard}
-          >
-            <View style={styles.metaIconBg}>
-              <Text style={{ fontSize: 24 }}>{missoes[0].icone}</Text>
+          <Animated.View entering={FadeInDown.delay(260).duration(450)}>
+            <View style={s.rowBetween}>
+              <Text style={s.sectionTitle}>Missões 🎯</Text>
+              <Pressable onPress={() => router.push('/child/(tabs)/missions' as any)}>
+                <Text style={s.seeAll}>Ver todas</Text>
+              </Pressable>
             </View>
-            <View style={styles.metaContent}>
-              <Text style={styles.metaTitle}>{missoes[0].titulo}</Text>
-              <Text style={styles.metaDesc}>
-                Faltam {(missoes[0].objetivo_valor - missoes[0].progresso_atual).toLocaleString()} Kz
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </LinearGradient>
+            {missoes.slice(0, 2).map(mission => {
+              const pct = Math.min(Math.round((mission.progresso_atual / mission.objetivo_valor) * 100), 100);
+              return (
+                <View key={mission.id} style={[s.missionCard, { backgroundColor: mission.cor?.[0] ?? '#A855F7' }]}>
+                  <View style={s.missionTop}>
+                    <Text style={{ fontSize: 22 }}>{mission.icone}</Text>
+                    <Text style={s.missionTitle}>{mission.titulo}</Text>
+                  </View>
+                  <View style={s.progressTrack}>
+                    <View style={[s.progressFill, { width: `${Math.max(pct, 2)}%` as any }]} />
+                  </View>
+                  <View style={s.rowBetween}>
+                    <Text style={s.missionSub}>
+                      {mission.progresso_atual.toLocaleString()} / {mission.objetivo_valor.toLocaleString()} Kz
+                    </Text>
+                    <Text style={s.missionPct}>{pct}%</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </Animated.View>
         )}
-
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFCE8' },
-  scrollContent: { paddingHorizontal: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  avatarBorder: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: '#FFD700',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  avatar: { width: 64, height: 64, borderRadius: 12 },
-  levelBadge: {
-    position: 'absolute',
-    bottom: -8,
-    right: -8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FFD700',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFCE8',
-  },
-  levelText: { fontSize: 14, fontWeight: '800', color: '#000' },
-  headerText: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#1E293B',
-    marginBottom: 2,
-  },
+const ORANGE = '#FF6E4A';
+const BLUE = '#5B9BD5';
+const TEAL = '#3EC9A7';
+const YELLOW = '#F5C842';
+
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#F7F7F7' },
+  scroll: { paddingHorizontal: 20, paddingBottom: 48 },
+
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  greeting: { fontSize: 22, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
   xpPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#FFE0B2',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#FFF3E0', paddingHorizontal: 10, paddingVertical: 3,
+    borderRadius: 10, marginTop: 4, alignSelf: 'flex-start',
+    borderWidth: 1, borderColor: '#FFE0B2',
   },
-  xpTextStatus: {
-    fontSize: 13,
-    color: '#FF8C00',
-    fontWeight: '800',
-    marginLeft: 4,
+  xpText: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
+  logoutBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center' },
+
+  // Grid
+  grid: { marginBottom: 28, position: 'relative' },
+  gridRow: { flexDirection: 'row', gap: TILE_GAP },
+  tile: {
+    width: TILE_W, height: 100, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: TILE_GAP,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 4,
   },
-  logoutBtn: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginLeft: 'auto',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  tileOrange: { backgroundColor: ORANGE },
+  tileBlue: { backgroundColor: BLUE },
+  tileTeal: { backgroundColor: TEAL },
+  tileYellow: { backgroundColor: YELLOW },
+  tilePressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
+  tileIconBox: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
+  tileLabel: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#FFFFFF' },
+
+  // Sparkle
+  sparkleWrapper: {
+    position: 'absolute',
+    top: 100 - 24,
+    left: (width - 40) / 2 - 24,
+    zIndex: 10,
   },
-  balanceCard: {
-    borderRadius: 28,
-    padding: 24,
-    marginBottom: 24,
-    shadowColor: '#FF6B00',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+  sparkleBtn: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: ORANGE, alignItems: 'center', justifyContent: 'center',
+    shadowColor: ORANGE, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 8, elevation: 8,
+    borderWidth: 3, borderColor: '#FFFFFF',
   },
-  balanceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  balanceLabel: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  balanceValue: { color: '#fff', fontSize: 44, fontWeight: '900' },
-  balanceHint: { color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: '600', marginTop: 4 },
-  sectionHeader: { marginBottom: 16 },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: '#000' },
-  sectionSubtitle: { fontSize: 13, color: '#b5b5b5', fontWeight: '600' },
-  poteFull: {
-    borderRadius: 28,
-    padding: 20,
-    marginBottom: 16,
-  },
-  poteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  poteIconBg: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center' },
-  poteBadge: { backgroundColor: 'rgba(0,0,0,0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  poteBadgeText: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  poteLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '700', marginBottom: 4 },
-  poteValue: { color: '#fff', fontSize: 32, fontWeight: '900' },
-  poteDesc: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', marginTop: 2 },
-  poteRow: { flexDirection: 'row', gap: 16, marginBottom: 16 },
-  poteHalf: { flex: 1, borderRadius: 28, padding: 20 },
-  poteHalfValue: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  sparklePrs: { transform: [{ scale: 0.9 }] },
+
+  // Section
+  sectionTitle: { fontSize: 17, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E', marginBottom: 12 },
+  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  seeAll: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: ORANGE },
+
+  // Potes
+  potesRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28 },
+
+  // Tasks
   taskCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 16,
-    flexDirection: 'row',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginBottom: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+    borderWidth: 1, borderColor: '#FFE0B2',
   },
-  taskCardAwaiting: {
-    borderColor: '#3498DB',
-    backgroundColor: '#F0F9FF',
+  taskIconBg: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#FFF3E0', alignItems: 'center', justifyContent: 'center' },
+  taskTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#1A1A2E' },
+  taskDesc: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: '#9CA3AF', marginTop: 2 },
+  rewardBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
+  rewardText: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
+
+  emptyCard: {
+    backgroundColor: '#F0FDF4', borderRadius: 16, padding: 18, alignItems: 'center',
+    borderWidth: 1, borderColor: '#BBF7D0', marginBottom: 10,
   },
-  taskIconBg: { width: 60, height: 60, borderRadius: 16, backgroundColor: '#FFF5E6', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  taskContent: { flex: 1 },
-  taskTitle: { fontSize: 17, fontWeight: '800', color: '#000', marginBottom: 4 },
-  taskDesc: { fontSize: 13, color: '#b5b5b5', lineHeight: 18, marginBottom: 8 },
-  taskFooter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
-  taskReward: { fontSize: 12, color: '#b5b5b5', fontWeight: '600' },
-  taskRewardAmt: { color: '#FF9900', fontWeight: '800' },
-  awaitingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  awaitingText: { fontSize: 12, fontWeight: '700', color: '#3498DB' },
-  metaCard: {
-    borderRadius: 24,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
+  emptyText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: '#15803D' },
+
+  // Missions
+  missionCard: {
+    borderRadius: 20, padding: 18, marginBottom: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
   },
-  metaIconBg: { width: 50, height: 50, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  metaContent: { flex: 1 },
-  metaTitle: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  metaDesc: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600', marginTop: 2 },
-  quickActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    marginBottom: 28,
-  },
-  actionBtn: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  actionIconBg: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  bonusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#C7D2FE',
-  },
-  bonusIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#E0E7FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  bonusTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#4338CA',
-    marginBottom: 2,
-  },
-  bonusText: {
-    fontSize: 13,
-    color: '#4F46E5',
-    lineHeight: 18,
-  },
+  missionTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  missionTitle: { fontSize: 15, fontFamily: 'Nunito_700Bold', color: '#FFFFFF', flex: 1 },
+  progressTrack: { height: 10, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
+  progressFill: { height: '100%', backgroundColor: '#FFFFFF', borderRadius: 5 },
+  missionSub: { fontSize: 12, fontFamily: 'Nunito_600SemiBold', color: 'rgba(255,255,255,0.85)' },
+  missionPct: { fontSize: 14, fontFamily: 'Nunito_800ExtraBold', color: '#FFFFFF' },
 });

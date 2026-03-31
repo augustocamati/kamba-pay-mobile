@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -8,14 +8,21 @@ import { useApp } from '@/context/AppContext';
 export default function ChildSchoolScreen() {
   const insets = useSafeAreaInsets();
   const { conteudoEducativo } = useApp();
+  const webTop = Platform.OS === 'web' ? 67 : 0;
 
   return (
     <View style={styles.container}>
+      <View style={[styles.topBar, { paddingTop: (insets.top || webTop) + 8 }]}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#FF6B00" />
+        </Pressable>
+        <Text style={styles.topBarTitle}>Escola Kamba Kid 📚</Text>
+        <View style={{ width: 40 }} />
+      </View>
       <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20, paddingBottom: 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Escola Kamba Kid 📚</Text>
         <Text style={styles.subtitle}>Aprenda sobre dinheiro se divertindo!</Text>
 
         {/* Featured Content */}
@@ -93,8 +100,16 @@ export default function ChildSchoolScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFCE8' },
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 12, backgroundColor: '#FFFCE8',
+  },
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center',
+  },
+  topBarTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
   scrollContent: { paddingHorizontal: 20 },
-  title: { fontSize: 26, fontWeight: '900', color: '#1E293B', textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', marginTop: 4, marginBottom: 24 },
   featuredCard: {
     borderRadius: 28,

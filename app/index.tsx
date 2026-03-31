@@ -90,7 +90,7 @@ export default function SplashScreen() {
             <Animated.View entering={FadeInUp.duration(400)} style={styles.selectionButtons}>
               <Pressable
                 style={({ pressed }) => [styles.enterButton, pressed && styles.buttonPressed]}
-                onPress={() => router.push('/login')}
+                onPress={() => router.push('/role-select')}
               >
                 <Ionicons name="log-in-outline" size={20} color="#FF8C00" />
                 <Text style={styles.enterButtonText}>Entrar</Text>

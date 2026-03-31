@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 export default function ChildTasksScreen() {
   const insets = useSafeAreaInsets();
   const { tarefas } = useApp();
+  const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const paraFazer = tarefas.filter(t => t.status === 'pendente');
   const aguardando = tarefas.filter(t => t.status === 'aguardando_aprovacao');
@@ -15,11 +16,18 @@ export default function ChildTasksScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Back button */}
+      <View style={[styles.topBar, { paddingTop: (insets.top || webTop) + 8 }]}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#FF6B00" />
+        </Pressable>
+        <Text style={styles.topBarTitle}>Minhas Tarefas 📋</Text>
+        <View style={{ width: 40 }} />
+      </View>
       <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20, paddingBottom: 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Minhas Tarefas 📋</Text>
         <Text style={styles.subtitle}>Complete e ganhe recompensas!</Text>
 
         {/* Para Fazer */}
@@ -112,8 +120,17 @@ export default function ChildTasksScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFCE8' },
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 12,
+    backgroundColor: '#FFFCE8',
+  },
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center',
+  },
+  topBarTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
   scrollContent: { paddingHorizontal: 20 },
-  title: { fontSize: 26, fontWeight: '900', color: '#1E293B', textAlign: 'center' },
   subtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', marginTop: 4, marginBottom: 24 },
   sectionHeader: { marginBottom: 16 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B' },
