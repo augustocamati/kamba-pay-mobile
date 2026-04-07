@@ -239,7 +239,7 @@ export default function ChildDashboard() {
       <ScrollView
         ref={scrollViewRef}
         scrollEnabled={!showTour}
-        contentContainerStyle={[s.scroll, { paddingTop: (insets.top || webTop) + 16 }]}
+        contentContainerStyle={[s.scroll, { flexGrow: 1, paddingTop: (insets.top || webTop) + 16 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
@@ -259,92 +259,95 @@ export default function ChildDashboard() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* ── Menu Row ── */}
-        <Animated.View entering={FadeInDown.delay(80).duration(450)} style={[s.grid, { marginBottom: 40 }]}>
-          <View style={{ zIndex: 1 }}>
-            {/* Row 1 */}
-            <View style={s.gridRow}>
-              <View ref={menuAprenderRef} collapsable={false}>
-                <Pressable
-                  style={({ pressed }) => [s.tile, s.tileOrange, pressed && s.tilePressed]}
-                  onPress={() => router.push('/child/(tabs)/school' as any)}
-                >
-                  <View style={s.tileIconBox}>
-                    <MaterialCommunityIcons name="school-outline" size={30} color="#fff" />
-                  </View>
-                  <Text style={s.tileLabel}>Aprender</Text>
+        {/* Content Wrapper for Vertical Centering */}
+        <View style={{ flex: 1, justifyContent: 'center', paddingBottom: 40 }}>
+          {/* ── Menu Row ── */}
+          <Animated.View entering={FadeInDown.delay(80).duration(450)} style={[s.grid, { marginBottom: 40 }]}>
+            <View style={{ zIndex: 1 }}>
+              {/* Row 1 */}
+              <View style={s.gridRow}>
+                <View ref={menuAprenderRef} collapsable={false}>
+                  <Pressable
+                    style={({ pressed }) => [s.tile, s.tileOrange, pressed && s.tilePressed]}
+                    onPress={() => router.push('/child/(tabs)/school' as any)}
+                  >
+                    <View style={s.tileIconBox}>
+                      <MaterialCommunityIcons name="school-outline" size={30} color="#fff" />
+                    </View>
+                    <Text style={s.tileLabel}>Aprender</Text>
+                  </Pressable>
+                </View>
+
+                <View ref={menuTarefasRef} collapsable={false}>
+                  <Pressable
+                    style={({ pressed }) => [s.tile, s.tileBlue, pressed && s.tilePressed]}
+                    onPress={() => router.push('/child/(tabs)/tasks' as any)}
+                  >
+                    <View style={s.tileIconBox}>
+                      <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
+                    </View>
+                    <Text style={s.tileLabel}>Tarefas</Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Central sparkle */}
+              <View style={s.sparkleWrapper}>
+                <Pressable style={({ pressed }) => [s.sparkleBtn, pressed && s.sparklePrs]} onPress={handleSparkle}>
+                  <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
                 </Pressable>
               </View>
 
-              <View ref={menuTarefasRef} collapsable={false}>
-                <Pressable
-                  style={({ pressed }) => [s.tile, s.tileBlue, pressed && s.tilePressed]}
-                  onPress={() => router.push('/child/(tabs)/tasks' as any)}
-                >
-                  <View style={s.tileIconBox}>
-                    <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
-                  </View>
-                  <Text style={s.tileLabel}>Tarefas</Text>
-                </Pressable>
+              {/* Row 2 */}
+              <View style={s.gridRow}>
+                <View ref={menuMissoesRef} collapsable={false}>
+                  <Pressable
+                    style={({ pressed }) => [s.tile, s.tileTeal, pressed && s.tilePressed]}
+                    onPress={() => router.push('/child/(tabs)/missions' as any)}
+                  >
+                    <View style={s.tileIconBox}>
+                      <MaterialCommunityIcons name="flag-checkered" size={30} color="#fff" />
+                    </View>
+                    <Text style={s.tileLabel}>Missões</Text>
+                  </Pressable>
+                </View>
+
+                <View ref={menuAjudarRef} collapsable={false}>
+                  <Pressable
+                    style={({ pressed }) => [s.tile, s.tileYellow, pressed && s.tilePressed]}
+                    onPress={() => router.push('/child/(tabs)/help' as any)}
+                  >
+                    <View style={s.tileIconBox}>
+                      <Ionicons name="heart-outline" size={30} color="#fff" />
+                    </View>
+                    <Text style={s.tileLabel}>Ajudar</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
+          </Animated.View>
 
-            {/* Central sparkle */}
-            <View style={s.sparkleWrapper}>
-              <Pressable style={({ pressed }) => [s.sparkleBtn, pressed && s.sparklePrs]} onPress={handleSparkle}>
-                <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
-              </Pressable>
-            </View>
-
-            {/* Row 2 */}
-            <View style={s.gridRow}>
-              <View ref={menuMissoesRef} collapsable={false}>
-                <Pressable
-                  style={({ pressed }) => [s.tile, s.tileTeal, pressed && s.tilePressed]}
-                  onPress={() => router.push('/child/(tabs)/missions' as any)}
-                >
-                  <View style={s.tileIconBox}>
-                    <MaterialCommunityIcons name="flag-checkered" size={30} color="#fff" />
-                  </View>
-                  <Text style={s.tileLabel}>Missões</Text>
-                </Pressable>
-              </View>
-
-              <View ref={menuAjudarRef} collapsable={false}>
-                <Pressable
-                  style={({ pressed }) => [s.tile, s.tileYellow, pressed && s.tilePressed]}
-                  onPress={() => router.push('/child/(tabs)/help' as any)}
-                >
-                  <View style={s.tileIconBox}>
-                    <Ionicons name="heart-outline" size={30} color="#fff" />
-                  </View>
-                  <Text style={s.tileLabel}>Ajudar</Text>
-                </Pressable>
+          {/* ── Os Meus Potes ── */}
+          <Animated.View entering={FadeInDown.delay(140).duration(450)}>
+            <View>
+              <Text style={s.sectionTitle}>Os Meus Potes 🪙</Text>
+              <View style={s.potesRow}>
+                <View ref={poteGeralRef} collapsable={false} style={{ flex: 1 }}>
+                  <PoteJar icon="apps-outline" iconColor="#FF6B6B" label="Geral" value={`${saldoGeral} Kz`} labelColor="#FF6B6B" />
+                </View>
+                <View ref={potePouparRef} collapsable={false} style={{ flex: 1 }}>
+                  <PoteJar icon="wallet-outline" iconColor="#4ADE80" label="Poupar" value={`${saldoPoupar} Kz`} labelColor="#4ADE80" />
+                </View>
+                <View ref={poteGastarRef} collapsable={false} style={{ flex: 1 }}>
+                  <PoteJar icon="card-outline" iconColor="#FB923C" label="Gastar" value={`${saldoGastar} Kz`} labelColor="#FB923C" />
+                </View>
+                <View ref={poteAjudarRef} collapsable={false} style={{ flex: 1 }}>
+                  <PoteJar icon="heart-outline" iconColor="#F472B6" label="Ajudar" value={`${saldoAjudar} Kz`} labelColor="#F472B6" />
+                </View>
               </View>
             </View>
-          </View>
-        </Animated.View>
-
-        {/* ── Os Meus Potes ── */}
-        <Animated.View entering={FadeInDown.delay(140).duration(450)}>
-          <View>
-            <Text style={s.sectionTitle}>Os Meus Potes 🪙</Text>
-            <View style={s.potesRow}>
-              <View ref={poteGeralRef} collapsable={false} style={{ flex: 1 }}>
-                <PoteJar icon="apps-outline" iconColor="#FF6B6B" label="Geral" value={`${saldoGeral} Kz`} labelColor="#FF6B6B" />
-              </View>
-              <View ref={potePouparRef} collapsable={false} style={{ flex: 1 }}>
-                <PoteJar icon="wallet-outline" iconColor="#4ADE80" label="Poupar" value={`${saldoPoupar} Kz`} labelColor="#4ADE80" />
-              </View>
-              <View ref={poteGastarRef} collapsable={false} style={{ flex: 1 }}>
-                <PoteJar icon="card-outline" iconColor="#FB923C" label="Gastar" value={`${saldoGastar} Kz`} labelColor="#FB923C" />
-              </View>
-              <View ref={poteAjudarRef} collapsable={false} style={{ flex: 1 }}>
-                <PoteJar icon="heart-outline" iconColor="#F472B6" label="Ajudar" value={`${saldoAjudar} Kz`} labelColor="#F472B6" />
-              </View>
-            </View>
-          </View>
-        </Animated.View>
+          </Animated.View>
+        </View>
       </ScrollView>
 
       {/* Onboarding Tour Overlay */}
