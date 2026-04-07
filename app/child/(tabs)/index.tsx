@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ChildOnboarding from '@/components/ChildOnboarding';
+import SpotlightTour, { TourStep } from '@/components/SpotlightTour';
 
 const { width, height } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -92,10 +95,110 @@ const jar = StyleSheet.create({
 export default function ChildDashboard() {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
-  const { crianca, tarefas, missoes } = useApp();
+  const { crianca } = useApp();
   const [stars, setStars] = useState<{ id: number; x: number; y: number; delay: number; size: number; color: string }[]>([]);
   const starKey = useRef(0);
   const sparkleRef = useRef<View>(null);
+
+  const [showSlides, setShowSlides] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [layouts, setLayouts] = useState<Record<string, {x:number, y:number, width:number, height:number}>>({});
+
+  const headerRef = useRef<View>(null);
+  const menuAprenderRef = useRef<View>(null);
+  const menuTarefasRef = useRef<View>(null);
+  const menuMissoesRef = useRef<View>(null);
+  const menuAjudarRef = useRef<View>(null);
+  const poteGeralRef = useRef<View>(null);
+  const potePouparRef = useRef<View>(null);
+  const poteGastarRef = useRef<View>(null);
+  const poteAjudarRef = useRef<View>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const TOUR_STEPS: TourStep[] = [
+    { name: 'header', title: 'O teu Perfil', text: 'Aqui podes ver o teu Nível e consultar o teu perfil.' },
+    { name: 'menuAprender', title: 'Aprender', text: 'Temos vídeo aulas e quizzes para aprenderes a gerir bem o dinheiro!' },
+    { name: 'menuTarefas', title: 'Aba das Tarefas', text: 'Os teus pais enviam-te tarefas aqui. Cumpra-as para ganhares o teu dinheiro.' },
+    { name: 'menuMissoes', title: 'Aba de Missões', text: 'Usa as Missões para juntares dinheiro para algo que queres muito!' },
+    { name: 'menuAjudar', title: 'Causas para Ajudar', text: 'Aqui encontras causas para as quais podes doar e ajudar o mundo.' },
+    { name: 'poteGeral', title: 'Saldo Geral', text: 'Este Pote mostra a soma de todo o teu dinheiro.' },
+    { name: 'potePoupar', title: 'Poupar', text: 'Tudo o que ganhas nas tarefas de Poupança vem parar a este Pote para o futuro.' },
+    { name: 'poteGastar', title: 'Gastar', text: 'Uau! O teu dinheiro para usares livremente no teu dia-a-dia está aqui.' },
+    { name: 'poteAjudar', title: 'Ajudar os Outros', text: 'Aqui fica a carteira reservada para doares a quem precisa.' },
+  ];
+
+  useEffect(() => {
+    // INFO: Limpando a chave forçadamente a pedido do usuário
+    AsyncStorage.removeItem('kamba_child_onboarding_slides');
+    AsyncStorage.removeItem('kamba_child_onboarding_tour').then(() => {
+      AsyncStorage.getItem('kamba_child_onboarding_slides').then((val) => {
+        if (!val) {
+          setShowSlides(true);
+        } else {
+          AsyncStorage.getItem('kamba_child_onboarding_tour').then((valTour) => {
+            if (!valTour) setShowTour(true);
+          });
+        }
+      });
+    });
+  }, []);
+
+  const measureRef = (name: string, ref: React.RefObject<View | null>) => {
+    return new Promise<void>((resolve) => {
+      if (ref.current) {
+        ref.current.measure((x, y, w, h, pX, pY) => {
+          setLayouts(prev => ({ ...prev, [name]: { x: pX, y: pY, width: w, height: h } }));
+          resolve();
+        });
+      } else {
+        resolve();
+      }
+    });
+  };
+
+  const updateLayouts = async () => {
+    await measureRef('header', headerRef);
+    await measureRef('menuAprender', menuAprenderRef);
+    await measureRef('menuTarefas', menuTarefasRef);
+    await measureRef('menuMissoes', menuMissoesRef);
+    await measureRef('menuAjudar', menuAjudarRef);
+    await measureRef('poteGeral', poteGeralRef);
+    await measureRef('potePoupar', potePouparRef);
+    await measureRef('poteGastar', poteGastarRef);
+    await measureRef('poteAjudar', poteAjudarRef);
+  };
+
+  useEffect(() => {
+    if (showTour) {
+      if (currentStep >= 5) {
+        scrollViewRef.current?.scrollTo({ y: 180, animated: true });
+      } else {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }
+      setTimeout(updateLayouts, 500);
+    }
+  }, [showTour, currentStep]);
+
+  const handleFinishSlides = async () => {
+    await AsyncStorage.setItem('kamba_child_onboarding_slides', 'true');
+    setShowSlides(false);
+    setShowTour(true);
+  };
+
+  const handleFinishTour = async () => {
+    await AsyncStorage.setItem('kamba_child_onboarding_tour', 'true');
+    setShowTour(false);
+  };
+
+  if (showSlides) {
+    return (
+      <ChildOnboarding
+        childName={user?.name || crianca.nome}
+        onFinish={handleFinishSlides}
+      />
+    );
+  }
 
   const name = user?.name || crianca.nome;
   const saldoGeral = crianca.potes.total;
@@ -103,8 +206,6 @@ export default function ChildDashboard() {
   const saldoGastar = crianca.potes.saldo_gastar;
   const saldoAjudar = crianca.potes.saldo_ajudar;
   const webTop = Platform.OS === 'web' ? 67 : 0;
-
-  const paraFazer = tarefas.filter(t => t.status === 'pendente').slice(0, 3);
 
   const handleSparkle = () => {
     const COLORS = ['#FFD700', '#FF8C00', '#FF6B6B', '#A78BFA', '#34D399', '#60A5FA', '#F9A8D4', '#FCD34D', '#86EFAC'];
@@ -136,12 +237,14 @@ export default function ChildDashboard() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
+        scrollEnabled={!showTour}
         contentContainerStyle={[s.scroll, { paddingTop: (insets.top || webTop) + 16 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
         <Animated.View entering={FadeInDown.duration(400)} style={s.header}>
-          <View>
+          <View ref={headerRef} collapsable={false}>
             <Text style={s.greeting}>Olá, {name}! 👋</Text>
             <View style={s.xpPill}>
               <Ionicons name="star" size={13} color="#FF8C00" />
@@ -156,139 +259,104 @@ export default function ChildDashboard() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* ── 2×2 menu grid ── */}
-        <Animated.View entering={FadeInDown.delay(80).duration(450)} style={s.grid}>
-          {/* Row 1 */}
-          <View style={s.gridRow}>
-            <Pressable
-              style={({ pressed }) => [s.tile, s.tileOrange, pressed && s.tilePressed]}
-              onPress={() => router.push('/child/(tabs)/school' as any)}
-            >
-              <View style={s.tileIconBox}>
-                <MaterialCommunityIcons name="school-outline" size={30} color="#fff" />
+        {/* ── Menu Row ── */}
+        <Animated.View entering={FadeInDown.delay(80).duration(450)} style={[s.grid, { marginBottom: 40 }]}>
+          <View style={{ zIndex: 1 }}>
+            {/* Row 1 */}
+            <View style={s.gridRow}>
+              <View ref={menuAprenderRef} collapsable={false}>
+                <Pressable
+                  style={({ pressed }) => [s.tile, s.tileOrange, pressed && s.tilePressed]}
+                  onPress={() => router.push('/child/(tabs)/school' as any)}
+                >
+                  <View style={s.tileIconBox}>
+                    <MaterialCommunityIcons name="school-outline" size={30} color="#fff" />
+                  </View>
+                  <Text style={s.tileLabel}>Aprender</Text>
+                </Pressable>
               </View>
-              <Text style={s.tileLabel}>Aprender</Text>
-            </Pressable>
 
-            <Pressable
-              style={({ pressed }) => [s.tile, s.tileBlue, pressed && s.tilePressed]}
-              onPress={() => router.push('/child/(tabs)/tasks' as any)}
-            >
-              <View style={s.tileIconBox}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
+              <View ref={menuTarefasRef} collapsable={false}>
+                <Pressable
+                  style={({ pressed }) => [s.tile, s.tileBlue, pressed && s.tilePressed]}
+                  onPress={() => router.push('/child/(tabs)/tasks' as any)}
+                >
+                  <View style={s.tileIconBox}>
+                    <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
+                  </View>
+                  <Text style={s.tileLabel}>Tarefas</Text>
+                </Pressable>
               </View>
-              <Text style={s.tileLabel}>Tarefas</Text>
-            </Pressable>
-          </View>
+            </View>
 
-          {/* Central sparkle */}
-          <View style={s.sparkleWrapper}>
-            <Pressable style={({ pressed }) => [s.sparkleBtn, pressed && s.sparklePrs]} onPress={handleSparkle}>
-              <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
-            </Pressable>
-          </View>
+            {/* Central sparkle */}
+            <View style={s.sparkleWrapper}>
+              <Pressable style={({ pressed }) => [s.sparkleBtn, pressed && s.sparklePrs]} onPress={handleSparkle}>
+                <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
+              </Pressable>
+            </View>
 
-          {/* Row 2 */}
-          <View style={s.gridRow}>
-            <Pressable
-              style={({ pressed }) => [s.tile, s.tileTeal, pressed && s.tilePressed]}
-              onPress={() => router.push('/child/(tabs)/missions' as any)}
-            >
-              <View style={s.tileIconBox}>
-                <MaterialCommunityIcons name="flag-checkered" size={30} color="#fff" />
+            {/* Row 2 */}
+            <View style={s.gridRow}>
+              <View ref={menuMissoesRef} collapsable={false}>
+                <Pressable
+                  style={({ pressed }) => [s.tile, s.tileTeal, pressed && s.tilePressed]}
+                  onPress={() => router.push('/child/(tabs)/missions' as any)}
+                >
+                  <View style={s.tileIconBox}>
+                    <MaterialCommunityIcons name="flag-checkered" size={30} color="#fff" />
+                  </View>
+                  <Text style={s.tileLabel}>Missões</Text>
+                </Pressable>
               </View>
-              <Text style={s.tileLabel}>Missões</Text>
-            </Pressable>
 
-            <Pressable
-              style={({ pressed }) => [s.tile, s.tileYellow, pressed && s.tilePressed]}
-              onPress={() => router.push('/child/(tabs)/help' as any)}
-            >
-              <View style={s.tileIconBox}>
-                <Ionicons name="heart-outline" size={30} color="#fff" />
+              <View ref={menuAjudarRef} collapsable={false}>
+                <Pressable
+                  style={({ pressed }) => [s.tile, s.tileYellow, pressed && s.tilePressed]}
+                  onPress={() => router.push('/child/(tabs)/help' as any)}
+                >
+                  <View style={s.tileIconBox}>
+                    <Ionicons name="heart-outline" size={30} color="#fff" />
+                  </View>
+                  <Text style={s.tileLabel}>Ajudar</Text>
+                </Pressable>
               </View>
-              <Text style={s.tileLabel}>Ajudar</Text>
-            </Pressable>
+            </View>
           </View>
         </Animated.View>
 
         {/* ── Os Meus Potes ── */}
         <Animated.View entering={FadeInDown.delay(140).duration(450)}>
-          <Text style={s.sectionTitle}>Os Meus Potes 🪙</Text>
-          <View style={s.potesRow}>
-            <PoteJar icon="apps-outline" iconColor="#FF6B6B" label="Geral" value={`${saldoGeral} Kz`} labelColor="#FF6B6B" />
-            <PoteJar icon="wallet-outline" iconColor="#4ADE80" label="Poupar" value={`${saldoPoupar} Kz`} labelColor="#4ADE80" />
-            <PoteJar icon="card-outline" iconColor="#FB923C" label="Gastar" value={`${saldoGastar} Kz`} labelColor="#FB923C" />
-            <PoteJar icon="heart-outline" iconColor="#F472B6" label="Ajudar" value={`${saldoAjudar} Kz`} labelColor="#F472B6" />
+          <View>
+            <Text style={s.sectionTitle}>Os Meus Potes 🪙</Text>
+            <View style={s.potesRow}>
+              <View ref={poteGeralRef} collapsable={false} style={{ flex: 1 }}>
+                <PoteJar icon="apps-outline" iconColor="#FF6B6B" label="Geral" value={`${saldoGeral} Kz`} labelColor="#FF6B6B" />
+              </View>
+              <View ref={potePouparRef} collapsable={false} style={{ flex: 1 }}>
+                <PoteJar icon="wallet-outline" iconColor="#4ADE80" label="Poupar" value={`${saldoPoupar} Kz`} labelColor="#4ADE80" />
+              </View>
+              <View ref={poteGastarRef} collapsable={false} style={{ flex: 1 }}>
+                <PoteJar icon="card-outline" iconColor="#FB923C" label="Gastar" value={`${saldoGastar} Kz`} labelColor="#FB923C" />
+              </View>
+              <View ref={poteAjudarRef} collapsable={false} style={{ flex: 1 }}>
+                <PoteJar icon="heart-outline" iconColor="#F472B6" label="Ajudar" value={`${saldoAjudar} Kz`} labelColor="#F472B6" />
+              </View>
+            </View>
           </View>
         </Animated.View>
-
-        {/* ── Tarefas para fazer ── */}
-        <Animated.View entering={FadeInDown.delay(200).duration(450)}>
-          <View style={s.rowBetween}>
-            <Text style={s.sectionTitle}>Tarefas do Dia ⭐</Text>
-            <Pressable onPress={() => router.push('/child/(tabs)/tasks' as any)}>
-              <Text style={s.seeAll}>Ver todas</Text>
-            </Pressable>
-          </View>
-          {paraFazer.length === 0 ? (
-            <View style={s.emptyCard}>
-              <Text style={s.emptyText}>🎉 Todas as tarefas concluídas!</Text>
-            </View>
-          ) : (
-            paraFazer.map(task => (
-              <Pressable
-                key={task.id}
-                style={s.taskCard}
-                onPress={() => router.push({ pathname: '/child/submit-task', params: { taskId: task.id } } as any)}
-              >
-                <View style={s.taskIconBg}>
-                  <MaterialCommunityIcons name={(task.icone as any) || 'clipboard-text'} size={22} color="#FF9900" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.taskTitle}>{task.titulo}</Text>
-                  <Text style={s.taskDesc} numberOfLines={1}>{task.descricao}</Text>
-                </View>
-                <View style={s.rewardBadge}>
-                  <Text style={s.rewardText}>+{task.recompensa} Kz</Text>
-                </View>
-              </Pressable>
-            ))
-          )}
-        </Animated.View>
-
-        {/* ── Missões ── */}
-        {missoes.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(260).duration(450)}>
-            <View style={s.rowBetween}>
-              <Text style={s.sectionTitle}>Missões 🎯</Text>
-              <Pressable onPress={() => router.push('/child/(tabs)/missions' as any)}>
-                <Text style={s.seeAll}>Ver todas</Text>
-              </Pressable>
-            </View>
-            {missoes.slice(0, 2).map(mission => {
-              const pct = Math.min(Math.round((mission.progresso_atual / mission.objetivo_valor) * 100), 100);
-              return (
-                <View key={mission.id} style={[s.missionCard, { backgroundColor: mission.cor?.[0] ?? '#A855F7' }]}>
-                  <View style={s.missionTop}>
-                    <Text style={{ fontSize: 22 }}>{mission.icone}</Text>
-                    <Text style={s.missionTitle}>{mission.titulo}</Text>
-                  </View>
-                  <View style={s.progressTrack}>
-                    <View style={[s.progressFill, { width: `${Math.max(pct, 2)}%` as any }]} />
-                  </View>
-                  <View style={s.rowBetween}>
-                    <Text style={s.missionSub}>
-                      {mission.progresso_atual.toLocaleString()} / {mission.objetivo_valor.toLocaleString()} Kz
-                    </Text>
-                    <Text style={s.missionPct}>{pct}%</Text>
-                  </View>
-                </View>
-              );
-            })}
-          </Animated.View>
-        )}
       </ScrollView>
+
+      {/* Onboarding Tour Overlay */}
+      <SpotlightTour
+        visible={showTour}
+        currentStep={currentStep}
+        steps={TOUR_STEPS}
+        layouts={layouts}
+        onNext={() => setCurrentStep(prev => prev + 1)}
+        onPrev={() => setCurrentStep(prev => prev - 1)}
+        onFinish={handleFinishTour}
+      />
     </View>
   );
 }
