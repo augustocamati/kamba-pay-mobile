@@ -2,7 +2,7 @@
 
 # dependencies
 node_modules/
-
+Kamba_Kid_Pay-backend/
 # Expo
 .expo/
 dist/
