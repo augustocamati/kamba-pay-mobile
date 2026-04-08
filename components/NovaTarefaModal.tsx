@@ -15,8 +15,9 @@ interface NovaTarefaModalProps {
   visible: boolean;
   onClose: () => void;
   onCriar: () => void;
-  form: { titulo: string; descricao: string; recompensa: string; icone: string; categoria: string };
+  form: { titulo: string; descricao: string; recompensa: string; icone: string; categoria: string; crianca_id: string };
   setForm: (f: any) => void;
+  dependentes: any[];
 }
 
 const ICONES = [
@@ -34,7 +35,17 @@ const CATEGORIAS = [
   { value: 'saude', label: 'Saúde' },
 ];
 
-export function NovaTarefaModal({ visible, onClose, onCriar, form, setForm }: NovaTarefaModalProps) {
+export function NovaTarefaModal({ visible, onClose, onCriar, form, setForm, dependentes }: NovaTarefaModalProps) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handlePressCriar = async () => {
+    setIsSubmitting(true);
+    try {
+      await onCriar();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
@@ -47,6 +58,25 @@ export function NovaTarefaModal({ visible, onClose, onCriar, form, setForm }: No
                 <Ionicons name="close" size={22} color="#64748b" />
               </TouchableOpacity>
             </View>
+
+            {/* Selecionar Criança */}
+            <Text style={styles.fieldLabel}>Atribuir a</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+              {dependentes.map((dep) => (
+                <TouchableOpacity
+                  key={dep.id}
+                  onPress={() => setForm({ ...form, crianca_id: dep.id })}
+                  style={[
+                    styles.chipBtn,
+                    form.crianca_id === dep.id && styles.chipBtnActive,
+                  ]}
+                >
+                  <Text style={[styles.chipText, form.crianca_id === dep.id && styles.chipTextActive]}>
+                    {dep.nome}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
             {/* Título */}
             <Text style={styles.fieldLabel}>Título</Text>
@@ -120,9 +150,13 @@ export function NovaTarefaModal({ visible, onClose, onCriar, form, setForm }: No
             </View>
 
             {/* Botão */}
-            <TouchableOpacity onPress={onCriar} style={styles.primaryBtn}>
+            <TouchableOpacity 
+              onPress={handlePressCriar} 
+              style={[styles.primaryBtn, isSubmitting && { opacity: 0.7 }]}
+              disabled={isSubmitting}
+            >
               <LinearGradient colors={['#3b82f6', '#7c3aed']} style={styles.gradientBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                <Text style={styles.primaryBtnText}>Criar Tarefa</Text>
+                <Text style={styles.primaryBtnText}>{isSubmitting ? 'A criar...' : 'Criar Tarefa'}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </ScrollView>

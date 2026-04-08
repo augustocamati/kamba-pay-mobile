@@ -11,18 +11,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { parentService } from '@/lib/api';
+import * as Haptics from 'expo-haptics';
 
 interface AdicionarDependenteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdicionar: (dados: {
-    nome: string;
-    idade: string;
-    username: string;
-    pin: string;
-    potePoupar: number;
-    poteAjudar: number;
-  }) => void;
+  onAdicionar: () => void;
 }
 
 const IDADES = [6, 7, 8, 9, 10, 11, 12];
@@ -37,11 +32,14 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
   const [poteAjudar, setPoteAjudar] = useState(10);
   const [mostrarPin, setMostrarPin] = useState(false);
   const [mostrarConfirmarPin, setMostrarConfirmarPin] = useState(false);
+  const [provincia, setProvincia] = useState('Luanda');
+  const [municipio, setMunicipio] = useState('Belas');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const poteGastar = 100 - potePoupar - poteAjudar;
 
-  const handleSubmit = () => {
-    if (!nome || !idade || !username || !pin || !confirmarPin) {
+  const handleSubmit = async () => {
+    if (!nome || !idade || !username || !pin || !confirmarPin || !provincia || !municipio) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios!');
       return;
     }
@@ -54,20 +52,45 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
       return;
     }
 
-    onAdicionar({ nome, idade, username, pin, potePoupar, poteAjudar });
+    setIsSubmitting(true);
+    try {
+      await parentService.addChild({
+        nome,
+        idade: parseInt(idade, 10),
+        username: username.trim(),
+        pin: pin.trim(),
+        provincia,
+        municipio,
+        distribuicao_potes: {
+          gastar_pct: poteGastar,
+          poupar_pct: potePoupar,
+          ajudar_pct: poteAjudar
+        }
+      });
 
-    // Reset
-    setNome('');
-    setIdade('');
-    setUsername('');
-    setPin('');
-    setConfirmarPin('');
-    setPotePoupar(30);
-    setPoteAjudar(10);
-    onOpenChange(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      onAdicionar();
+
+      // Reset
+      setNome('');
+      setIdade('');
+      setUsername('');
+      setPin('');
+      setConfirmarPin('');
+      setProvincia('Luanda');
+      setMunicipio('Belas');
+      setPotePoupar(30);
+      setPoteAjudar(10);
+      onOpenChange(false);
+    } catch (err: any) {
+      console.error(err);
+      const msg = err.response?.data?.mensagem || 'Erro ao adicionar dependente';
+      Alert.alert('Erro', msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Sliders manuais — botões +/- em vez de slider nativo
   const adjustPoupar = (delta: number) => {
     const next = Math.max(0, Math.min(90, potePoupar + delta));
     const remaining = 100 - next;
@@ -101,12 +124,11 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
               </TouchableOpacity>
             </View>
 
-            {/* ── Informações da Criança ── */}
+            {/* Inforrmações da Criança */}
             <View style={[styles.section, { borderColor: '#fb923c' }]}>
               <LinearGradient colors={['#fff7ed', '#fefce8']} style={styles.sectionGradient}>
                 <Text style={styles.sectionTitle}>👶  Informações da Criança</Text>
 
-                {/* Nome */}
                 <Text style={styles.fieldLabel}>Nome completo *</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="person-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
@@ -119,7 +141,6 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                   />
                 </View>
 
-                {/* Username */}
                 <Text style={styles.fieldLabel}>Nome de usuário *</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="at-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
@@ -134,7 +155,6 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                 </View>
                 <Text style={styles.hint}>Será usado para fazer login no app</Text>
 
-                {/* Idade — chips */}
                 <Text style={[styles.fieldLabel, { marginTop: 8 }]}>Idade *</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
                   {IDADES.map((ano) => (
@@ -149,15 +169,38 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
+
+                <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Província *</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="map-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Luanda"
+                    placeholderTextColor="#94a3b8"
+                    value={provincia}
+                    onChangeText={setProvincia}
+                  />
+                </View>
+
+                <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Município *</Text>
+                <View style={styles.inputRow}>
+                  <Ionicons name="business-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Belas"
+                    placeholderTextColor="#94a3b8"
+                    value={municipio}
+                    onChangeText={setMunicipio}
+                  />
+                </View>
               </LinearGradient>
             </View>
 
-            {/* ── Segurança ── */}
+            {/* Segurança */}
             <View style={[styles.section, { borderColor: '#818cf8' }]}>
               <LinearGradient colors={['#eef2ff', '#ede9fe']} style={styles.sectionGradient}>
                 <Text style={styles.sectionTitle}>🔒  Segurança</Text>
 
-                {/* PIN */}
                 <Text style={styles.fieldLabel}>Criar PIN/Senha *</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
@@ -173,9 +216,8 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                     <Ionicons name={mostrarPin ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94a3b8" />
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.hint}>Crie uma senha simples e fácil de lembrar para a criança</Text>
+                <Text style={styles.hint}>Crie uma senha simples para a criança</Text>
 
-                {/* Confirmar PIN */}
                 <Text style={[styles.fieldLabel, { marginTop: 8 }]}>Confirmar PIN/Senha *</Text>
                 <View style={styles.inputRow}>
                   <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
@@ -194,13 +236,12 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
               </LinearGradient>
             </View>
 
-            {/* ── Configuração dos Potes ── */}
+            {/* Configuração dos Potes */}
             <View style={[styles.section, { borderColor: '#c084fc' }]}>
               <LinearGradient colors={['#fdf4ff', '#fdf2f8']} style={styles.sectionGradient}>
                 <Text style={styles.sectionTitle}>💰  Configuração dos Potes</Text>
-                <Text style={styles.hint}>Defina como o dinheiro será distribuído automaticamente</Text>
+                <Text style={styles.hint}>Defina como o dinheiro será distribuído</Text>
 
-                {/* Poupar */}
                 <View style={styles.poteRow}>
                   <Text style={styles.poteName}>💚 Poupar</Text>
                   <View style={styles.poteControls}>
@@ -217,7 +258,6 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                   <View style={[styles.progressFill, { width: `${potePoupar}%`, backgroundColor: '#4ade80' }]} />
                 </View>
 
-                {/* Ajudar */}
                 <View style={[styles.poteRow, { marginTop: 14 }]}>
                   <Text style={styles.poteName}>❤️ Ajudar</Text>
                   <View style={styles.poteControls}>
@@ -234,7 +274,6 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                   <View style={[styles.progressFill, { width: `${poteAjudar}%`, backgroundColor: '#f87171' }]} />
                 </View>
 
-                {/* Gastar (calculado) */}
                 <View style={[styles.poteRow, { marginTop: 14 }]}>
                   <Text style={styles.poteName}>🧡 Gastar</Text>
                   <Text style={[styles.potePct, { color: '#ea580c' }]}>{poteGastar}%</Text>
@@ -242,9 +281,7 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                 <View style={styles.progressTrack}>
                   <View style={[styles.progressFill, { width: `${poteGastar}%`, backgroundColor: '#fb923c' }]} />
                 </View>
-                <Text style={[styles.hint, { marginTop: 4 }]}>Calculado automaticamente</Text>
 
-                {/* Barra de distribuição visual */}
                 <View style={styles.distBar}>
                   <View style={[styles.distSegment, { flex: poteGastar, backgroundColor: '#fb923c' }]}>
                     {poteGastar > 15 && <Text style={styles.distText}>{poteGastar}%</Text>}
@@ -259,16 +296,17 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
               </LinearGradient>
             </View>
 
-            {/* ── Botões ── */}
+            {/* Botões */}
             <View style={styles.footer}>
-              <TouchableOpacity
-                onPress={() => onOpenChange(false)}
-                style={styles.cancelBtn}
-              >
+              <TouchableOpacity onPress={() => onOpenChange(false)} style={styles.cancelBtn}>
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={handleSubmit} style={{ flex: 1 }}>
+              <TouchableOpacity
+                onPress={handleSubmit}
+                style={[{ flex: 1 }, isSubmitting && { opacity: 0.6 }]}
+                disabled={isSubmitting}
+              >
                 <LinearGradient
                   colors={['#f97316', '#ea580c']}
                   style={styles.submitBtn}
@@ -276,7 +314,9 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                   end={{ x: 1, y: 0 }}
                 >
                   <Ionicons name="person-add" size={18} color="#fff" style={{ marginRight: 8 }} />
-                  <Text style={styles.submitBtnText}>Adicionar Dependente</Text>
+                  <Text style={styles.submitBtnText}>
+                    {isSubmitting ? 'Adicionando...' : 'Adicionar Dependente'}
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -433,7 +473,7 @@ const styles = StyleSheet.create({
   distBar: {
     flexDirection: 'row',
     height: 52,
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
     marginTop: 14,
   },

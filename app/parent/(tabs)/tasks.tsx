@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import type { StatusTarefa } from '../../../types';
 
 export default function ParentTasksScreen() {
   const insets = useSafeAreaInsets();
-  const { tarefas, crianca, criarTarefa } = useApp();
+  const { tarefas, crianca, criarTarefa, dependentes } = useApp();
   const [novaTarefaModal, setNovaTarefaModal] = useState(false);
   const [formTarefa, setFormTarefa] = useState({
     titulo: '',
@@ -17,7 +17,14 @@ export default function ParentTasksScreen() {
     recompensa: '',
     icone: 'bed',
     categoria: 'casa',
+    crianca_id: '',
   });
+
+  useEffect(() => {
+    if (dependentes.length > 0 && !formTarefa.crianca_id) {
+      setFormTarefa(prev => ({ ...prev, crianca_id: dependentes[0].id }));
+    }
+  }, [dependentes]);
   
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -31,24 +38,31 @@ export default function ParentTasksScreen() {
 
   const sortedTasks = [...tarefas].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
 
-  const handleCriarTarefa = () => {
-    if (!formTarefa.titulo || !formTarefa.descricao || !formTarefa.recompensa) {
+  const handleCriarTarefa = async () => {
+    if (!formTarefa.titulo || !formTarefa.descricao || !formTarefa.recompensa || !formTarefa.crianca_id) {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
     }
 
-    criarTarefa({
+    await criarTarefa({
       titulo: formTarefa.titulo,
       descricao: formTarefa.descricao,
       recompensa: parseFloat(formTarefa.recompensa),
       status: 'pendente' as StatusTarefa,
-      crianca_id: crianca.id,
+      crianca_id: formTarefa.crianca_id,
       icone: formTarefa.icone,
       categoria: formTarefa.categoria,
     });
 
     Alert.alert('Sucesso ✅', 'Tarefa criada com sucesso!');
-    setFormTarefa({ titulo: '', descricao: '', recompensa: '', icone: 'bed', categoria: 'casa' });
+    setFormTarefa({ 
+      titulo: '', 
+      descricao: '', 
+      recompensa: '', 
+      icone: 'bed', 
+      categoria: 'casa',
+      crianca_id: dependentes[0]?.id || ''
+    });
     setNovaTarefaModal(false);
   };
 
@@ -77,7 +91,7 @@ export default function ParentTasksScreen() {
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.actionCardTitle}>Criar Nova Tarefa</Text>
-              <Text style={styles.actionCardSubtitle}>Atribua tarefas e recompense {crianca.nome}</Text>
+              <Text style={styles.actionCardSubtitle}>Atribua tarefas para seus filhos</Text>
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => setNovaTarefaModal(true)}
@@ -99,11 +113,12 @@ export default function ParentTasksScreen() {
         }
         renderItem={({ item }) => {
           const statusInfo = getStatusInfo(item.status);
+          const criancaAtribuida = dependentes.find(d => d.id === item.crianca_id);
           return (
             <View style={styles.taskCard}>
               <View style={styles.taskLeft}>
                 <Text style={styles.taskTitle}>{item.titulo}</Text>
-                <Text style={styles.taskChild}>{crianca.nome}</Text>
+                <Text style={styles.taskChild}>{criancaAtribuida?.nome || 'Filho'}</Text>
               </View>
               <View style={styles.taskRight}>
                 <Text style={styles.taskReward}>{item.recompensa} Kz</Text>
@@ -123,6 +138,7 @@ export default function ParentTasksScreen() {
         onCriar={handleCriarTarefa}
         form={formTarefa}
         setForm={setFormTarefa}
+        dependentes={dependentes}
       />
     </View>
   );

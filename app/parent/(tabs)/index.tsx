@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,7 @@ export default function ParentDashboard() {
     criarCampanha,
     campanhas,
     dependentes,
+    refreshData
   } = useApp();
   const { logout } = useAuth();
 
@@ -66,11 +67,12 @@ export default function ParentDashboard() {
     recompensa: '',
     icone: 'bed',
     categoria: 'casa',
+    crianca_id: '',
   });
 
-  const handleAdicionarDependente = (dados: any) => {
-    atualizarDadosCrianca(dados.nome, parseInt(dados.idade));
-    Alert.alert('Sucesso 🎉', `${dados.nome} já pode começar a aprender sobre finanças!`);
+  const handleAdicionarDependente = () => {
+    refreshData();
+    Alert.alert('Sucesso 🎉', 'Dependente adicionado com sucesso! Já pode começar a aprender sobre finanças!');
   };
 
   const handleCriarCampanha = (dados: any) => {
@@ -84,24 +86,38 @@ export default function ParentDashboard() {
     Alert.alert('Sucesso 🎯', `Missão "${dados.titulo}" criada!`);
   };
 
-  const handleCriarTarefa = () => {
-    if (!formTarefa.titulo || !formTarefa.descricao || !formTarefa.recompensa) {
+  // Sync default crianca_id when dependentes load
+  React.useEffect(() => {
+    if (dependentes.length > 0 && !formTarefa.crianca_id) {
+      setFormTarefa(prev => ({ ...prev, crianca_id: dependentes[0].id }));
+    }
+  }, [dependentes]);
+
+  const handleCriarTarefa = async () => {
+    if (!formTarefa.titulo || !formTarefa.descricao || !formTarefa.recompensa || !formTarefa.crianca_id) {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
     }
 
-    criarTarefa({
+    await criarTarefa({
       titulo: formTarefa.titulo,
       descricao: formTarefa.descricao,
       recompensa: parseFloat(formTarefa.recompensa),
       status: 'pendente' as StatusTarefa,
-      crianca_id: crianca.id,
+      crianca_id: formTarefa.crianca_id,
       icone: formTarefa.icone,
       categoria: formTarefa.categoria,
     });
 
     Alert.alert('Sucesso ✅', 'Tarefa criada com sucesso!');
-    setFormTarefa({ titulo: '', descricao: '', recompensa: '', icone: 'bed', categoria: 'casa' });
+    setFormTarefa({ 
+      titulo: '', 
+      descricao: '', 
+      recompensa: '', 
+      icone: 'bed', 
+      categoria: 'casa',
+      crianca_id: dependentes[0]?.id || ''
+    });
     setNovaTarefaModal(false);
   };
 
@@ -295,7 +311,7 @@ export default function ParentDashboard() {
         <View style={{ marginBottom: 24 }}>
           <View style={[styles.cardHeaderRow, { marginBottom: 12 }]}>
             <Text style={styles.cardTitle}>Seus Filhos</Text>
-            <TouchableOpacity onPress={() => router.push('/parent/add-child')}>
+            <TouchableOpacity onPress={() => setAdicionarDependenteModal(true)}>
                <Ionicons name="add-circle-outline" size={24} color="#93c5fd" />
             </TouchableOpacity>
           </View>
@@ -375,6 +391,7 @@ export default function ParentDashboard() {
           onCriar={handleCriarTarefa}
           form={formTarefa}
           setForm={setFormTarefa}
+          dependentes={dependentes}
         />
 
         <NovaMissaoModal

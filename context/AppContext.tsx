@@ -1,15 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { Crianca, Tarefa, Missao, Campanha, ConteudoEducativo, ItemLoja, HistoricoTransacao } from '../types';
-import { 
-  mockCrianca, 
-  mockTarefas, 
-  mockMissoes, 
-  mockCampanhas, 
-  mockConteudoEducativo, 
-  mockItensLoja,
-  mockHistorico,
-  mockCrianca2
-} from '../data/mockData';
 
 interface AppContextType {
   crianca: Crianca;
@@ -39,6 +29,7 @@ interface AppContextType {
   atualizarDadosCrianca: (nome: string, idade: number) => void;
   criarCampanha: (campanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => void;
   concluirAula: () => void;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -51,31 +42,33 @@ import { useAuth } from '@/lib/auth-context';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth(); // Hook directly
-  const [dependentes, setDependentes] = useState<Crianca[]>([
-    {
-      ...mockCrianca,
-      tarefas: mockTarefas,
-      missoes: mockMissoes,
-      historico: mockHistorico
-    },
-    mockCrianca2
-  ]);
-  
-  const [crianca, setCrianca] = useState<Crianca>(dependentes[0]);
-  
-  const [tarefas, setTarefas] = useState<Tarefa[]>(mockTarefas);
-  const [missoes, setMissoes] = useState<Missao[]>(mockMissoes);
-  const [campanhas, setCampanhas] = useState<Campanha[]>(mockCampanhas);
-  const [conteudoEducativo, setConteudoEducativo] = useState<ConteudoEducativo[]>(mockConteudoEducativo);
-  const [itensLoja, setItensLoja] = useState<ItemLoja[]>(mockItensLoja);
-  const [historico, setHistorico] = useState<HistoricoTransacao[]>(mockHistorico);
+
+  const fallbackCrianca: Crianca = {
+    id: 'novo',
+    nome: 'ninguém (adicione um filho)',
+    idade: 0,
+    nivel: 1,
+    xp: 0,
+    paiId: '',
+    potes: { saldo_gastar: 0, saldo_poupar: 0, saldo_ajudar: 0, total: 0 },
+    avatar: { id: '', cabelo: 'padrao', roupa: 'padrao', acessorio: '', cor_pele: 'marrom', expressao: 'feliz' },
+    tarefas: [], missoes: [], historico: []
+  };
+
+  const [dependentes, setDependentes] = useState<Crianca[]>([]);
+  const [crianca, setCrianca] = useState<Crianca>(fallbackCrianca);
+  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [missoes, setMissoes] = useState<Missao[]>([]);
+  const [campanhas, setCampanhas] = useState<Campanha[]>([]);
+  const [conteudoEducativo, setConteudoEducativo] = useState<ConteudoEducativo[]>([]);
+  const [itensLoja, setItensLoja] = useState<ItemLoja[]>([]);
+  const [historico, setHistorico] = useState<HistoricoTransacao[]>([]);
   const [aulaVistaHoje, setAulaVistaHoje] = useState<boolean>(false);
 
-  React.useEffect(() => {
-    async function carregarDadosAPI() {
-      if (!user) return;
-      try {
-        if (user.role === 'parent') {
+  const carregarDadosAPI = async () => {
+    if (!user) return;
+    try {
+      if (user.role === 'parent') {
           const res = await parentService.getDashboard();
           if (res.dependentes) {
             setDependentes(res.dependentes.map((d: any) => ({
@@ -128,10 +121,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
              setMissoes([{ ...res.missao_destaque, ativa: true, tipo: 'poupanca', cor: ['#BF5AF2', '#A335EE'] }]);
           }
         }
-      } catch (e) {
-        console.error('Erro ao carregar os dados reais na AppContext:', e);
-      }
+    } catch (error) {
+      console.error("Erro ao carregar dados da API:", error);
     }
+  };
+
+  React.useEffect(() => {
     carregarDadosAPI();
   }, [user]);
 
@@ -364,7 +359,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       atualizarDadosCrianca,
       criarCampanha,
       adicionarXP,
-      concluirAula
+      concluirAula,
+      refreshData: carregarDadosAPI
     }}>
       {children}
     </AppContext.Provider>
