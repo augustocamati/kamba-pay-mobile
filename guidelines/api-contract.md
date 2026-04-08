@@ -117,7 +117,10 @@ POST /api/auth/register
   "nome": "Pedro Lopes",
   "email": "pedro@email.com",
   "senha": "minhasenha123",
-  "tipo": "pai"
+  "tipo": "pai",
+  "telefone": "900000000",
+  "provincia": "Luanda",
+  "municipio": "Viana"
 }
 ```
 
@@ -130,6 +133,9 @@ POST /api/auth/register
     "nome": "Pedro Lopes",
     "tipo": "pai",
     "email": "pedro@email.com",
+    "telefone": "900000000",
+    "provincia": "Luanda",
+    "municipio": "Viana",
     "criancas": []
   }
 }
@@ -140,6 +146,14 @@ POST /api/auth/register
 {
   "erro": "EMAIL_JA_REGISTADO",
   "mensagem": "Este e-mail já está em uso."
+}
+```
+
+**Response 409 — Telefone já em uso:**
+```json
+{
+  "erro": "TELEFONE_JA_REGISTADO",
+  "mensagem": "Este número de telefone já está em uso."
 }
 ```
 
@@ -319,11 +333,14 @@ POST /api/parent/children
     "poupar_pct": 30,
     "ajudar_pct": 10,
     "gastar_pct": 60
-  }
+  },
+  "provincia": "Luanda",
+  "municipio": "Belas"
 }
 ```
 > - `username`: nome de utilizador escolhido pelo responsável (usado para login da criança)
 > - `pin`: senha mínima de 4 caracteres criada pelo responsável para a criança
+> - `provincia` / `municipio`: opcionais, mas associam localidade
 > - `distribuicao_potes`: percentagens de como o dinheiro ganho será distribuído automaticamente (`poupar_pct` + `ajudar_pct` + `gastar_pct` = 100)
 
 **Response 201:**
@@ -431,6 +448,41 @@ POST /api/parent/children/:childId/add-balance
     "saldo_ajudar": 1000,
     "total": 9000
   }
+}
+```
+
+---
+
+### 3.4 Atualizar Dados do Dependente
+
+**Tela:** Configurações ou Perfil do Filho
+
+```
+PATCH /api/parent/children/:childId
+```
+
+**Request:**
+```json
+{
+  "nome": "Kiala A. Silva",
+  "idade": 10
+}
+```
+
+---
+
+### 3.5 Atualizar Configuração de Potes
+
+```
+PATCH /api/parent/children/:childId/potes-config
+```
+
+**Request:**
+```json
+{
+  "gastar_pct": 50,
+  "poupar_pct": 40,
+  "ajudar_pct": 10
 }
 ```
 
@@ -832,6 +884,44 @@ GET /api/parent/children/:childId/finance
   ]
 }
 ```
+
+---
+
+### 7.2 Extrato e Filtros Detalhados
+
+**Tela:** Extratos Completos
+
+```
+GET /api/parent/children/:childId/transacoes?inicio=2026-01-01&fim=2026-01-31&tipo=gastar
+```
+
+**Response 200:**
+```json
+{
+  "total": 1,
+  "periodo": { "inicio": "2026-01-01", "fim": "2026-01-31" },
+  "transacoes": [
+    {
+      "id": "hist-1",
+      "tipo": "gastar",
+      "descricao": "Sandes na Cantina",
+      "valor": 100,
+      "data": "2026-01-22T00:00:00Z",
+      "pote_afetado": "gastar"
+    }
+  ]
+}
+```
+
+---
+
+### 7.3 Resumo Mensal Detalhado
+
+```
+GET /api/parent/children/:childId/resumo-mensal?ano=2026
+```
+
+**Response 200:** Retorna array de meses com total ganho e saldo, utilizado para os gráficos de barras no painel dos pais.
 
 ---
 
