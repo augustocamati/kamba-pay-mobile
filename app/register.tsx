@@ -13,13 +13,16 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [provincia, setProvincia] = useState('Luanda');
+  const [municipio, setMunicipio] = useState('Belas');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
   const webBottomInset = Platform.OS === 'web' ? 34 : 0;
 
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+    if (!name.trim() || !email.trim() || !password.trim() || !telefone.trim()) {
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
       return;
     }
     if (password.length < 4) {
@@ -28,7 +31,7 @@ export default function RegisterScreen() {
     }
     setIsSubmitting(true);
     try {
-      const success = await register(name, email, password, 'parent');
+      const success = await register(name, email, password, 'parent', provincia, municipio, telefone);
       if (success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.replace('/parent');
@@ -108,6 +111,49 @@ export default function RegisterScreen() {
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Telefone</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="call-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="9XXXXXXXX"
+                    placeholderTextColor="#C0C0C0"
+                    value={telefone}
+                    onChangeText={setTelefone}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </View>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Província</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="map-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Ex: Luanda"
+                    placeholderTextColor="#C0C0C0"
+                    value={provincia}
+                    onChangeText={setProvincia}
+                  />
+                </View>
+              </View>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Município</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="business-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Ex: Belas"
+                    placeholderTextColor="#C0C0C0"
+                    value={municipio}
+                    onChangeText={setMunicipio}
                   />
                 </View>
               </View>

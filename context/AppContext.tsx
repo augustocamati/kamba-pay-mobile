@@ -43,7 +43,14 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+import { 
+  parentService, childService, taskService, missionService, campaignService,
+  educationalService, shopService, api 
+} from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth(); // Hook directly
   const [dependentes, setDependentes] = useState<Crianca[]>([
     {
       ...mockCrianca,
@@ -63,6 +70,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [itensLoja, setItensLoja] = useState<ItemLoja[]>(mockItensLoja);
   const [historico, setHistorico] = useState<HistoricoTransacao[]>(mockHistorico);
   const [aulaVistaHoje, setAulaVistaHoje] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    async function carregarDadosAPI() {
+      if (!user) return;
+      try {
+        if (user.role === 'parent') {
+          const res = await parentService.getDashboard();
+          if (res.dependentes) {
+            setDependentes(res.dependentes.map((d: any) => ({
+              id: d.id,
+              nome: d.nome,
+              idade: d.idade,
+              nivel: d.nivel,
+              xp: 0,
+              paiId: user.id,
+              potes: d.potes,
+              avatar: { id: '', cabelo: 'padrao', roupa: 'padrao', acessorio: '', cor_pele: 'marrom', expressao: 'feliz' },
+              tarefas: [], missoes: [], historico: []
+            })));
+            if (res.dependentes.length > 0) {
+              setCrianca((prev: any) => ({ ...prev, ...res.dependentes[0] }));
+            }
+          }
+          if (res.tarefas_pendentes_aprovacao) {
+             setTarefas(res.tarefas_pendentes_aprovacao.map((t: any) => ({
+               ...t,
+               id: t.id, titulo: t.titulo, descricao: t.descricao, recompensa: t.recompensa,
+               status: t.status, crianca_id: t.crianca_id, foto_url: t.foto_url,
+               criado_em: new Date(), concluido_em: t.concluido_em ? new Date(t.concluido_em) : undefined,
+               icone: t.icone || 'bed', categoria: t.categoria || 'save'
+             })));
+          }
+          if (res.campanhas_ativas) {
+             setCampanhas(res.campanhas_ativas.map((c: any) => ({
+                id: c.id, titulo: c.titulo, descricao: c.descricao || '',
+                meta_valor: 10000, valor_arrecadado: 0, ativa: true, organizacao: c.organizacao, causa: 'outro'
+             })));
+          }
+          if(res.missoes_ativas) {
+             setMissoes(res.missoes_ativas.map((m: any) => ({
+                id: m.id, titulo: m.titulo, descricao: '', tipo: 'poupanca', objetivo_valor: m.objetivo_valor,
+                progresso_atual: m.progresso_atual, recompensa: 0, icone: '🎯', cor: ['#000', '#000'],
+                tipo_label: 'Poupança', icone_nome: 'trending-up', ativa: true, crianca_id: m.crianca_id
+             })));
+          }
+        } else {
+          // Criança
+          const res = await childService.getDashboard();
+          if (res.crianca) {
+             setCrianca((prev: any) => ({ ...prev, ...res.crianca }));
+          }
+          if(res.tarefas_do_dia) {
+             setTarefas(res.tarefas_do_dia.map((t: any) => ({ ...t, criado_em: new Date() })));
+          }
+          if(res.missao_destaque) {
+             setMissoes([{ ...res.missao_destaque, ativa: true, tipo: 'poupanca', cor: ['#BF5AF2', '#A335EE'] }]);
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao carregar os dados reais na AppContext:', e);
+      }
+    }
+    carregarDadosAPI();
+  }, [user]);
 
   // Atualizar saldo dos potes
   const atualizarSaldo = (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => {
@@ -160,80 +231,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Criar nova tarefa (ação do pai)
-  const criarTarefa = (novaTarefa: Omit<Tarefa, 'id' | 'criado_em'>) => {
-    const tarefa: Tarefa = {
-      ...novaTarefa,
-      id: `tarefa-${Date.now()}`,
-      criado_em: new Date()
-    };
-    setTarefas(prev => [tarefa, ...prev]);
-  };
-
-  // Aprovar tarefa (ação do pai)
-  const aprovarTarefa = (tarefaId: string) => {
-    const tarefa = tarefas.find(t => t.id === tarefaId);
-    if (tarefa) {
-      setTarefas(prev => prev.map(t => 
-        t.id === tarefaId 
-          ? { ...t, status: 'concluida', aprovado_em: new Date() }
-          : t
-      ));
-      
-      // Divisão Automática
-      const gastarPct = crianca.potes.config?.gastar?.label ? 60 : 60; // usando hardcode para fallback
-      const pouparPct = crianca.potes.config?.poupar?.label ? 30 : 30;
-      const ajudarPct = 100 - gastarPct - pouparPct;
-      
-      const valGastar = Math.round((tarefa.recompensa * gastarPct) / 100);
-      const valPoupar = Math.round((tarefa.recompensa * pouparPct) / 100);
-      const valAjudar = tarefa.recompensa - valGastar - valPoupar;
-
-      setCrianca(prev => {
-        const np = { ...prev.potes };
-        np.saldo_gastar += valGastar;
-        np.saldo_poupar += valPoupar;
-        np.saldo_ajudar += valAjudar;
-        np.total = np.saldo_gastar + np.saldo_poupar + np.saldo_ajudar;
-        return { ...prev, potes: np };
+  const criarTarefa = async (novaTarefa: Omit<Tarefa, 'id' | 'criado_em'>) => {
+    try {
+      const res = await taskService.createTask({
+         titulo: novaTarefa.titulo,
+         descricao: novaTarefa.descricao,
+         recompensa: novaTarefa.recompensa,
+         categoria: novaTarefa.categoria,
+         crianca_id: novaTarefa.crianca_id,
+         icone: novaTarefa.icone
       });
-      
-      // Adicionar ao histórico - múltiplos registos para refletir a divisão
-      setHistorico(prev => [
-        {
-          id: `hist-${Date.now()}-1`,
-          tipo: 'tarefa',
-          descricao: `${tarefa.titulo} (Gastar)`,
-          valor: valGastar,
-          data: new Date(),
-          pote_afetado: 'gastar'
-        },
-        {
-          id: `hist-${Date.now()}-2`,
-          tipo: 'tarefa',
-          descricao: `${tarefa.titulo} (Poupar)`,
-          valor: valPoupar,
-          data: new Date(),
-          pote_afetado: 'poupar'
-        },
-        {
-          id: `hist-${Date.now()}-3`,
-          tipo: 'tarefa',
-          descricao: `${tarefa.titulo} (Ajudar)`,
-          valor: valAjudar,
-          data: new Date(),
-          pote_afetado: 'ajudar'
-        }, ...prev
-      ]);
+      const tarefa: Tarefa = {
+        ...novaTarefa,
+        id: res.id || `tarefa-${Date.now()}`,
+        criado_em: res.criado_em ? new Date(res.criado_em) : new Date()
+      };
+      setTarefas(prev => [tarefa, ...prev]);
+    } catch(e) {
+      console.error(e);
     }
   };
 
+  // Aprovar tarefa (ação do pai)
+  const aprovarTarefa = async (tarefaId: string) => {
+    try {
+       await taskService.approveTask(tarefaId);
+       // Fallback mock style update for reactivity
+       const tarefa = tarefas.find(t => t.id === tarefaId);
+       if (tarefa) {
+        setTarefas(prev => prev.map(t => 
+          t.id === tarefaId 
+            ? { ...t, status: 'concluida', aprovado_em: new Date() }
+            : t
+        ));
+        const gastarPct = crianca?.potes?.config?.gastar?.label ? 60 : 60;
+        const pouparPct = crianca?.potes?.config?.poupar?.label ? 30 : 30;
+        const ajudarPct = 100 - gastarPct - pouparPct;
+        const valGastar = Math.round((tarefa.recompensa * gastarPct) / 100);
+        const valPoupar = Math.round((tarefa.recompensa * pouparPct) / 100);
+        const valAjudar = tarefa.recompensa - valGastar - valPoupar;
+        setCrianca(prev => {
+          const np = { ...prev.potes };
+          np.saldo_gastar += valGastar;
+          np.saldo_poupar += valPoupar;
+          np.saldo_ajudar += valAjudar;
+          np.total = np.saldo_gastar + np.saldo_poupar + np.saldo_ajudar;
+          return { ...prev, potes: np };
+        });
+       }
+    } catch(e) { console.error(e); }
+  };
+
   // Rejeitar tarefa (ação do pai)
-  const rejeitarTarefa = (tarefaId: string) => {
-    setTarefas(prev => prev.map(t => 
-      t.id === tarefaId 
-        ? { ...t, status: 'rejeitada', foto_url: undefined }
-        : t
-    ));
+  const rejeitarTarefa = async (tarefaId: string) => {
+    try {
+      await taskService.rejectTask(tarefaId, 'Rejeitada pelo Responsável');
+      setTarefas(prev => prev.map(t => 
+        t.id === tarefaId 
+          ? { ...t, status: 'rejeitada', foto_url: undefined }
+          : t
+      ));
+    } catch(e) { console.error(e); }
   };
 
   // Adicionar saldo (ação do pai)
