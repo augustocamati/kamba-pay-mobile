@@ -40,9 +40,13 @@ import {
   educationalService, shopService, api 
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import {
+  DEMO_CHILDREN, DEMO_TAREFAS, DEMO_MISSOES, DEMO_CAMPANHAS,
+  DEMO_CONTEUDO, DEMO_HISTORICO,
+} from '@/lib/demo-data';
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isDemo } = useAuth();
 
   const fallbackCrianca: Crianca = {
     id: 'novo',
@@ -122,6 +126,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const carregarDadosAPI = async () => {
     if (!user) return;
+
+    // ── MODO DEMO ──────────────────────────────────────────────
+    if (isDemo) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setDependentes(DEMO_CHILDREN);
+        setCrianca(user.role === 'child' ? DEMO_CHILDREN[0] : DEMO_CHILDREN[0]);
+        setTarefas(DEMO_TAREFAS);
+        setMissoes(DEMO_MISSOES);
+        setCampanhas(DEMO_CAMPANHAS);
+        setConteudoEducativo(DEMO_CONTEUDO);
+        setHistorico(DEMO_HISTORICO);
+        setIsLoading(false);
+      }, 800); // simula latência
+      return;
+    }
+    // ───────────────────────────────────────────────────────────
+
     setIsLoading(true);
     try {
       if (user.role === 'parent') {
@@ -224,7 +246,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   React.useEffect(() => {
     carregarDadosAPI();
-  }, [user]);
+  }, [user, isDemo]);
 
   // Atualizar saldo dos potes
   const atualizarSaldo = (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => {
@@ -296,8 +318,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConteudoEducativo(prev => prev.map(c => c.id === conteudoId ? { ...c, completo: true } : c));
   };
 
-  // Criar nova tarefa (ação do pai) — API real
+  // Criar nova tarefa (ação do pai) — API real ou demo
   const criarTarefa = async (novaTarefa: Omit<Tarefa, 'id' | 'criado_em'>) => {
+    if (isDemo) {
+      const tarefa: Tarefa = {
+        ...novaTarefa,
+        id: `demo-t${Date.now()}`,
+        criado_em: new Date(),
+      };
+      setTarefas(prev => [tarefa, ...prev]);
+      return;
+    }
     try {
       const res = await taskService.createTask({
         titulo: novaTarefa.titulo,
@@ -319,53 +350,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Aprovar tarefa (ação do pai) — API real + atualização otimista
+  // Aprovar tarefa — demo ou API real
   const aprovarTarefa = async (tarefaId: string) => {
-    try {
-      const res = await taskService.approveTask(tarefaId);
-      setTarefas(prev => prev.map(t => 
+    if (isDemo) {
+      const tarefa = tarefas.find(t => t.id === tarefaId);
+      setTarefas(prev => prev.map(t =>
         t.id === tarefaId ? { ...t, status: 'concluida', aprovado_em: new Date() } : t
       ));
-      // Atualizar saldos do filho com valores vindos da API
+      if (tarefa) atualizarSaldo('gastar', tarefa.recompensa * 0.6);
+      return;
+    }
+    try {
+      const res = await taskService.approveTask(tarefaId);
+      setTarefas(prev => prev.map(t =>
+        t.id === tarefaId ? { ...t, status: 'concluida', aprovado_em: new Date() } : t
+      ));
       if (res?.recompensa_creditada?.detalhes) {
         const { gastar, poupar, ajudar } = res.recompensa_creditada.detalhes;
         setCrianca(prev => ({
           ...prev,
-          potes: {
-            saldo_gastar: gastar,
-            saldo_poupar: poupar,
-            saldo_ajudar: ajudar,
-            total: gastar + poupar + ajudar,
-          }
+          potes: { saldo_gastar: gastar, saldo_poupar: poupar, saldo_ajudar: ajudar, total: gastar + poupar + ajudar }
         }));
       }
     } catch(e) { console.error('Erro ao aprovar tarefa:', e); }
   };
 
-  // Rejeitar tarefa — API real
+  // Rejeitar tarefa — demo ou API real
   const rejeitarTarefa = async (tarefaId: string) => {
+    if (isDemo) {
+      setTarefas(prev => prev.map(t =>
+        t.id === tarefaId ? { ...t, status: 'rejeitada', foto_url: undefined } : t
+      ));
+      return;
+    }
     try {
       await taskService.rejectTask(tarefaId, 'Rejeitada pelo Responsável');
-      setTarefas(prev => prev.map(t => 
+      setTarefas(prev => prev.map(t =>
         t.id === tarefaId ? { ...t, status: 'rejeitada', foto_url: undefined } : t
       ));
     } catch(e) { console.error('Erro ao rejeitar tarefa:', e); }
   };
 
-  // Adicionar saldo (ação do pai) — API real
+  // Adicionar saldo — demo ou API real
   const adicionarSaldo = async (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => {
+    if (isDemo) {
+      atualizarSaldo(pote, valor);
+      setHistorico(prev => [{
+        id: `demo-h${Date.now()}`, tipo: 'tarefa',
+        descricao: 'Mesada (Demo)', valor, data: new Date(), pote_afetado: pote
+      }, ...prev]);
+      return;
+    }
     try {
       if (crianca.id && crianca.id !== 'novo') {
         await parentService.addBalance(crianca.id, valor, pote, 'Mesada adicionada pelos pais');
       }
       atualizarSaldo(pote, valor);
       setHistorico(prev => [{
-        id: `hist-${Date.now()}`,
-        tipo: 'tarefa',
-        descricao: 'Mesada adicionada pelos pais',
-        valor,
-        data: new Date(),
-        pote_afetado: pote
+        id: `hist-${Date.now()}`, tipo: 'tarefa',
+        descricao: 'Mesada adicionada pelos pais', valor, data: new Date(), pote_afetado: pote
       }, ...prev]);
     } catch (e) {
       console.error('Erro ao adicionar saldo:', e);

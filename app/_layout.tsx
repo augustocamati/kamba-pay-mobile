@@ -10,27 +10,31 @@ import { AuthProvider } from "@/lib/auth-context";
 import { AppProvider } from "@/context/AppContext";
 import { useFonts, Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
+import { DemoBanner } from "@/components/DemoBanner";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false, headerBackTitle: "Back" }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="role-select" />
-      <Stack.Screen name="login" />
-      <Stack.Screen name="login-parent" />
-      <Stack.Screen name="login-child" />
-      <Stack.Screen name="register" />
-      <Stack.Screen name="parent/(tabs)" />
-      <Stack.Screen name="parent/create-task" options={{ presentation: "modal" }} />
-      <Stack.Screen name="parent/create-campaign" options={{ presentation: "modal" }} />
-      <Stack.Screen name="parent/create-mission" options={{ presentation: "modal" }} />
-      <Stack.Screen name="parent/add-child" options={{ presentation: "modal" }} />
-      <Stack.Screen name="parent/approve" />
-      <Stack.Screen name="child/(tabs)" />
-      <Stack.Screen name="child/submit-task" options={{ presentation: "modal" }} />
-    </Stack>
+    <>
+      <DemoBanner />
+      <Stack screenOptions={{ headerShown: false, headerBackTitle: "Back" }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="role-select" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="login-parent" />
+        <Stack.Screen name="login-child" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="parent/(tabs)" />
+        <Stack.Screen name="parent/create-task" options={{ presentation: "modal" }} />
+        <Stack.Screen name="parent/create-campaign" options={{ presentation: "modal" }} />
+        <Stack.Screen name="parent/create-mission" options={{ presentation: "modal" }} />
+        <Stack.Screen name="parent/add-child" options={{ presentation: "modal" }} />
+        <Stack.Screen name="parent/approve" />
+        <Stack.Screen name="child/(tabs)" />
+        <Stack.Screen name="child/submit-task" options={{ presentation: "modal" }} />
+      </Stack>
+    </>
   );
 }
 
