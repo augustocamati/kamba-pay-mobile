@@ -300,7 +300,7 @@ export default function LoginChildScreen() {
   const insets = useSafeAreaInsets();
   const { login, isLoading } = useAuth();
   const [step, setStep] = useState<'name' | 'pin'>('name');
-  const [childName, setChildName] = useState('');
+  const [childName, setChildName] = useState(''); // username
   const [pin, setPin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const shakeX = useSharedValue(0);
@@ -351,9 +351,10 @@ export default function LoginChildScreen() {
   const handleLogin = async (pinValue: string) => {
     setIsSubmitting(true);
     try {
-      // Child email is generated as: name@child.kamba
-      const email = `${childName.trim().toLowerCase().replace(/\s/g, '')}@child.kamba`;
-      const success = await login(email, pinValue);
+      // A API aceita o username da criança no campo email
+      // Contrato: POST /api/auth/login { email: username, senha: pin }
+      const username = childName.trim().toLowerCase();
+      const success = await login(username, pinValue);
       if (success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.replace('/child/(tabs)');
@@ -361,8 +362,17 @@ export default function LoginChildScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         triggerShake();
         setPin('');
-        Alert.alert('Oops!', 'Nome ou PIN incorretos. Pede ajuda ao teu responsável.');
+        Alert.alert(
+          'Ops! 🤔',
+          'Username ou PIN incorretos.\nPede ajuda ao teu responsável para verificar os teus dados.',
+          [{ text: 'OK', onPress: () => setStep('name') }]
+        );
       }
+    } catch (e) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      triggerShake();
+      setPin('');
+      Alert.alert('Erro de ligação', 'Não foi possível ligar ao servidor. Verifica a tua ligação.');
     } finally {
       setIsSubmitting(false);
     }
@@ -370,7 +380,7 @@ export default function LoginChildScreen() {
 
   const bubbleText =
     step === 'name'
-      ? 'Oi! Qual é o teu nome?'
+      ? 'Oi! Qual é o teu username?'
       : `Olá ${childName.trim()}! Entra o teu PIN de 4 dígitos`;
 
   return (
@@ -393,12 +403,13 @@ export default function LoginChildScreen() {
           <Animated.View style={shakeStyle}>
             <TextInput
               style={styles.nameInput}
-              placeholder="O teu nome..."
+              placeholder="O teu username..."
               placeholderTextColor="#C0A880"
               value={childName}
               onChangeText={setChildName}
-              autoCapitalize="words"
+              autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="username"
               returnKeyType="done"
               onSubmitEditing={handleNameContinue}
             />

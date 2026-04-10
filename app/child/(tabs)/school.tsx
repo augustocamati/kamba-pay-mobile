@@ -7,7 +7,7 @@ import { useApp } from '@/context/AppContext';
 
 export default function ChildSchoolScreen() {
   const insets = useSafeAreaInsets();
-  const { conteudoEducativo } = useApp();
+  const { conteudoEducativo, isLoading } = useApp();
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   return (
@@ -25,8 +25,18 @@ export default function ChildSchoolScreen() {
       >
         <Text style={styles.subtitle}>Aprenda sobre dinheiro se divertindo!</Text>
 
-        {/* Featured Content */}
-        {conteudoEducativo.length > 0 && (
+        {isLoading && conteudoEducativo.length === 0 ? (
+          <View style={{ alignItems: 'center', paddingVertical: 60 }}>
+            <Text style={{ fontSize: 36 }}>📚</Text>
+            <Text style={{ color: '#64748B', marginTop: 12, textAlign: 'center' }}>A carregar conteúdos...</Text>
+          </View>
+        ) : conteudoEducativo.length === 0 ? (
+          <View style={{ alignItems: 'center', paddingVertical: 60 }}>
+            <Text style={{ fontSize: 48 }}>📚</Text>
+            <Text style={{ color: '#64748B', fontSize: 16, fontWeight: '700', marginTop: 12 }}>Escola Kamba Kid</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 14, marginTop: 6, textAlign: 'center' }}>Em breve terás conteúdos educativos incríveis!</Text>
+          </View>
+        ) : (<>
           <Pressable 
             style={styles.featuredCard}
             onPress={() => router.push({ pathname: '/child/aula', params: { id: conteudoEducativo[0].id } } as any)}
@@ -47,51 +57,49 @@ export default function ChildSchoolScreen() {
               </View>
             </View>
           </Pressable>
-        )}
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Continue Estudando</Text>
-        </View>
-
-        {/* List of Content */}
-        {conteudoEducativo.map(item => (
-          <Pressable 
-            key={item.id} 
-            style={styles.contentItem}
-            onPress={() => router.push({ pathname: '/child/aula', params: { id: item.id } } as any)}
-          >
-            <Image source={{ uri: item.thumbnail_url }} style={styles.itemThumb} />
-            <View style={styles.itemInfo}>
-              <View style={styles.typeBadge}>
-                <Text style={styles.typeText}>{item.tipo.toUpperCase()}</Text>
-              </View>
-              <Text style={styles.itemTitle}>{item.titulo}</Text>
-              <View style={styles.itemMeta}>
-                <Ionicons name="time-outline" size={14} color="#94A3B8" />
-                <Text style={styles.itemDuration}>{item.duracao}</Text>
-                {item.completo && (
-                  <View style={styles.completeBadge}>
-                    <Ionicons name="checkmark-circle" size={14} color="#45D37B" />
-                    <Text style={styles.completeText}>Visto</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
-          </Pressable>
-        ))}
-
-        {/* Gamification Link */}
-        <View style={styles.gameCard}>
-          <MaterialCommunityIcons name="gamepad-variant" size={40} color="#fff" />
-          <View style={{ flex: 1, marginLeft: 16 }}>
-             <Text style={styles.gameTitle}>Queres testar teus conhecimentos?</Text>
-             <Text style={styles.gameDesc}>Joga o Quiz e ganha bónus!</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Continue Estudando</Text>
           </View>
-          <Pressable style={styles.gameButton}>
-             <Text style={styles.gameButtonText}>Jogar</Text>
-          </Pressable>
-        </View>
+
+          {conteudoEducativo.map(item => (
+            <Pressable 
+              key={item.id} 
+              style={styles.contentItem}
+              onPress={() => router.push({ pathname: '/child/aula', params: { id: item.id } } as any)}
+            >
+              <Image source={{ uri: item.thumbnail_url }} style={styles.itemThumb} />
+              <View style={styles.itemInfo}>
+                <View style={styles.typeBadge}>
+                  <Text style={styles.typeText}>{item.tipo.toUpperCase()}</Text>
+                </View>
+                <Text style={styles.itemTitle}>{item.titulo}</Text>
+                <View style={styles.itemMeta}>
+                  <Ionicons name="time-outline" size={14} color="#94A3B8" />
+                  <Text style={styles.itemDuration}>{item.duracao}</Text>
+                  {item.completo && (
+                    <View style={styles.completeBadge}>
+                      <Ionicons name="checkmark-circle" size={14} color="#45D37B" />
+                      <Text style={styles.completeText}>Visto</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
+            </Pressable>
+          ))}
+
+          <View style={styles.gameCard}>
+            <MaterialCommunityIcons name="gamepad-variant" size={40} color="#fff" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+               <Text style={styles.gameTitle}>Queres testar teus conhecimentos?</Text>
+               <Text style={styles.gameDesc}>Joga o Quiz e ganha bónus!</Text>
+            </View>
+            <Pressable style={styles.gameButton} onPress={() => router.push('/child/quiz' as any)}>
+               <Text style={styles.gameButtonText}>Jogar</Text>
+            </Pressable>
+          </View>
+        </>)}
 
       </ScrollView>
     </View>

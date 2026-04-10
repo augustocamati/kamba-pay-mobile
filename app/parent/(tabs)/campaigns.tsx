@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,12 +8,21 @@ import { CriarCampanha } from '../../../components/CriarCampanha';
 
 export default function CampaignsScreen() {
   const insets = useSafeAreaInsets();
-  const { campanhas, criarCampanha } = useApp();
+  const { campanhas, criarCampanha, isLoading } = useApp();
   const [novaCampanhaModal, setNovaCampanhaModal] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  const handleCriarCampanha = (dados: any) => {
-    criarCampanha(dados);
-    Alert.alert('Sucesso ❤️', `${dados.titulo} foi adicionada à lista de campanhas disponíveis.`);
+  const handleCriarCampanha = async (dados: any) => {
+    setCreating(true);
+    try {
+      await criarCampanha(dados);
+      Alert.alert('Sucesso ❤️', `${dados.titulo} foi criada com sucesso!`);
+      setNovaCampanhaModal(false);
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível criar a campanha.');
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -44,38 +53,50 @@ export default function CampaignsScreen() {
 
         <Text style={[styles.title, { fontSize: 20, marginBottom: 12 }]}>Campanhas Ativas</Text>
 
-        {campanhas.map((campanha) => {
-           const progresso = Math.min(
-             Math.round((campanha.valor_arrecadado / campanha.meta_valor) * 100),
-             100
-           );
-           return (
-             <View key={campanha.id} style={styles.card}>
-               <Image source={{ uri: campanha.imagem_url }} style={styles.cardImage} />
-               <View style={styles.cardBody}>
-                 <Text style={styles.cardOrg}>{campanha.organizacao}</Text>
-                 <Text style={styles.cardTitle}>{campanha.titulo}</Text>
-                 <Text style={styles.cardDesc} numberOfLines={2}>{campanha.descricao}</Text>
-                 
-                 <View style={styles.progressRow}>
-                   <View style={styles.progressTrack}>
-                     <View style={[styles.progressBar, { width: `${progresso}%` }]} />
-                   </View>
-                   <Text style={styles.percentText}>{progresso}%</Text>
-                 </View>
+        {isLoading ? (
+          <ActivityIndicator color="#ec4899" style={{ marginTop: 30 }} />
+        ) : campanhas.length === 0 ? (
+          <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+            <Text style={{ fontSize: 40 }}>🌍</Text>
+            <Text style={{ color: '#94a3b8', marginTop: 12, fontSize: 14, textAlign: 'center' }}>
+              Nenhuma campanha ativa.{'\n'}Crie uma agora!
+            </Text>
+          </View>
+        ) : (
+          campanhas.map((campanha) => {
+            const metaValor = campanha.meta_valor || 10000;
+            const valorArrecadado = campanha.valor_arrecadado || 0;
+            const progresso = Math.min(Math.round((valorArrecadado / metaValor) * 100), 100);
+            return (
+              <View key={campanha.id} style={styles.card}>
+                {campanha.imagem_url ? (
+                  <Image source={{ uri: campanha.imagem_url }} style={styles.cardImage} />
+                ) : (
+                  <LinearGradient colors={['#ec4899', '#dc2626']} style={[styles.cardImage, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ fontSize: 48 }}>🌍</Text>
+                  </LinearGradient>
+                )}
+                <View style={styles.cardBody}>
+                  <Text style={styles.cardOrg}>{campanha.organizacao}</Text>
+                  <Text style={styles.cardTitle}>{campanha.titulo}</Text>
+                  <Text style={styles.cardDesc} numberOfLines={2}>{campanha.descricao}</Text>
+                  
+                  <View style={styles.progressRow}>
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressBar, { width: `${progresso}%` }]} />
+                    </View>
+                    <Text style={styles.percentText}>{progresso}%</Text>
+                  </View>
 
-                 <View style={styles.cardFooter}>
-                   <Text style={styles.footerText}>
-                     Meta: {campanha.meta_valor.toLocaleString()} Kz
-                   </Text>
-                   <Text style={styles.raisedText}>
-                     {campanha.valor_arrecadado.toLocaleString()} Kz arrecadados
-                   </Text>
-                 </View>
-               </View>
-             </View>
-           );
-        })}
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.footerText}>Meta: {metaValor.toLocaleString()} Kz</Text>
+                    <Text style={styles.raisedText}>{valorArrecadado.toLocaleString()} Kz arrecadados</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
       </ScrollView>
 
       <CriarCampanha
@@ -92,32 +113,22 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800', color: '#fff' },
   subtitle: { fontSize: 14, color: '#93c5fd', marginBottom: 24 },
   actionCard: {
-    borderRadius: 20,
-    padding: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    borderRadius: 20, padding: 24,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   actionCardTitle: { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 4 },
   actionCardSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 14 },
   actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignSelf: 'flex-start',
-    gap: 6,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: 12,
+    paddingVertical: 10, paddingHorizontal: 16,
+    alignSelf: 'flex-start', gap: 6,
   },
   actionBtnText: { fontWeight: '700', fontSize: 14 },
   card: {
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20, overflow: 'hidden', marginBottom: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   cardImage: { width: '100%', height: 150 },
   cardBody: { padding: 16 },
@@ -126,11 +137,9 @@ const styles = StyleSheet.create({
   cardDesc: { fontSize: 13, color: '#94a3b8', marginBottom: 16 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   progressTrack: {
-    flex: 1,
-    height: 8,
+    flex: 1, height: 8,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 4,
-    overflow: 'hidden',
+    borderRadius: 4, overflow: 'hidden',
   },
   progressBar: { height: '100%', backgroundColor: '#ec4899', borderRadius: 4 },
   percentText: { fontSize: 12, fontWeight: '700', color: '#fff', minWidth: 35 },

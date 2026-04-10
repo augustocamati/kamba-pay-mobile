@@ -3,7 +3,7 @@ import type { Crianca, Tarefa, Missao, Campanha, ConteudoEducativo, ItemLoja, Hi
 
 interface AppContextType {
   crianca: Crianca;
-  dependentes: Crianca[]; // Add list of children
+  dependentes: Crianca[];
   tarefas: Tarefa[];
   missoes: Missao[];
   campanhas: Campanha[];
@@ -11,18 +11,19 @@ interface AppContextType {
   itensLoja: ItemLoja[];
   historico: HistoricoTransacao[];
   aulaVistaHoje: boolean;
+  isLoading: boolean;
   
   // Ações para Criança
   atualizarSaldo: (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => void;
   enviarFotoTarefa: (tarefaId: string, fotoUrl: string) => void;
-  realizarDoacao: (campanhaId: string, valor: number) => void;
+  realizarDoacao: (campanhaId: string, valor: number) => Promise<void>;
   comprarItem: (itemId: string) => void;
   atualizarAvatar: (parte: string, valor: string) => void;
   marcarConteudoCompleto: (conteudoId: string) => void;
   adicionarXP: (valor: number) => void;
   
   // Ações para Pai
-  criarTarefa: (tarefa: Omit<Tarefa, 'id' | 'criado_em'>) => void;
+  criarTarefa: (tarefa: Omit<Tarefa, 'id' | 'criado_em'>) => Promise<void>;
   aprovarTarefa: (tarefaId: string) => void;
   rejeitarTarefa: (tarefaId: string) => void;
   adicionarSaldo: (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => void;
@@ -41,7 +42,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth(); // Hook directly
+  const { user } = useAuth();
 
   const fallbackCrianca: Crianca = {
     id: 'novo',
@@ -64,65 +65,160 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [itensLoja, setItensLoja] = useState<ItemLoja[]>([]);
   const [historico, setHistorico] = useState<HistoricoTransacao[]>([]);
   const [aulaVistaHoje, setAulaVistaHoje] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const mapTarefa = (t: any): Tarefa => ({
+    id: t.id,
+    titulo: t.titulo,
+    descricao: t.descricao || '',
+    recompensa: parseFloat(t.recompensa),
+    status: t.status,
+    crianca_id: t.crianca_id,
+    foto_url: t.foto_url,
+    icone: t.icone || 'bed',
+    categoria: t.categoria || 'casa',
+    criado_em: t.criado_em ? new Date(t.criado_em) : new Date(),
+    concluido_em: t.concluido_em ? new Date(t.concluido_em) : undefined,
+    aprovado_em: t.aprovado_em ? new Date(t.aprovado_em) : undefined,
+  });
+
+  const mapMissao = (m: any): Missao => ({
+    id: m.id,
+    titulo: m.titulo,
+    descricao: m.descricao || '',
+    tipo: m.tipo || 'poupanca',
+    objetivo_valor: parseFloat(m.objetivo_valor),
+    progresso_atual: parseFloat(m.progresso_atual || 0),
+    recompensa: parseFloat(m.recompensa || 0),
+    icone: m.icone || '🎯',
+    cor: m.cor || ['#3b82f6', '#7c3aed'],
+    tipo_label: m.tipo_label || 'Poupança',
+    icone_nome: m.icone_nome || 'trending-up',
+    ativa: m.ativa !== false,
+    crianca_id: m.crianca_id,
+  });
+
+  const mapCampanha = (c: any): Campanha => ({
+    id: c.id,
+    titulo: c.titulo || c.nome,
+    descricao: c.descricao || '',
+    organizacao: c.organizacao || 'Kamba Kid Pay',
+    meta_valor: parseFloat(c.meta_valor || 10000),
+    valor_arrecadado: parseFloat(c.valor_arrecadado || 0),
+    ativa: c.ativa !== false,
+    imagem_url: c.imagem_url,
+    causa: c.causa || 'outro',
+  });
+
+  const mapHistorico = (h: any): HistoricoTransacao => ({
+    id: h.id,
+    tipo: h.tipo,
+    descricao: h.descricao || '',
+    valor: parseFloat(h.valor),
+    data: h.data ? new Date(h.data) : new Date(),
+    pote_afetado: h.pote_afetado || h.tipo,
+    xp_ganho: h.xp_ganho,
+  });
 
   const carregarDadosAPI = async () => {
     if (!user) return;
+    setIsLoading(true);
     try {
       if (user.role === 'parent') {
-          const res = await parentService.getDashboard();
-          if (res.dependentes) {
-            setDependentes(res.dependentes.map((d: any) => ({
-              id: d.id,
-              nome: d.nome,
-              idade: d.idade,
-              nivel: d.nivel,
-              xp: 0,
-              paiId: user.id,
-              potes: d.potes,
-              avatar: { id: '', cabelo: 'padrao', roupa: 'padrao', acessorio: '', cor_pele: 'marrom', expressao: 'feliz' },
-              tarefas: [], missoes: [], historico: []
-            })));
-            if (res.dependentes.length > 0) {
-              setCrianca((prev: any) => ({ ...prev, ...res.dependentes[0] }));
-            }
-          }
-          if (res.tarefas_pendentes_aprovacao) {
-             setTarefas(res.tarefas_pendentes_aprovacao.map((t: any) => ({
-               ...t,
-               id: t.id, titulo: t.titulo, descricao: t.descricao, recompensa: t.recompensa,
-               status: t.status, crianca_id: t.crianca_id, foto_url: t.foto_url,
-               criado_em: new Date(), concluido_em: t.concluido_em ? new Date(t.concluido_em) : undefined,
-               icone: t.icone || 'bed', categoria: t.categoria || 'save'
-             })));
-          }
-          if (res.campanhas_ativas) {
-             setCampanhas(res.campanhas_ativas.map((c: any) => ({
-                id: c.id, titulo: c.titulo, descricao: c.descricao || '',
-                meta_valor: 10000, valor_arrecadado: 0, ativa: true, organizacao: c.organizacao, causa: 'outro'
-             })));
-          }
-          if(res.missoes_ativas) {
-             setMissoes(res.missoes_ativas.map((m: any) => ({
-                id: m.id, titulo: m.titulo, descricao: '', tipo: 'poupanca', objetivo_valor: m.objetivo_valor,
-                progresso_atual: m.progresso_atual, recompensa: 0, icone: '🎯', cor: ['#000', '#000'],
-                tipo_label: 'Poupança', icone_nome: 'trending-up', ativa: true, crianca_id: m.crianca_id
-             })));
-          }
-        } else {
-          // Criança
-          const res = await childService.getDashboard();
-          if (res.crianca) {
-             setCrianca((prev: any) => ({ ...prev, ...res.crianca }));
-          }
-          if(res.tarefas_do_dia) {
-             setTarefas(res.tarefas_do_dia.map((t: any) => ({ ...t, criado_em: new Date() })));
-          }
-          if(res.missao_destaque) {
-             setMissoes([{ ...res.missao_destaque, ativa: true, tipo: 'poupanca', cor: ['#BF5AF2', '#A335EE'] }]);
+        // Dashboard principal (dependentes, tarefas pendentes, campanhas, missões)
+        const [dashRes, tasksRes, campaignsRes] = await Promise.all([
+          parentService.getDashboard(),
+          taskService.getTasks(),
+          campaignService.getCampaigns(true).catch(() => ({ campanhas: [] })),
+        ]);
+
+        if (dashRes.dependentes) {
+          const deps = dashRes.dependentes.map((d: any): Crianca => ({
+            id: d.id,
+            nome: d.nome,
+            idade: d.idade,
+            nivel: d.nivel,
+            xp: 0,
+            paiId: user.id,
+            potes: d.potes,
+            avatar: { id: '', cabelo: 'padrao', roupa: 'padrao', acessorio: '', cor_pele: 'marrom', expressao: 'feliz' },
+            tarefas: [], missoes: [], historico: []
+          }));
+          setDependentes(deps);
+          if (deps.length > 0) {
+            setCrianca(prev => ({ ...prev, ...deps[0] }));
           }
         }
+
+        // Todas as tarefas (não só pendentes)
+        if (tasksRes.tarefas) {
+          setTarefas(tasksRes.tarefas.map(mapTarefa));
+        } else if (dashRes.tarefas_pendentes_aprovacao) {
+          setTarefas(dashRes.tarefas_pendentes_aprovacao.map(mapTarefa));
+        }
+
+        if (campaignsRes.campanhas) {
+          setCampanhas(campaignsRes.campanhas.map(mapCampanha));
+        } else if (dashRes.campanhas_ativas) {
+          setCampanhas(dashRes.campanhas_ativas.map(mapCampanha));
+        }
+
+        if (dashRes.missoes_ativas) {
+          setMissoes(dashRes.missoes_ativas.map(mapMissao));
+        }
+
+      } else {
+        // Criança
+        const [dashRes, campaignsRes, contentRes] = await Promise.all([
+          childService.getDashboard(),
+          campaignService.getCampaigns(true).catch(() => ({ campanhas: [] })),
+          educationalService.getContent().catch(() => ({ conteudos: [] })),
+        ]);
+
+        if (dashRes.crianca) {
+          setCrianca(prev => ({
+            ...prev,
+            id: dashRes.crianca.id,
+            nome: dashRes.crianca.nome,
+            idade: dashRes.crianca.idade,
+            nivel: dashRes.crianca.nivel,
+            xp: dashRes.crianca.xp || 0,
+            potes: dashRes.crianca.potes || prev.potes,
+          }));
+        }
+
+        if (dashRes.tarefas_do_dia) {
+          setTarefas(dashRes.tarefas_do_dia.map(mapTarefa));
+        }
+
+        if (dashRes.missao_destaque) {
+          setMissoes([mapMissao({ ...dashRes.missao_destaque, ativa: true, cor: ['#BF5AF2', '#A335EE'] })]);
+        } else if (dashRes.missoes) {
+          setMissoes(dashRes.missoes.map(mapMissao));
+        }
+
+        if (campaignsRes.campanhas) {
+          setCampanhas(campaignsRes.campanhas.map(mapCampanha));
+        }
+
+        if (contentRes.conteudos) {
+          setConteudoEducativo(contentRes.conteudos.map((c: any): ConteudoEducativo => ({
+            id: c.id,
+            titulo: c.titulo,
+            tipo: c.tipo,
+            thumbnail_url: c.thumbnail_url || `https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800`,
+            video_url: c.video_url,
+            duracao: c.duracao || '5',
+            descricao: c.descricao || '',
+            faixa_etaria: c.faixa_etaria || '6-12',
+            completo: c.completo || false,
+          })));
+        }
+      }
     } catch (error) {
       console.error("Erro ao carregar dados da API:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -134,7 +230,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const atualizarSaldo = (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => {
     setCrianca(prev => {
       const novosPotes = { ...prev.potes };
-      novosPotes[`saldo_${tipo}`] += valor;
+      (novosPotes as any)[`saldo_${tipo}`] += valor;
       novosPotes.total = novosPotes.saldo_gastar + novosPotes.saldo_poupar + novosPotes.saldo_ajudar;
       return { ...prev, potes: novosPotes };
     });
@@ -149,40 +245,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ));
   };
 
-  // Realizar doação para campanha
-  const realizarDoacao = (campanhaId: string, valor: number) => {
-    if (crianca.potes.saldo_ajudar >= valor) {
-      // Atualizar saldo
+  // Realizar doação para campanha (via API real)
+  const realizarDoacao = async (campanhaId: string, valor: number) => {
+    if (crianca.potes.saldo_ajudar < valor) return;
+    try {
+      await campaignService.donate(campanhaId, valor);
       atualizarSaldo('ajudar', -valor);
-      
-      // Atualizar campanha
       setCampanhas(prev => prev.map(c => 
         c.id === campanhaId 
           ? { ...c, valor_arrecadado: c.valor_arrecadado + valor }
           : c
       ));
-      
-      // Atualizar progresso da missão de solidariedade
-      setMissoes(prev => prev.map(m => 
-        m.tipo === 'solidariedade' 
-          ? { ...m, progresso_atual: m.progresso_atual + valor }
-          : m
-      ));
-      
-      // Adicionar ao histórico
-      const campanhaEncontrada = campanhas.find(c => c.id === campanhaId);
       setHistorico(prev => [{
         id: `hist-${Date.now()}`,
         tipo: 'doacao',
-        descricao: campanhaEncontrada?.titulo || 'Doação',
+        descricao: campanhas.find(c => c.id === campanhaId)?.titulo || 'Doação',
         valor: -valor,
-        xp_ganho: valor * 2, // XP em Dobro
+        xp_ganho: valor * 2,
         data: new Date(),
         pote_afetado: 'ajudar'
       }, ...prev]);
-      
-      // Ganhar XP em dobro
       adicionarXP(valor * 2);
+    } catch (e) {
+      console.error('Erro ao fazer doação:', e);
     }
   };
 
@@ -190,15 +275,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const comprarItem = (itemId: string) => {
     const item = itensLoja.find(i => i.id === itemId);
     if (item && crianca.potes.saldo_gastar >= item.preco) {
-      // Desbloquear item
-      setItensLoja(prev => prev.map(i => 
-        i.id === itemId ? { ...i, desbloqueado: true } : i
-      ));
-      
-      // Atualizar saldo
+      setItensLoja(prev => prev.map(i => i.id === itemId ? { ...i, desbloqueado: true } : i));
       atualizarSaldo('gastar', -item.preco);
-      
-      // Adicionar ao histórico
       setHistorico(prev => [{
         id: `hist-${Date.now()}`,
         tipo: 'compra',
@@ -210,31 +288,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Atualizar avatar
   const atualizarAvatar = (parte: string, valor: string) => {
-    setCrianca(prev => ({
-      ...prev,
-      avatar: { ...prev.avatar, [parte]: valor }
-    }));
+    setCrianca(prev => ({ ...prev, avatar: { ...prev.avatar, [parte]: valor } }));
   };
 
-  // Marcar conteúdo educativo como completo
   const marcarConteudoCompleto = (conteudoId: string) => {
-    setConteudoEducativo(prev => prev.map(c => 
-      c.id === conteudoId ? { ...c, completo: true } : c
-    ));
+    setConteudoEducativo(prev => prev.map(c => c.id === conteudoId ? { ...c, completo: true } : c));
   };
 
-  // Criar nova tarefa (ação do pai)
+  // Criar nova tarefa (ação do pai) — API real
   const criarTarefa = async (novaTarefa: Omit<Tarefa, 'id' | 'criado_em'>) => {
     try {
       const res = await taskService.createTask({
-         titulo: novaTarefa.titulo,
-         descricao: novaTarefa.descricao,
-         recompensa: novaTarefa.recompensa,
-         categoria: novaTarefa.categoria,
-         crianca_id: novaTarefa.crianca_id,
-         icone: novaTarefa.icone
+        titulo: novaTarefa.titulo,
+        descricao: novaTarefa.descricao,
+        recompensa: novaTarefa.recompensa,
+        categoria: novaTarefa.categoria,
+        crianca_id: novaTarefa.crianca_id,
+        icone: novaTarefa.icone
       });
       const tarefa: Tarefa = {
         ...novaTarefa,
@@ -243,91 +314,100 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       setTarefas(prev => [tarefa, ...prev]);
     } catch(e) {
-      console.error(e);
+      console.error('Erro ao criar tarefa:', e);
+      throw e;
     }
   };
 
-  // Aprovar tarefa (ação do pai)
+  // Aprovar tarefa (ação do pai) — API real + atualização otimista
   const aprovarTarefa = async (tarefaId: string) => {
     try {
-       await taskService.approveTask(tarefaId);
-       // Fallback mock style update for reactivity
-       const tarefa = tarefas.find(t => t.id === tarefaId);
-       if (tarefa) {
-        setTarefas(prev => prev.map(t => 
-          t.id === tarefaId 
-            ? { ...t, status: 'concluida', aprovado_em: new Date() }
-            : t
-        ));
-        const gastarPct = crianca?.potes?.config?.gastar?.label ? 60 : 60;
-        const pouparPct = crianca?.potes?.config?.poupar?.label ? 30 : 30;
-        const ajudarPct = 100 - gastarPct - pouparPct;
-        const valGastar = Math.round((tarefa.recompensa * gastarPct) / 100);
-        const valPoupar = Math.round((tarefa.recompensa * pouparPct) / 100);
-        const valAjudar = tarefa.recompensa - valGastar - valPoupar;
-        setCrianca(prev => {
-          const np = { ...prev.potes };
-          np.saldo_gastar += valGastar;
-          np.saldo_poupar += valPoupar;
-          np.saldo_ajudar += valAjudar;
-          np.total = np.saldo_gastar + np.saldo_poupar + np.saldo_ajudar;
-          return { ...prev, potes: np };
-        });
-       }
-    } catch(e) { console.error(e); }
+      const res = await taskService.approveTask(tarefaId);
+      setTarefas(prev => prev.map(t => 
+        t.id === tarefaId ? { ...t, status: 'concluida', aprovado_em: new Date() } : t
+      ));
+      // Atualizar saldos do filho com valores vindos da API
+      if (res?.recompensa_creditada?.detalhes) {
+        const { gastar, poupar, ajudar } = res.recompensa_creditada.detalhes;
+        setCrianca(prev => ({
+          ...prev,
+          potes: {
+            saldo_gastar: gastar,
+            saldo_poupar: poupar,
+            saldo_ajudar: ajudar,
+            total: gastar + poupar + ajudar,
+          }
+        }));
+      }
+    } catch(e) { console.error('Erro ao aprovar tarefa:', e); }
   };
 
-  // Rejeitar tarefa (ação do pai)
+  // Rejeitar tarefa — API real
   const rejeitarTarefa = async (tarefaId: string) => {
     try {
       await taskService.rejectTask(tarefaId, 'Rejeitada pelo Responsável');
       setTarefas(prev => prev.map(t => 
-        t.id === tarefaId 
-          ? { ...t, status: 'rejeitada', foto_url: undefined }
-          : t
+        t.id === tarefaId ? { ...t, status: 'rejeitada', foto_url: undefined } : t
       ));
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error('Erro ao rejeitar tarefa:', e); }
   };
 
-  // Adicionar saldo (ação do pai)
-  const adicionarSaldo = (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => {
-    atualizarSaldo(pote, valor);
-    setHistorico(prev => [{
-      id: `hist-${Date.now()}`,
-      tipo: 'tarefa',
-      descricao: 'Mesada adicionada pelos pais',
-      valor: valor,
-      data: new Date(),
-      pote_afetado: pote
-    }, ...prev]);
+  // Adicionar saldo (ação do pai) — API real
+  const adicionarSaldo = async (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => {
+    try {
+      if (crianca.id && crianca.id !== 'novo') {
+        await parentService.addBalance(crianca.id, valor, pote, 'Mesada adicionada pelos pais');
+      }
+      atualizarSaldo(pote, valor);
+      setHistorico(prev => [{
+        id: `hist-${Date.now()}`,
+        tipo: 'tarefa',
+        descricao: 'Mesada adicionada pelos pais',
+        valor,
+        data: new Date(),
+        pote_afetado: pote
+      }, ...prev]);
+    } catch (e) {
+      console.error('Erro ao adicionar saldo:', e);
+    }
   };
 
-  // Atualizar dados da criança (nome e idade)
   const atualizarDadosCrianca = (nome: string, idade: number) => {
-    setCrianca(prev => ({
-      ...prev,
-      nome,
-      idade
-    }));
+    setCrianca(prev => ({ ...prev, nome, idade }));
   };
 
-  // Criar nova campanha
-  const criarCampanha = (novaCampanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => {
-    const campanha: Campanha = {
-      ...novaCampanha,
-      id: `campanha-${Date.now()}`,
-      valor_arrecadado: 0,
-      criado_em: new Date()
-    };
-    setCampanhas(prev => [campanha, ...prev]);
+  // Criar campanha — API real
+  const criarCampanha = async (novaCampanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => {
+    try {
+      const res = await campaignService.createCampaign({
+        nome: novaCampanha.titulo,
+        descricao: novaCampanha.descricao,
+        organizacao: novaCampanha.organizacao,
+        meta_valor: novaCampanha.meta_valor,
+        causa: novaCampanha.causa,
+      });
+      const campanha: Campanha = {
+        ...novaCampanha,
+        id: res.id || `campanha-${Date.now()}`,
+        valor_arrecadado: 0,
+      };
+      setCampanhas(prev => [campanha, ...prev]);
+    } catch (e) {
+      console.error('Erro ao criar campanha:', e);
+      // Fallback local
+      setCampanhas(prev => [{
+        ...novaCampanha,
+        id: `campanha-${Date.now()}`,
+        valor_arrecadado: 0,
+      }, ...prev]);
+    }
   };
 
-  // Adicionar XP
   const adicionarXP = (valor: number) => {
     setCrianca(prev => ({
       ...prev,
       xp: (prev.xp || 0) + valor,
-      nivel: Math.floor(((prev.xp || 0) + valor) / 100) + 1 // Regra simples: 1 nível a cada 100 XP
+      nivel: Math.floor(((prev.xp || 0) + valor) / 100) + 1
     }));
   };
 
@@ -346,6 +426,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       itensLoja,
       historico,
       aulaVistaHoje,
+      isLoading,
       atualizarSaldo,
       enviarFotoTarefa,
       realizarDoacao,

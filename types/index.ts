@@ -106,8 +106,9 @@ export interface ConteudoEducativo {
   tipo: 'video' | 'animacao' | 'jogo';
   faixa_etaria: FaixaEtaria;
   thumbnail_url?: string;
+  video_url?: string;
   duracao?: string;
-  topico: string;
+  topico?: string;
   completo: boolean;
 }
 

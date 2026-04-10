@@ -51,31 +51,24 @@ export default function ParentTabsLayout() {
           ),
         }}
       />
+
+      {/* Ecrãs ocultos da tab bar — acessíveis por navegação direta */}
       <Tabs.Screen
         name="campaigns"
         options={{
-          title: 'Causas',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="finance"
         options={{
-          title: 'Finanças',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="family"
         options={{
-          title: 'Família',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
     </Tabs>
