@@ -94,7 +94,7 @@ const jar = StyleSheet.create({
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function ChildDashboard() {
   const insets = useSafeAreaInsets();
-  const { user, logout } = useAuth();
+  const { user, logout, isDemo } = useAuth();
   const { crianca } = useApp();
   const [stars, setStars] = useState<{ id: number; x: number; y: number; delay: number; size: number; color: string }[]>([]);
   const starKey = useRef(0);
@@ -129,20 +129,23 @@ export default function ChildDashboard() {
   ];
 
   useEffect(() => {
-    // INFO: Limpando a chave forçadamente a pedido do usuário
-    AsyncStorage.removeItem('kamba_child_onboarding_slides');
-    AsyncStorage.removeItem('kamba_child_onboarding_tour').then(() => {
-      AsyncStorage.getItem('kamba_child_onboarding_slides').then((val) => {
-        if (!val) {
-          setShowSlides(true);
-        } else {
-          AsyncStorage.getItem('kamba_child_onboarding_tour').then((valTour) => {
-            if (!valTour) setShowTour(true);
-          });
-        }
-      });
-    });
-  }, []);
+    const checkOnboarding = async () => {
+      if (isDemo) {
+        // No modo demo, sempre mostramos a apresentação
+        setShowSlides(true);
+        return;
+      }
+
+      const val = await AsyncStorage.getItem('kamba_child_onboarding_slides');
+      if (!val) {
+        setShowSlides(true);
+      } else {
+        const valTour = await AsyncStorage.getItem('kamba_child_onboarding_tour');
+        if (!valTour) setShowTour(true);
+      }
+    };
+    checkOnboarding();
+  }, [isDemo]);
 
   const measureRef = (name: string, ref: React.RefObject<View | null>) => {
     return new Promise<void>((resolve) => {
@@ -187,8 +190,16 @@ export default function ChildDashboard() {
   };
 
   const handleFinishTour = async () => {
-    await AsyncStorage.setItem('kamba_child_onboarding_tour', 'true');
+    if (!isDemo) {
+      await AsyncStorage.setItem('kamba_child_onboarding_tour', 'true');
+    }
     setShowTour(false);
+    setCurrentStep(0);
+  };
+
+  const startTourManually = () => {
+    setCurrentStep(0);
+    setShowTour(true);
   };
 
   if (showSlides) {
@@ -251,12 +262,14 @@ export default function ChildDashboard() {
               <Text style={s.xpText}>{crianca.xp || 0} XP</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={s.logoutBtn}
-            onPress={async () => { await logout(); router.replace('/'); }}
-          >
-            <Ionicons name="log-out-outline" size={22} color="#FF6B00" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity
+              style={s.logoutBtn}
+              onPress={async () => { await logout(); router.replace('/'); }}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#FF6B00" />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
         {/* Content Wrapper for Vertical Centering */}
