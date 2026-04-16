@@ -6,6 +6,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  Target, Users, TrendingUp, HeartHandshake, Building, MapPin, 
+  Calendar, Pause, Play, Lock, Pencil, Trash2, X, UploadCloud, Tag
+} from 'lucide-react-native';
 
 interface Campaign {
   id: string;
@@ -165,10 +169,10 @@ export default function AdminCampaigns() {
         ListHeaderComponent={() => (
           /* KPI row */
           <View style={styles.kpiRow}>
-            <KpiCard icon="🎯" label="Campanhas Ativas" value={String(stats.ativas)} tag="ATIVAS" color="#22C55E" />
-            <KpiCard icon="👥" label="Doadores" value={stats.doadores.toLocaleString()} tag="TOTAL" color="#3B82F6" />
-            <KpiCard icon="📈" label="Meta Total" value={fmtKz(stats.meta)} tag="META" color="#F59E0B" />
-            <KpiCard icon="💝" label="Arrecadado" value={fmtKz(stats.arrecadado)} tag="ARRECADADO" color="#EC4899" />
+            <KpiCard Icon={Target} label="Campanhas Ativas" value={String(stats.ativas)} tag="ATIVAS" color="#22C55E" />
+            <KpiCard Icon={Users} label="Doadores" value={stats.doadores.toLocaleString()} tag="TOTAL" color="#3B82F6" />
+            <KpiCard Icon={TrendingUp} label="Meta Total" value={fmtKz(stats.meta)} tag="META" color="#F59E0B" />
+            <KpiCard Icon={HeartHandshake} label="Arrecadado" value={fmtKz(stats.arrecadado)} tag="ARRECADADO" color="#EC4899" />
           </View>
         )}
         renderItem={({ item: c, index }) => {
@@ -218,10 +222,12 @@ export default function AdminCampaigns() {
                   {/* Org + Location */}
                   <View style={styles.orgRow}>
                     <View style={styles.orgChip}>
-                      <Text style={styles.orgChipText}>🏢 {c.organizacao}</Text>
+                      <Building size={12} color="#8FA1C7" />
+                      <Text style={styles.orgChipText}>{c.organizacao}</Text>
                     </View>
                     <View style={styles.orgChip}>
-                      <Text style={styles.orgChipText}>📍 {c.localizacao}</Text>
+                      <MapPin size={12} color="#8FA1C7" />
+                      <Text style={styles.orgChipText}>{c.localizacao}</Text>
                     </View>
                   </View>
 
@@ -234,11 +240,17 @@ export default function AdminCampaigns() {
                     {c.dataInicio ? (
                       <>
                         <View style={styles.statItem}>
-                          <Text style={styles.statValue}>📅 {c.dataInicio}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Calendar size={12} color="#F0F4FF" />
+                            <Text style={styles.statValue}>{c.dataInicio}</Text>
+                          </View>
                           <Text style={styles.statLabel}>Início</Text>
                         </View>
                         <View style={styles.statItem}>
-                          <Text style={styles.statValue}>📅 {c.dataFim}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Calendar size={12} color="#F0F4FF" />
+                            <Text style={styles.statValue}>{c.dataFim}</Text>
+                          </View>
                           <Text style={styles.statLabel}>Fim</Text>
                         </View>
                       </>
@@ -252,15 +264,18 @@ export default function AdminCampaigns() {
                       onPress={() => toggleStatus(c)}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.pauseBtnText}>
-                        {c.status === 'ativa' ? '⏸ Pausar' : c.status === 'pausada' ? '▶ Ativar' : '🔒 Finalizada'}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                        {c.status === 'ativa' ? <Pause size={14} color="#F59E0B" /> : c.status === 'pausada' ? <Play size={14} color="#22C55E" /> : <Lock size={14} color="#8FA1C7" />}
+                        <Text style={[styles.pauseBtnText, c.status === 'ativa' ? undefined : c.status === 'pausada' ? { color: '#22C55E' } : { color: '#8FA1C7' }]}>
+                          {c.status === 'ativa' ? 'Pausar' : c.status === 'pausada' ? 'Ativar' : 'Finalizada'}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconBtn} onPress={() => openEdit(c)}>
-                      <Text style={{ fontSize: 16 }}>✏️</Text>
+                      <Pencil size={18} color="#8FA1C7" />
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.iconBtn, styles.delIconBtn]} onPress={() => del(c.id)}>
-                      <Text style={{ fontSize: 16 }}>🗑️</Text>
+                      <Trash2 size={18} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -277,7 +292,7 @@ export default function AdminCampaigns() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editId ? 'Editar Campanha' : 'Criar Nova Campanha'}</Text>
               <TouchableOpacity onPress={() => setModal(false)} style={styles.closeBtn}>
-                <Text style={styles.closeBtnText}>✕</Text>
+                <X size={20} color="#8FA1C7" />
               </TouchableOpacity>
             </View>
 
@@ -285,7 +300,7 @@ export default function AdminCampaigns() {
               {/* Image URL / Upload */}
               <Text style={styles.fieldLabel}>Imagem de Capa *</Text>
               <View style={styles.uploadArea}>
-                <Text style={styles.uploadIcon}>⬆️</Text>
+                <UploadCloud size={32} color="#8FA1C7" style={{ marginBottom: 8 }} />
                 <Text style={styles.uploadText}>Imagem de capa da campanha (recomendado: 1200x600px)</Text>
                 <TextInput
                   style={[styles.input, { marginTop: 10 }]}
@@ -378,8 +393,9 @@ export default function AdminCampaigns() {
               <TouchableOpacity style={styles.btnCancel} onPress={() => setModal(false)}>
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.btnSave, { backgroundColor: '#EC4899' }]} onPress={save}>
-                <Text style={styles.btnSaveText}>🏷 {editId ? 'Salvar' : 'Criar Campanha'}</Text>
+              <TouchableOpacity style={[styles.btnSave, { backgroundColor: '#EC4899', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]} onPress={save}>
+                <Tag size={16} color="#fff" />
+                <Text style={styles.btnSaveText}>{editId ? 'Salvar' : 'Criar Campanha'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -389,11 +405,11 @@ export default function AdminCampaigns() {
   );
 }
 
-function KpiCard({ icon, label, value, tag, color }: { icon: string; label: string; value: string; tag: string; color: string }) {
+function KpiCard({ Icon, label, value, tag, color }: { Icon: any; label: string; value: string; tag: string; color: string }) {
   return (
     <View style={[styles.kpiCard, { borderColor: `${color}30` }]}>
       <View style={styles.kpiTop}>
-        <Text style={styles.kpiIcon}>{icon}</Text>
+        <Icon size={22} color={color} />
         <View style={[styles.kpiTag, { backgroundColor: `${color}22` }]}>
           <Text style={[styles.kpiTagText, { color }]}>{tag}</Text>
         </View>
@@ -473,7 +489,7 @@ const styles = StyleSheet.create({
   orgRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 12 },
   orgChip: {
     backgroundColor: S.sidebar, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
-    borderWidth: 1, borderColor: S.border,
+    borderWidth: 1, borderColor: S.border, flexDirection: 'row', alignItems: 'center', gap: 4
   },
   orgChipText: { fontSize: 11, color: S.sub, fontFamily: 'Nunito_400Regular' },
 

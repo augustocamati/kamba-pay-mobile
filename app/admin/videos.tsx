@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Play, Eye, Pencil, Trash2, X, UploadCloud, Image as ImageIcon, Clapperboard } from 'lucide-react-native';
 
 interface AdminVideo {
   id: string; titulo: string; descricao: string;
@@ -119,7 +120,7 @@ export default function AdminVideos() {
                   <Image source={{ uri: v.thumbnail }} style={styles.thumb} resizeMode="cover" />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.65)']} style={styles.thumbGrad} />
                   <View style={styles.playCircle}>
-                    <Text style={styles.playIcon}>▶</Text>
+                    <Play size={24} color="#0B1222" style={{ marginLeft: 3 }} />
                   </View>
                   <View style={[styles.catLabel, { backgroundColor: color }]}>
                     <Text style={styles.catLabelText}>{v.categoria}</Text>
@@ -136,14 +137,20 @@ export default function AdminVideos() {
                   <Text style={styles.videoTitle}>{v.titulo}</Text>
                   <Text style={styles.videoDesc} numberOfLines={2}>{v.descricao}</Text>
                   <View style={styles.videoMeta}>
-                    <Text style={styles.viewCount}>👁 {v.visualizacoes.toLocaleString()} visualizações</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Eye size={14} color="#8FA1C7" />
+                      <Text style={styles.viewCount}>{v.visualizacoes.toLocaleString()} visualizações</Text>
+                    </View>
                   </View>
                   <View style={styles.videoActions}>
                     <TouchableOpacity style={[styles.actionBtn, { flex: 2 }]} onPress={() => openEdit(v)}>
-                      <Text style={styles.actionBtnText}>✏️ Editar</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <Pencil size={14} color="#8FA1C7" />
+                        <Text style={styles.actionBtnText}>Editar</Text>
+                      </View>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.actionBtn, styles.delBtn]} onPress={() => del(v.id)}>
-                      <Text style={{ fontSize: 16 }}>🗑️</Text>
+                      <Trash2 size={16} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -160,7 +167,7 @@ export default function AdminVideos() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editId ? 'Editar Vídeo' : 'Adicionar Novo Vídeo'}</Text>
               <TouchableOpacity onPress={() => setModal(false)} style={styles.closeBtn}>
-                <Text style={styles.closeBtnText}>✕</Text>
+                <X size={20} color="#8FA1C7" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -179,7 +186,7 @@ export default function AdminVideos() {
               {/* Video upload area */}
               <Text style={styles.fieldLabel}>Vídeo *</Text>
               <View style={styles.uploadBox}>
-                <Text style={styles.uploadIcon}>⬆️</Text>
+                <UploadCloud size={32} color="#8FA1C7" style={{ marginBottom: 12 }} />
                 <Text style={styles.uploadHint}>Arraste um vídeo ou clique para fazer upload</Text>
                 <TextInput style={[styles.input, styles.uploadInput]}
                   placeholder="Ou cole a URL do vídeo (YouTube, Vimeo...)"
@@ -193,7 +200,7 @@ export default function AdminVideos() {
               {/* Thumbnail */}
               <Text style={styles.fieldLabel}>Thumbnail</Text>
               <View style={styles.uploadBox}>
-                <Text style={styles.uploadIcon}>🖼️</Text>
+                <ImageIcon size={32} color="#8FA1C7" style={{ marginBottom: 12 }} />
                 <Text style={styles.uploadHint}>Imagem de capa do vídeo</Text>
                 <TextInput style={[styles.input, styles.uploadInput]}
                   placeholder="Cole a URL da thumbnail..."
@@ -227,8 +234,9 @@ export default function AdminVideos() {
               <TouchableOpacity style={styles.btnCancel} onPress={() => setModal(false)}>
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btnSave} onPress={save}>
-                <Text style={styles.btnSaveText}>🎬 {editId ? 'Salvar' : 'Adicionar Vídeo'}</Text>
+              <TouchableOpacity style={[styles.btnSave, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]} onPress={save}>
+                <Clapperboard size={16} color="#fff" />
+                <Text style={styles.btnSaveText}>{editId ? 'Salvar' : 'Adicionar Vídeo'}</Text>
               </TouchableOpacity>
             </View>
           </View>

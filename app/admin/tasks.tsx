@@ -5,6 +5,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { 
+  Bed, Book, Utensils, Paintbrush, Trophy, Music, Leaf, BookOpen, 
+  Dumbbell, Smile, Broom, Shirt, Coins, Dog, Droplets, Pencil, 
+  Trash2, X, Plus, CheckCircle2, Clock, CheckSquare, Save
+} from 'lucide-react-native';
 
 interface AdminTask {
   id: string; icone: string; titulo: string; descricao: string;
@@ -13,15 +18,22 @@ interface AdminTask {
 }
 
 const INITIAL_TASKS: AdminTask[] = [
-  { id: 'task-1', icone: '🛏️', titulo: 'Arrumar a Cama', descricao: 'Organize sua cama todos os dias ao acordar', categoria: 'Casa', dificuldade: 'Fácil', recompensa: 100, tempo: '5 min', status: 'ativo', completadas: 245, ativas: 3 },
-  { id: 'task-2', icone: '📚', titulo: 'Fazer Lição de Casa', descricao: 'Complete todas as tarefas escolares do dia antes de brincar', categoria: 'Escola', dificuldade: 'Médio', recompensa: 500, tempo: '60 min', status: 'ativo', completadas: 180, ativas: 2 },
-  { id: 'task-3', icone: '🍽️', titulo: 'Lavar a Louça', descricao: 'Ajuda lavando os pratos após as refeições', categoria: 'Casa', dificuldade: 'Médio', recompensa: 300, tempo: '15 min', status: 'ativo', completadas: 156, ativas: 4 },
-  { id: 'task-4', icone: '📖', titulo: 'Ler 30 Minutos', descricao: 'Dedique tempo para leitura diária de um livro à sua escolha', categoria: 'Escola', dificuldade: 'Fácil', recompensa: 400, tempo: '30 min', status: 'ativo', completadas: 98, ativas: 1 },
-  { id: 'task-5', icone: '🌱', titulo: 'Regar as Plantas', descricao: 'Cuide das plantas da casa regando-as com a quantidade certa de água', categoria: 'Casa', dificuldade: 'Fácil', recompensa: 150, tempo: '10 min', status: 'inativo', completadas: 67, ativas: 0 },
-  { id: 'task-6', icone: '⚽', titulo: 'Treino de Futebol', descricao: 'Pratique suas habilidades de futebol por 1 hora', categoria: 'Esporte', dificuldade: 'Médio', recompensa: 350, tempo: '60 min', status: 'ativo', completadas: 120, ativas: 2 },
+  { id: 'task-1', icone: 'bed', titulo: 'Arrumar a Cama', descricao: 'Organize sua cama todos os dias ao acordar', categoria: 'Casa', dificuldade: 'Fácil', recompensa: 100, tempo: '5 min', status: 'ativo', completadas: 245, ativas: 3 },
+  { id: 'task-2', icone: 'book', titulo: 'Fazer Lição de Casa', descricao: 'Complete todas as tarefas escolares do dia antes de brincar', categoria: 'Escola', dificuldade: 'Médio', recompensa: 500, tempo: '60 min', status: 'ativo', completadas: 180, ativas: 2 },
+  { id: 'task-3', icone: 'utensils', titulo: 'Lavar a Louça', descricao: 'Ajuda lavando os pratos após as refeições', categoria: 'Casa', dificuldade: 'Médio', recompensa: 300, tempo: '15 min', status: 'ativo', completadas: 156, ativas: 4 },
+  { id: 'task-4', icone: 'book_open', titulo: 'Ler 30 Minutos', descricao: 'Dedique tempo para leitura diária de um livro à sua escolha', categoria: 'Escola', dificuldade: 'Fácil', recompensa: 400, tempo: '30 min', status: 'ativo', completadas: 98, ativas: 1 },
+  { id: 'task-5', icone: 'leaf', titulo: 'Regar as Plantas', descricao: 'Cuide das plantas da casa regando-as com a quantidade certa de água', categoria: 'Casa', dificuldade: 'Fácil', recompensa: 150, tempo: '10 min', status: 'inativo', completadas: 67, ativas: 0 },
+  { id: 'task-6', icone: 'trophy', titulo: 'Treino de Futebol', descricao: 'Pratique suas habilidades de futebol por 1 hora', categoria: 'Esporte', dificuldade: 'Médio', recompensa: 350, tempo: '60 min', status: 'ativo', completadas: 120, ativas: 2 },
 ];
 
-const TASK_ICONS = ['🛏️','📚','🍽️','🎨','⚽','🎵','🌱','📖','💪','🦷','🧹','🧺','💰','🐶','🚿'];
+const ICON_MAP: Record<string, any> = {
+  bed: Bed, book: Book, utensils: Utensils, paint: Paintbrush,
+  trophy: Trophy, music: Music, leaf: Leaf, book_open: BookOpen,
+  dumbbell: Dumbbell, smile: Smile, broom: Broom, shirt: Shirt,
+  coins: Coins, dog: Dog, drop: Droplets,
+};
+
+const TASK_ICONS = Object.keys(ICON_MAP);
 const DIFFICULTIES = ['Fácil', 'Médio', 'Difícil'];
 const CATEGORIES = ['Casa', 'Escola', 'Esporte', 'Arte', 'Saúde', 'Responsabilidade'];
 
@@ -31,13 +43,13 @@ export default function AdminTasks() {
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<AdminTask>>({
-    icone: '🛏️', titulo: '', descricao: '', categoria: 'Casa',
+    icone: 'bed', titulo: '', descricao: '', categoria: 'Casa',
     dificuldade: 'Fácil', recompensa: 100, tempo: '5 min', status: 'ativo',
   });
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ icone: '🛏️', titulo: '', descricao: '', categoria: 'Casa', dificuldade: 'Fácil', recompensa: 100, tempo: '5 min', status: 'ativo' });
+    setForm({ icone: 'bed', titulo: '', descricao: '', categoria: 'Casa', dificuldade: 'Fácil', recompensa: 100, tempo: '5 min', status: 'ativo' });
     setModal(true);
   };
 
@@ -53,7 +65,7 @@ export default function AdminTasks() {
       setTasks(p => p.map(t => t.id === editId ? { ...t, ...form } as AdminTask : t));
     } else {
       const newTask: AdminTask = {
-        id: `task-${Date.now()}`, icone: form.icone || '🛏️', titulo: form.titulo!,
+        id: `task-${Date.now()}`, icone: form.icone || 'bed', titulo: form.titulo!,
         descricao: form.descricao!, categoria: form.categoria || 'Casa',
         dificuldade: form.dificuldade || 'Fácil', recompensa: form.recompensa || 100,
         tempo: form.tempo || '5 min', status: 'ativo',
@@ -89,7 +101,10 @@ export default function AdminTasks() {
           <Text style={styles.pageSub}>Total: {tasks.length} tarefas cadastradas</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <Text style={styles.addBtnText}>➕ Adicionar</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Plus size={16} color="#fff" />
+            <Text style={styles.addBtnText}>Adicionar</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -106,7 +121,10 @@ export default function AdminTasks() {
               <View style={styles.taskCard}>
                 <View style={styles.taskCardTop}>
                   <View style={styles.taskIconWrap}>
-                    <Text style={styles.taskIcon}>{t.icone}</Text>
+                    {(() => {
+                      const IconComp = ICON_MAP[t.icone] || BookOpen;
+                      return <IconComp size={24} color="#FF8C00" />;
+                    })()}
                   </View>
                   <View style={styles.taskBadges}>
                     <View style={[styles.pill, { backgroundColor: diff.bg }]}>
@@ -122,23 +140,27 @@ export default function AdminTasks() {
                 <Text style={styles.taskDesc} numberOfLines={2}>{t.descricao}</Text>
 
                 <View style={styles.taskMeta}>
-                  <MetaItem emoji="💰" label="Recompensa" value={`Kz ${t.recompensa}`} />
-                  <MetaItem emoji="⏱️" label="Tempo" value={t.tempo} />
-                  <MetaItem emoji="✅" label="Completadas" value={String(t.completadas)} />
+                  <MetaItem Icon={Coins} label="Recompensa" value={`Kz ${t.recompensa}`} />
+                  <MetaItem Icon={Clock} label="Tempo" value={t.tempo} />
+                  <MetaItem Icon={CheckSquare} label="Completadas" value={String(t.completadas)} />
                 </View>
 
                 <View style={[styles.statusBar, t.status === 'ativo' ? styles.statusBarAtivo : styles.statusBarInativo]}>
-                  <Text style={[styles.statusBarText, t.status === 'ativo' ? { color: '#22C55E' } : { color: '#EF4444' }]}>
-                    {t.status === 'ativo' ? '✅ Ativo' : '❌ Inativo'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {t.status === 'ativo' ? <CheckCircle2 size={14} color="#22C55E" /> : <X size={14} color="#EF4444" />}
+                    <Text style={[styles.statusBarText, t.status === 'ativo' ? { color: '#22C55E' } : { color: '#EF4444' }]}>
+                      {t.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                    </Text>
+                  </View>
                 </View>
 
                 <View style={styles.taskActions}>
-                  <TouchableOpacity style={[styles.taskActionBtn, { flex: 2 }]} onPress={() => openEdit(t)}>
-                    <Text style={styles.taskActionBtnText}>✏️ Editar</Text>
+                  <TouchableOpacity style={[styles.taskActionBtn, { flex: 2, flexDirection: 'row', justifyContent: 'center', gap: 6 }]} onPress={() => openEdit(t)}>
+                    <Pencil size={14} color="#8FA1C7" />
+                    <Text style={styles.taskActionBtnText}>Editar</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.taskActionBtn, { flex: 1 }]} onPress={() => deleteTask(t.id)}>
-                    <Text style={[styles.taskActionBtnText, { color: '#EF4444' }]}>🗑️</Text>
+                  <TouchableOpacity style={[styles.taskActionBtn, { flex: 1, alignItems: 'center' }]} onPress={() => deleteTask(t.id)}>
+                    <Trash2 size={16} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -153,21 +175,24 @@ export default function AdminTasks() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editId ? 'Editar Tarefa' : 'Adicionar Tarefa'}</Text>
-              <TouchableOpacity onPress={() => setModal(false)}><Text style={styles.modalClose}>✕</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => setModal(false)}><X size={20} color="#4A5F8A" /></TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
               {/* Icon picker */}
               <Text style={styles.formLabel}>Ícone</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.iconScroll}>
-                {TASK_ICONS.map(ic => (
+                {TASK_ICONS.map(ic => {
+                  const IconComp = ICON_MAP[ic];
+                  return (
                   <TouchableOpacity
                     key={ic}
                     style={[styles.iconOption, form.icone === ic && styles.iconOptionSelected]}
                     onPress={() => setForm(p => ({ ...p, icone: ic }))}
                   >
-                    <Text style={styles.iconOptionText}>{ic}</Text>
+                    <IconComp size={22} color={form.icone === ic ? "#FF8C00" : "#8FA1C7"} />
                   </TouchableOpacity>
-                ))}
+                  );
+                })}
               </ScrollView>
 
               <FormField label="Título *" value={form.titulo || ''} onChange={v => setForm(p => ({ ...p, titulo: v }))} />
@@ -216,9 +241,12 @@ export default function AdminTasks() {
                     style={[styles.segmentBtn, form.status === s && styles.segmentBtnActive]}
                     onPress={() => setForm(p => ({ ...p, status: s as any }))}
                   >
-                    <Text style={[styles.segmentText, form.status === s && { color: '#FF8C00' }]}>
-                      {s === 'ativo' ? '✅ Ativo' : '❌ Inativo'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      {s === 'ativo' ? <CheckCircle2 size={14} color={form.status === s ? "#FF8C00" : "#8FA1C7"} /> : <X size={14} color={form.status === s ? "#FF8C00" : "#8FA1C7"} />}
+                      <Text style={[styles.segmentText, form.status === s && { color: '#FF8C00' }]}>
+                        {s === 'ativo' ? 'Ativo' : 'Inativo'}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -228,8 +256,9 @@ export default function AdminTasks() {
               <TouchableOpacity style={styles.btnCancel} onPress={() => setModal(false)}>
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btnSave} onPress={saveTask}>
-                <Text style={styles.btnSaveText}>💾 Salvar e Adicionar</Text>
+              <TouchableOpacity style={[styles.btnSave, { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }]} onPress={saveTask}>
+                <Save size={16} color="#fff" />
+                <Text style={styles.btnSaveText}>Salvar e Adicionar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -239,10 +268,13 @@ export default function AdminTasks() {
   );
 }
 
-function MetaItem({ emoji, label, value }: { emoji: string; label: string; value: string }) {
+function MetaItem({ Icon, label, value }: { Icon: any; label: string; value: string }) {
   return (
     <View style={styles.metaItem}>
-      <Text style={styles.metaValue}>{emoji} {value}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Icon size={14} color="#8FA1C7" />
+        <Text style={styles.metaValue}>{value}</Text>
+      </View>
       <Text style={styles.metaLabel}>{label}</Text>
     </View>
   );

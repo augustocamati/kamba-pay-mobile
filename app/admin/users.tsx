@@ -5,6 +5,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { 
+  Users, UserPlus, GraduationCap, CheckCircle2, Search, Filter, X, 
+  MapPin, Calendar, Eye, Pencil, Lock, Unlock, Trash2, XCircle,
+  ArrowUpDown, DollarSign, RefreshCw, Check, Save, Plus
+} from 'lucide-react-native';
 
 export interface AdminUser {
   id: string; nome: string; email: string; telefone: string;
@@ -117,16 +122,16 @@ export default function AdminUsers() {
 
       {/* Stats bar */}
       <View style={styles.statsBar}>
-        <StatChip icon="👥" label="Total" value={stats.total} color="#8FA1C7" />
-        <StatChip icon="👨‍👧" label="Pais" value={stats.pais} color="#F59E0B" />
-        <StatChip icon="👧" label="Crianças" value={stats.criancas} color="#3B82F6" />
-        <StatChip icon="✅" label="Ativos" value={stats.ativos} color="#22C55E" />
+        <StatChip Icon={Users} label="Total" value={stats.total} color="#8FA1C7" />
+        <StatChip Icon={UserPlus} label="Pais" value={stats.pais} color="#F59E0B" />
+        <StatChip Icon={GraduationCap} label="Crianças" value={stats.criancas} color="#3B82F6" />
+        <StatChip Icon={CheckCircle2} label="Ativos" value={stats.ativos} color="#22C55E" />
       </View>
 
       {/* Search + Filter button */}
       <View style={styles.searchRow}>
         <View style={styles.searchWrap}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Search size={16} color="#4A5F8A" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar nome, email ou telefone..."
@@ -136,7 +141,7 @@ export default function AdminUsers() {
           />
           {search ? (
             <TouchableOpacity onPress={() => setSearch('')} style={styles.clearSearch}>
-              <Text style={{ color: '#4A5F8A', fontSize: 16 }}>✕</Text>
+              <X size={18} color="#4A5F8A" />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -144,7 +149,7 @@ export default function AdminUsers() {
           style={[styles.filterToggleBtn, activeFilters.length > 0 && styles.filterToggleBtnActive]}
           onPress={() => setFilterOpen(true)}
         >
-          <Text style={styles.filterToggleIcon}>⚙️</Text>
+          <Filter size={18} color={activeFilters.length > 0 ? '#FF8C00' : '#8FA1C7'} />
           {activeFilters.length > 0 && (
             <View style={styles.filterBadge}><Text style={styles.filterBadgeText}>{activeFilters.length}</Text></View>
           )}
@@ -194,7 +199,8 @@ export default function AdminUsers() {
               {/* Location + Balance */}
               <View style={styles.cardMid}>
                 <View style={styles.locWrap}>
-                  <Text style={styles.locText}>📍 {u.provincia}{u.municipio ? `, ${u.municipio}` : ''}</Text>
+                  <MapPin size={11} color="#4A5F8A" style={{ marginBottom: 2 }} />
+                  <Text style={styles.locText}>{u.provincia}{u.municipio ? `, ${u.municipio}` : ''}</Text>
                 </View>
                 <View style={styles.saldoWrap}>
                   <Text style={styles.saldoLabel}>Saldo</Text>
@@ -205,19 +211,22 @@ export default function AdminUsers() {
               {/* Footer */}
               <View style={styles.cardFooter}>
                 <StatusBadge status={u.status} />
-                <Text style={styles.dateText}>📅 {u.dataCadastro}</Text>
+                <View style={styles.dateWrap}>
+                  <Calendar size={11} color="#4A5F8A" />
+                  <Text style={styles.dateText}>{u.dataCadastro}</Text>
+                </View>
                 <View style={styles.actionBtns}>
                   <TouchableOpacity style={styles.iconBtn} onPress={() => setViewUser(u)}>
-                    <Text style={styles.iconBtnText}>👁️</Text>
+                    <Eye size={15} color="#8FA1C7" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.iconBtn} onPress={() => setEditUser({ ...u })}>
-                    <Text style={styles.iconBtnText}>✏️</Text>
+                    <Pencil size={15} color="#8FA1C7" />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.iconBtn} onPress={() => toggleStatus(u.id)}>
-                    <Text style={styles.iconBtnText}>{u.status === 'ativo' ? '🔒' : '🔓'}</Text>
+                    {u.status === 'ativo' ? <Lock size={15} color="#8FA1C7" /> : <Unlock size={15} color="#8FA1C7" />}
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.iconBtn, styles.delBtn]} onPress={() => deleteUser(u.id)}>
-                    <Text style={styles.iconBtnText}>🗑️</Text>
+                    <Trash2 size={15} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -225,7 +234,10 @@ export default function AdminUsers() {
           </Animated.View>
         )}
         ListEmptyComponent={() => (
-          <View style={styles.empty}><Text style={styles.emptyIcon}>🔍</Text><Text style={styles.emptyText}>Nenhum usuário encontrado</Text></View>
+          <View style={styles.empty}>
+            <Search size={32} color="#4A5F8A" style={{ marginBottom: 10 }} />
+            <Text style={styles.emptyText}>Nenhum usuário encontrado</Text>
+          </View>
         )}
       />
 
@@ -245,14 +257,14 @@ export default function AdminUsers() {
               <FilterSection label="Tipo de Utilizador">
                 {(['Todos', 'Pai', 'Criança'] as TipoFilter[]).map(t => (
                   <FilterOption key={t} label={t} active={tipoFilter === t} onPress={() => setTipoFilter(t)}
-                    icon={t === 'Todos' ? '👥' : t === 'Pai' ? '👨‍👧' : '👧'} />
+                    Icon={t === 'Todos' ? Users : t === 'Pai' ? UserPlus : GraduationCap} />
                 ))}
               </FilterSection>
 
               <FilterSection label="Status da Conta">
                 {(['Todos', 'Ativo', 'Inativo'] as StatusFilter[]).map(s => (
                   <FilterOption key={s} label={s} active={statusFilter === s} onPress={() => setStatusFilter(s)}
-                    icon={s === 'Todos' ? '🔁' : s === 'Ativo' ? '✅' : '❌'} />
+                    Icon={s === 'Todos' ? RefreshCw : s === 'Ativo' ? CheckCircle2 : XCircle} />
                 ))}
               </FilterSection>
 
@@ -269,8 +281,12 @@ export default function AdminUsers() {
               </FilterSection>
 
               <FilterSection label="Ordenar por">
-                {[{ key: 'nome', label: 'Nome A-Z', icon: '🔤' }, { key: 'saldo', label: 'Maior Saldo', icon: '💰' }, { key: 'data', label: 'Mais Recente', icon: '📅' }].map(s => (
-                  <FilterOption key={s.key} label={s.label} active={sortBy === s.key} onPress={() => setSortBy(s.key as SortBy)} icon={s.icon} />
+                {[
+                  { key: 'nome', label: 'Nome A-Z', Icon: ArrowUpDown }, 
+                  { key: 'saldo', label: 'Maior Saldo', Icon: DollarSign }, 
+                  { key: 'data', label: 'Mais Recente', Icon: Calendar }
+                ].map(s => (
+                  <FilterOption key={s.key} label={s.label} active={sortBy === s.key} onPress={() => setSortBy(s.key as SortBy)} Icon={s.Icon} />
                 ))}
               </FilterSection>
             </ScrollView>
@@ -280,7 +296,10 @@ export default function AdminUsers() {
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnApply} onPress={() => setFilterOpen(false)}>
-                <Text style={styles.btnApplyText}>✓ Aplicar Filtros</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Check size={16} color="#fff" />
+                  <Text style={styles.btnApplyText}>Aplicar Filtros</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -304,12 +323,12 @@ export default function AdminUsers() {
                 </View>
                 <View style={styles.detailGrid}>
                   {[
-                    { label: '📧 Email', value: viewUser.email },
-                    { label: '📱 Telefone', value: viewUser.telefone || '—' },
-                    { label: '📍 Província', value: viewUser.provincia },
-                    { label: '🏙️ Município', value: viewUser.municipio || '—' },
-                    { label: '💰 Saldo', value: `Kz ${viewUser.saldo.toLocaleString()}` },
-                    { label: '📅 Cadastro', value: viewUser.dataCadastro },
+                    { label: 'Email', value: viewUser.email },
+                    { label: 'Telefone', value: viewUser.telefone || '—' },
+                    { label: 'Província', value: viewUser.provincia },
+                    { label: 'Município', value: viewUser.municipio || '—' },
+                    { label: 'Saldo', value: `Kz ${viewUser.saldo.toLocaleString()}` },
+                    { label: 'Cadastro', value: viewUser.dataCadastro },
                   ].map((d, i) => (
                     <View key={i} style={styles.detailRow}>
                       <Text style={styles.detailLabel}>{d.label}</Text>
@@ -332,7 +351,7 @@ export default function AdminUsers() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Editar Usuário</Text>
-              <TouchableOpacity onPress={() => setEditUser(null)}><Text style={styles.closeBtnText}>✕</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => setEditUser(null)}><X size={20} color="#8FA1C7" /></TouchableOpacity>
             </View>
             {editUser && (
               <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
@@ -353,7 +372,10 @@ export default function AdminUsers() {
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnApply} onPress={saveEdit}>
-                <Text style={styles.btnApplyText}>💾 Salvar</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Save size={16} color="#fff" />
+                  <Text style={styles.btnApplyText}>Salvar</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -366,7 +388,7 @@ export default function AdminUsers() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Adicionar Usuário</Text>
-              <TouchableOpacity onPress={() => setAddModal(false)}><Text style={styles.closeBtnText}>✕</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => setAddModal(false)}><X size={20} color="#8FA1C7" /></TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
               <FormField label="Nome Completo *" value={newUser.nome || ''} onChange={v => setNewUser(p => ({ ...p, nome: v }))} />
@@ -383,7 +405,10 @@ export default function AdminUsers() {
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnApply} onPress={addNewUser}>
-                <Text style={styles.btnApplyText}>➕ Adicionar</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Plus size={16} color="#fff" />
+                  <Text style={styles.btnApplyText}>Adicionar</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -394,10 +419,10 @@ export default function AdminUsers() {
 }
 
 /* ── Sub-components ── */
-function StatChip({ icon, label, value, color }: { icon: string; label: string; value: number; color: string }) {
+function StatChip({ Icon, label, value, color }: { Icon: any; label: string; value: number; color: string }) {
   return (
     <View style={[styles.statChip, { borderColor: `${color}30` }]}>
-      <Text style={styles.statChipIcon}>{icon}</Text>
+      <Icon size={18} color={color} style={styles.statChipIcon} />
       <Text style={[styles.statChipValue, { color }]}>{value}</Text>
       <Text style={styles.statChipLabel}>{label}</Text>
     </View>
@@ -433,12 +458,14 @@ function FilterSection({ label, children }: { label: string; children: React.Rea
   );
 }
 
-function FilterOption({ label, active, onPress, icon }: { label: string; active: boolean; onPress: () => void; icon: string }) {
+function FilterOption({ label, active, onPress, Icon }: { label: string; active: boolean; onPress: () => void; Icon: any }) {
   return (
     <TouchableOpacity style={[styles.filterOpt, active && styles.filterOptActive]} onPress={onPress}>
-      <Text style={styles.filterOptIcon}>{icon}</Text>
+      <View style={styles.filterOptIcon}>
+        <Icon size={18} color={active ? "#FF8C00" : "#8FA1C7"} />
+      </View>
       <Text style={[styles.filterOptText, active && { color: '#F0F4FF' }]}>{label}</Text>
-      {active && <View style={styles.filterOptCheck}><Text style={{ color: '#FF8C00', fontSize: 14 }}>✓</Text></View>}
+      {active && <View style={styles.filterOptCheck}><CheckCircle2 size={16} color="#FF8C00" /></View>}
     </TouchableOpacity>
   );
 }
@@ -547,7 +574,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingTop: 10, borderTopWidth: 1, borderTopColor: S.border,
   },
-  locWrap: {},
+  locWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   locText: { fontSize: 11, color: S.muted, fontFamily: 'Nunito_400Regular' },
   saldoWrap: { alignItems: 'flex-end' },
   saldoLabel: { fontSize: 9, color: S.muted, fontFamily: 'Nunito_600SemiBold', textTransform: 'uppercase', letterSpacing: 0.4 },
@@ -557,7 +584,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingTop: 10, borderTopWidth: 1, borderTopColor: S.border, flexWrap: 'wrap',
   },
-  dateText: { fontSize: 10, color: S.muted, fontFamily: 'Nunito_400Regular', flex: 1 },
+  dateWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
+  dateText: { fontSize: 10, color: S.muted, fontFamily: 'Nunito_400Regular' },
   actionBtns: { flexDirection: 'row', gap: 6 },
   iconBtn: {
     width: 32, height: 32, borderRadius: 8, backgroundColor: S.sidebar,

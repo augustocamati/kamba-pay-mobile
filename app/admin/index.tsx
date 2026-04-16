@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { Users, TrendingUp, Wallet, Award, MapPin, Zap, UserCheck } from 'lucide-react-native';
 
 const ADMIN_ACTIVITY = [
   { name: 'João Manuel', action: 'Completou Quiz "Poupar é Legal"', time: '1 min atrás', color: '#3B82F6' },
@@ -54,7 +55,7 @@ export default function AdminDashboard() {
             <Text style={styles.headerSub}>Visão geral da plataforma</Text>
           </View>
           <View style={styles.adminPill}>
-            <Text style={styles.adminPillIcon}>🐱</Text>
+            <UserCheck size={20} color="#FF8C00" />
             <View>
               <Text style={styles.adminPillName}>Admin</Text>
               <Text style={styles.adminPillRole}>Super Admin</Text>
@@ -71,26 +72,29 @@ export default function AdminDashboard() {
         {/* KPI Cards */}
         <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.kpiGrid}>
           <KpiCard
-            icon="👥" label="Total de Usuários" value="1.247"
+            Icon={Users} label="Total de Usuários" value="1.247"
             change="+12,5%" color="#3B82F6" colorSoft="rgba(59,130,246,0.15)"
           />
           <KpiCard
-            icon="📈" label="Transações Mensais" value="8.542"
+            Icon={TrendingUp} label="Transações Mensais" value="8.542"
             change="+28,3%" color="#F59E0B" colorSoft="rgba(245,158,11,0.15)"
           />
           <KpiCard
-            icon="💰" label="Volume (Kz)" value="2,8M"
+            Icon={Wallet} label="Volume (Kz)" value="2,8M"
             change="+18,7%" color="#22C55E" colorSoft="rgba(34,197,94,0.15)"
           />
           <KpiCard
-            icon="🏆" label="Quizzes Feitos" value="3.456"
+            Icon={Award} label="Quizzes Feitos" value="3.456"
             change="+35,2%" color="#8B5CF6" colorSoft="rgba(139,92,246,0.15)"
           />
         </Animated.View>
 
         {/* Growth Chart */}
         <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.chartCard}>
-          <Text style={styles.sectionTitle}>📈 Crescimento Mensal</Text>
+          <View style={styles.sectionHeaderRow}>
+            <TrendingUp size={18} color="#F0F4FF" />
+            <Text style={styles.sectionTitle}>Crescimento Mensal</Text>
+          </View>
           <View style={styles.chartLegend}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
@@ -135,7 +139,10 @@ export default function AdminDashboard() {
 
         {/* Province Distribution */}
         <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.chartCard}>
-          <Text style={styles.sectionTitle}>📍 Distribuição por Província</Text>
+          <View style={styles.sectionHeaderRow}>
+            <MapPin size={18} color="#F0F4FF" />
+            <Text style={styles.sectionTitle}>Distribuição por Província</Text>
+          </View>
           <View style={styles.provinceList}>
             {PROVINCES.map((p, i) => (
               <View key={i} style={styles.provinceRow}>
@@ -157,7 +164,10 @@ export default function AdminDashboard() {
 
         {/* Recent Activity */}
         <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.activityCard}>
-          <Text style={styles.sectionTitle}>⚡ Atividade Recente</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Zap size={18} color="#F0F4FF" />
+            <Text style={styles.sectionTitle}>Atividade Recente</Text>
+          </View>
           {ADMIN_ACTIVITY.map((item, i) => (
             <View key={i} style={[styles.activityItem, i < ADMIN_ACTIVITY.length - 1 && styles.activityBorder]}>
               <View style={[styles.activityAvatar, { backgroundColor: item.color }]}>
@@ -178,15 +188,15 @@ export default function AdminDashboard() {
 
 /* ── KPI Card ───────────────────────────── */
 function KpiCard({
-  icon, label, value, change, color, colorSoft,
+  Icon, label, value, change, color, colorSoft,
 }: {
-  icon: string; label: string; value: string;
+  Icon: any; label: string; value: string;
   change: string; color: string; colorSoft: string;
 }) {
   return (
     <View style={[styles.kpiCard, { width: CARD_W }]}>
       <View style={[styles.kpiIconWrap, { backgroundColor: colorSoft }]}>
-        <Text style={styles.kpiEmoji}>{icon}</Text>
+        <Icon size={22} color={color} />
       </View>
       <Text style={styles.kpiValue}>{value}</Text>
       <Text style={styles.kpiLabel}>{label}</Text>
@@ -270,7 +280,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
   },
-  sectionTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#F0F4FF', marginBottom: 14 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
+  sectionTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#F0F4FF' },
 
   chartLegend: { flexDirection: 'row', gap: 16, marginBottom: 16 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },

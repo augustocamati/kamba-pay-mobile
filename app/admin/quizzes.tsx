@@ -5,6 +5,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { 
+  BrainCircuit, Pencil, Trash2, Puzzle, X, PlusCircle, Coins, Landmark, BookOpen, Target, CheckCircle2 
+} from 'lucide-react-native';
 
 export interface AdminQuiz {
   id: string;
@@ -172,7 +175,7 @@ export default function AdminQuizzes() {
                 {/* Top row: brain + badges */}
                 <View style={styles.quizCardTop}>
                   <View style={styles.brainWrap}>
-                    <Text style={styles.brainEmoji}>🧠</Text>
+                    <BrainCircuit size={20} color="#8B5CF6" />
                   </View>
                   <View style={styles.quizBadges}>
                     <View style={[styles.chip, { backgroundColor: `${catColor}22`, borderColor: `${catColor}44` }]}>
@@ -204,10 +207,11 @@ export default function AdminQuizzes() {
                 {/* Actions */}
                 <View style={styles.quizActions}>
                   <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(q)} activeOpacity={0.8}>
-                    <Text style={styles.editBtnText}>✏️ Editar</Text>
+                    <Pencil size={14} color="#8FA1C7" style={{ marginRight: 6 }} />
+                    <Text style={styles.editBtnText}>Editar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.delBtn} onPress={() => del(q.id)} activeOpacity={0.8}>
-                    <Text style={styles.delBtnText}>🗑️</Text>
+                    <Trash2 size={16} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -216,7 +220,7 @@ export default function AdminQuizzes() {
         }}
         ListEmptyComponent={() => (
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🧩</Text>
+            <Puzzle size={48} color="#4A5F8A" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyText}>Nenhum quiz cadastrado</Text>
           </View>
         )}
@@ -229,7 +233,7 @@ export default function AdminQuizzes() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editId ? 'Editar Quiz' : 'Adicionar Novo Quiz'}</Text>
               <TouchableOpacity onPress={() => setModal(false)} style={styles.closeBtn}>
-                <Text style={styles.closeBtnText}>✕</Text>
+                <X size={20} color="#8FA1C7" />
               </TouchableOpacity>
             </View>
 
@@ -317,16 +321,17 @@ export default function AdminQuizzes() {
               <View style={styles.opcoeHeader}>
                 <Text style={styles.fieldLabel}>Opções de Resposta (mínimo 2)</Text>
                 <TouchableOpacity onPress={addOpcao} style={styles.addOpcaoBtn}>
-                  <Text style={styles.addOpcaoBtnText}>⊕ Adicionar Opção</Text>
+                  <PlusCircle size={14} color="#FF8C00" />
+                  <Text style={styles.addOpcaoBtnText}>Adicionar Opção</Text>
                 </TouchableOpacity>
               </View>
 
-              {form.opcoes.map((op, i) => (
+              {form.opcoes.map((op, i) => {
+                const OptionIcon = [Coins, Landmark, BookOpen, Target][i] || Puzzle;
+                return (
                 <View key={i} style={styles.opcaoRow}>
                   <View style={styles.opcaoIconWrap}>
-                    <Text style={styles.opcaoIcon}>
-                      {['💰', '🏦', '📖', '🎯'][i] || '•'}
-                    </Text>
+                    <OptionIcon size={16} color="#8FA1C7" />
                   </View>
                   <TextInput
                     style={[styles.input, styles.opcaoInput]}
@@ -339,17 +344,16 @@ export default function AdminQuizzes() {
                     style={[styles.corretaBtn, op.correta && styles.corretaBtnActive]}
                     onPress={() => setOpcaoCorreta(i)}
                   >
-                    <Text style={[styles.corretaBtnText, op.correta && { color: '#22C55E' }]}>
-                      {op.correta ? '✅' : 'Correta?'}
-                    </Text>
+                    {op.correta ? <CheckCircle2 size={14} color="#22C55E" /> : <Text style={styles.corretaBtnText}>Correta?</Text>}
                   </TouchableOpacity>
                   {form.opcoes.length > 2 && (
                     <TouchableOpacity onPress={() => removeOpcao(i)} style={styles.removeOpcaoBtn}>
-                      <Text style={{ color: '#EF4444', fontSize: 16 }}>×</Text>
+                      <X size={16} color="#EF4444" />
                     </TouchableOpacity>
                   )}
                 </View>
-              ))}
+                );
+              })}
 
               {/* Explicação */}
               <Field label="Explicação (após resposta)">
@@ -369,7 +373,10 @@ export default function AdminQuizzes() {
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnSave} onPress={save}>
-                <Text style={styles.btnSaveText}>🧩 {editId ? 'Salvar Alterações' : 'Adicionar Quiz'}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Puzzle size={16} color="#fff" />
+                  <Text style={styles.btnSaveText}>{editId ? 'Salvar Alterações' : 'Adicionar Quiz'}</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -449,7 +456,7 @@ const styles = StyleSheet.create({
   quizActions: { flexDirection: 'row', gap: 8 },
   editBtn: {
     flex: 1, backgroundColor: S.sidebar, borderRadius: 10, padding: 9,
-    borderWidth: 1, borderColor: S.border, alignItems: 'center',
+    borderWidth: 1, borderColor: S.border, alignItems: 'center', justifyContent: 'center', flexDirection: 'row'
   },
   editBtnText: { fontSize: 12, fontFamily: 'Nunito_600SemiBold', color: S.sub },
   delBtn: {
