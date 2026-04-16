@@ -113,6 +113,14 @@ export default function SplashScreen() {
                 <Ionicons name="play-circle-outline" size={20} color="rgba(0,0,0,0.55)" />
                 <Text style={styles.demoButtonText}>Explorar Demo</Text>
               </Pressable>
+
+              {/* Admin button */}
+              <Pressable
+                style={({ pressed }) => [styles.adminButton, pressed && styles.buttonPressed]}
+                onPress={() => router.push('/admin-login' as any)}
+              >
+                <Text style={styles.adminButtonText}>🔐 Acesso Admin</Text>
+              </Pressable>
             </>
           ) : (
             <Animated.View entering={FadeInUp.duration(400)} style={styles.selectionButtons}>
@@ -288,6 +296,15 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.45)', marginTop: 4,
   },
   buttonPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+  adminButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  adminButtonText: {
+    fontSize: 13, fontFamily: 'Nunito_600SemiBold',
+    color: 'rgba(0,0,0,0.4)',
+    textDecorationLine: 'underline',
+  },
 
   // ── Modal ──
   modalOverlay: {

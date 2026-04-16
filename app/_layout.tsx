@@ -33,6 +33,8 @@ function RootLayoutNav() {
         <Stack.Screen name="parent/approve" />
         <Stack.Screen name="child/(tabs)" />
         <Stack.Screen name="child/submit-task" options={{ presentation: "modal" }} />
+        <Stack.Screen name="admin-login" />
+        <Stack.Screen name="admin" />
       </Stack>
     </>
   );
