@@ -1,81 +1,134 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, Image } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, Dimensions, ActivityIndicator, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, SlideInDown } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
 const { width } = Dimensions.get('window');
 
 export default function AulaScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
-  const { conteudoEducativo } = useApp();
+  const { conteudoEducativo, marcarConteudoCompleto } = useApp();
   
   const [isVideoFinished, setIsVideoFinished] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Buscar conteúdo com base no ID
   const conteudo = typeof id === 'string' 
-    ? conteudoEducativo.find(c => c.id === id) 
-    : conteudoEducativo[0] || { // fallback se não vier ID
-        titulo: 'O que é o Pote Poupar?',
-        descricao: 'Vais aprender como e porquê guardar o teu dinheiro para poderes comprar coisas maiores no futuro.',
-        thumbnail_url: 'https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?auto=format&fit=crop&q=80&w=800'
-      };
+    ? conteudoEducativo.find(c => String(c.id) === id) 
+    : conteudoEducativo[0];
 
-  // Simulando a duração do vídeo
-  const handlePlayVideo = () => {
-    setIsPlaying(true);
-    setTimeout(() => {
-      setIsPlaying(false);
+  useEffect(() => {
+    console.log('[Aula] ID recebido:', id);
+    console.log('[Aula] Conteúdo encontrado:', conteudo);
+    console.log('[Aula] Video URL:', conteudo?.video_url);
+  }, [id, conteudo]);
+
+  // Extrair ID do vídeo do YouTube
+  const getYoutubeId = (url: string) => {
+    if (!url) return null;
+    console.log('[Aula] Extraindo ID de:', url);
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    const extractedId = (match && match[2].length === 11) ? match[2] : null;
+    console.log('[Aula] ID extraído:', extractedId);
+    return extractedId;
+  };
+
+  const videoId = conteudo?.video_url ? getYoutubeId(conteudo.video_url) : null;
+
+  const onStateChange = useCallback((state: string) => {
+    if (state === 'ended') {
       setIsVideoFinished(true);
-    }, 3000); // 3 seconds video simulation
+      if (conteudo) marcarConteudoCompleto(conteudo.id);
+    }
+  }, [conteudo, marcarConteudoCompleto]);
+
+  const handleSkip = () => {
+      // Para testes ou crianças que já sabem, permitir pular (opcional)
+      setIsVideoFinished(true);
+      if (conteudo) marcarConteudoCompleto(conteudo.id);
   };
 
   return (
     <LinearGradient colors={['#fff', '#f8fafc']} style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-        <Text style={styles.headerTitle}>Momento de Aprender! 🧠</Text>
-        <Text style={styles.headerSubtitle}>Assiste à aula de hoje para ganhares XP base e desbloqueares o Quiz Mestre.</Text>
+        <View style={styles.topFixed}>
+            <Pressable style={styles.backBtn} onPress={() => router.back()}>
+                <Ionicons name="arrow-back" size={24} color="#0f172a" />
+            </Pressable>
+            <Text style={styles.headerTitle}>Aula Kamba 📚</Text>
+            <View style={{ width: 44 }} />
+        </View>
+        <Text style={styles.headerSubtitle}>Assiste com atenção para desbloqueares o Quiz Mestre!</Text>
       </View>
 
       <Animated.View entering={FadeInDown.delay(200)} style={styles.content}>
-        <View style={styles.videoCard}>
-          <Image 
-            source={{ uri: conteudo?.thumbnail_url || 'https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?auto=format&fit=crop&q=80&w=800' }} 
-            style={styles.thumbnail}
-          />
-          <View style={styles.videoOverlay}>
-            {!isVideoFinished && !isPlaying && (
-              <Pressable style={styles.playButton} onPress={handlePlayVideo}>
-                <Ionicons name="play" size={40} color="#fff" style={{ marginLeft: 4 }} />
-              </Pressable>
-            )}
-            {isPlaying && (
-              <View style={styles.playingState}>
-                <Ionicons name="time" size={30} color="#fff" />
-                <Text style={styles.playingText}>A reproduzir aula...</Text>
-              </View>
-            )}
-            {isVideoFinished && (
-              <View style={styles.finishedState}>
-                <View style={styles.checkCircle}>
-                  <Ionicons name="checkmark" size={32} color="#4ade80" />
-                </View>
-                <Text style={styles.finishedText}>Vídeo Concluído!</Text>
-                <Text style={styles.xpText}>+10 XP Ganhos</Text>
-              </View>
-            )}
-          </View>
+        <View style={styles.videoWrapper}>
+          {videoId ? (
+            <View style={styles.videoCard}>
+                {Platform.OS === 'web' ? (
+                    <iframe
+                        width="100%"
+                        height="220"
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ borderRadius: 24 }}
+                        onLoad={() => {
+                            setLoading(false);
+                            // Simular término do vídeo na web após algum tempo se o postMessage não funcionar
+                            setTimeout(() => setIsVideoFinished(true), 5000);
+                        }}
+                    />
+                ) : (
+                    <YoutubePlayer
+                        height={220}
+                        play={true}
+                        videoId={videoId}
+                        onChangeState={onStateChange}
+                        onReady={() => setLoading(false)}
+                    />
+                )}
+                {loading && (
+                    <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="large" color="#fb923c" />
+                    </View>
+                )}
+            </View>
+          ) : (
+            <View style={styles.errorVideo}>
+                <Ionicons name="alert-circle" size={48} color="#94A3B8" />
+                <Text style={styles.errorText}>Vídeo indisponível no momento.</Text>
+                <Pressable onPress={handleSkip} style={{ marginTop: 10 }}>
+                    <Text style={{ color: '#fb923c', fontWeight: 'bold' }}>Simular Conclusão (Debug)</Text>
+                </Pressable>
+            </View>
+          )}
+
+          {isVideoFinished && (
+            <View style={styles.finishedBadge}>
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <Text style={styles.finishedBadgeText}>AULA CONCLUÍDA!</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.lessonInfo}>
-          <Text style={styles.lessonTitle}>Tema: {conteudo?.titulo}</Text>
+          <View style={styles.titleRow}>
+              <Text style={styles.lessonTitle}>{conteudo?.titulo}</Text>
+              <View style={styles.xpBadge}>
+                  <Text style={styles.xpBadgeText}>+20 XP</Text>
+              </View>
+          </View>
           <Text style={styles.lessonDesc}>
-            {conteudo?.descricao}
+            {conteudo?.descricao || 'Carregando detalhes da aula...'}
           </Text>
         </View>
       </Animated.View>
@@ -84,7 +137,7 @@ export default function AulaScreen() {
         <Animated.View entering={SlideInDown} style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
           <Pressable 
             style={styles.quizButton}
-            onPress={() => router.replace({ pathname: '/child/quiz', params: { id } } as any)}
+            onPress={() => router.replace({ pathname: '/child/quiz', params: { id, id_missao: conteudo?.id_missao } } as any)}
           >
             <LinearGradient 
               colors={['#f97316', '#ea580c']} 
@@ -102,9 +155,7 @@ export default function AulaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     paddingHorizontal: 24,
     paddingBottom: 20,
@@ -112,116 +163,48 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#0f172a',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#64748b',
-    lineHeight: 22,
-  },
-  content: {
-    padding: 24,
-    flex: 1,
-  },
+  topFixed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: '#0f172a' },
+  headerSubtitle: { fontSize: 14, color: '#64748b', lineHeight: 20 },
+  content: { padding: 20, flex: 1 },
+  videoWrapper: { position: 'relative', width: '100%', marginBottom: 20 },
   videoCard: {
     width: '100%',
     height: 220,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#1e293b',
+    backgroundColor: '#000',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 15,
     elevation: 5,
   },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.6,
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center' },
+  errorVideo: { width: '100%', height: 220, borderRadius: 24, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: '#cbd5e1' },
+  errorText: { color: '#64748b', marginTop: 10, fontWeight: '600' },
+  finishedBadge: {
+    position: 'absolute', top: -10, right: -10,
+    backgroundColor: '#22c55e', paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6,
+    shadowColor: '#22c55e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+    zIndex: 10,
   },
-  videoOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  playButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#fb923c',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#f97316',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  playingState: {
-    alignItems: 'center',
-  },
-  playingText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 12,
-  },
-  finishedState: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-  },
-  checkCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(74, 222, 128, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  finishedText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  xpText: {
-    color: '#4ade80',
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 4,
-  },
+  finishedBadgeText: { color: '#fff', fontSize: 11, fontWeight: '900' },
   lessonInfo: {
-    marginTop: 24,
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  lessonTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  lessonDesc: {
-    fontSize: 15,
-    color: '#475569',
-    lineHeight: 22,
-  },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  lessonTitle: { fontSize: 20, fontWeight: '900', color: '#1e293b', flex: 1 },
+  xpBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  xpBadgeText: { color: '#d97706', fontSize: 12, fontWeight: '800' },
+  lessonDesc: { fontSize: 15, color: '#475569', lineHeight: 24 },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 24,
     paddingTop: 20,
     backgroundColor: '#fff',
@@ -229,7 +212,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#f1f5f9',
   },
   quizButton: {
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#f97316',
     shadowOffset: { width: 0, height: 8 },
@@ -237,13 +220,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  quizGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  quizButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-  },
+  quizGradient: { paddingVertical: 18, alignItems: 'center' },
+  quizButtonText: { color: '#fff', fontSize: 18, fontWeight: '800' },
 });

@@ -244,10 +244,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             titulo: c.titulo,
             tipo: c.tipo,
             thumbnail_url: c.thumbnail_url || `https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800`,
-            video_url: c.video_url,
+            video_url: c.url,
             duracao: c.duracao || '5',
             descricao: c.descricao || '',
             faixa_etaria: c.faixa_etaria || '6-12',
+            id_missao: c.id_missao,
             completo: c.completo || false,
           })));
         }
@@ -329,8 +330,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCrianca(prev => ({ ...prev, avatar: { ...prev.avatar, [parte]: valor } }));
   };
 
-  const marcarConteudoCompleto = (conteudoId: string) => {
-    setConteudoEducativo(prev => prev.map(c => c.id === conteudoId ? { ...c, completo: true } : c));
+  const marcarConteudoCompleto = async (conteudoId: string) => {
+    try {
+      if (!isDemo) {
+        await educationalService.completeContent(conteudoId);
+      }
+      setConteudoEducativo(prev => prev.map(c => String(c.id) === String(conteudoId) ? { ...c, completo: true } : c));
+      // Se a API retornar novo XP, poderíamos atualizar aqui também
+      carregarDadosAPI();
+    } catch (e) {
+      console.error('Erro ao marcar conteúdo como completo:', e);
+    }
   };
 
   // Criar nova tarefa (ação do pai) — API real ou demo

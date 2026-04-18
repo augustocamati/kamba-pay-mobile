@@ -127,6 +127,8 @@ export const childService = {
 export const educationalService = {
   getContent: (faixa_etaria?: string) => api.get('/educational-content', { params: { faixa_etaria } }).then(res => res.data),
   completeContent: (contentId: string) => api.patch(`/educational-content/${contentId}/complete`).then(res => res.data),
+  getQuizDetails: (missaoId: string | number) => api.get(`/educational-content/quiz/${missaoId}`).then(res => res.data),
+  submitQuiz: (quizId: string | number, id_opcao: number) => api.post(`/educational-content/quiz/${quizId}/submit`, { id_opcao }).then(res => res.data),
 };
 
 export const shopService = {
@@ -186,4 +188,11 @@ export const adminService = {
   createQuiz: (data: any) => api.post('/admin/quizzes', data).then(res => res.data),
   updateQuiz: (id: string, data: any) => api.put(`/admin/quizzes/${id}`, data).then(res => res.data),
   deleteQuiz: (id: string) => api.delete(`/admin/quizzes/${id}`).then(res => res.data),
+
+  // Vídeos (Conteúdo)
+  getVideos: (params?: any) => api.get('/admin/videos', { params }).then(res => res.data),
+  getVideosStats: () => api.get('/admin/videos/estatisticas').then(res => res.data),
+  createVideo: (data: any) => api.post('/admin/videos', data).then(res => res.data),
+  updateVideo: (id: string, data: any) => api.put(`/admin/videos/${id}`, data).then(res => res.data),
+  deleteVideo: (id: string) => api.delete(`/admin/videos/${id}`).then(res => res.data),
 };

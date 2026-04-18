@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
-import {
+import { 
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Modal, ScrollView, TextInput, Alert, Pressable, Image,
+  Modal, ScrollView, TextInput, Alert, ActivityIndicator, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Eye, Pencil, Trash2, X, UploadCloud, Image as ImageIcon, Clapperboard } from 'lucide-react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '../../lib/api';
+import { Play, Eye, Pencil, Trash2, X, UploadCloud, Image as ImageIcon, Clapperboard, BrainCircuit, Check } from 'lucide-react-native';
 
 interface AdminVideo {
-  id: string; titulo: string; descricao: string;
-  url: string; thumbnail: string; categoria: string;
-  duracao: string; visualizacoes: number;
+  id: string; 
+  titulo: string; 
+  descricao: string;
+  url: string; 
+  thumbnail: string; 
+  categoria: string;
+  duracao: string; 
+  visualizacoes: number;
+  id_missao?: number | null;
 }
 
 const CATEGORIES = ['Poupar', 'Gastar', 'Ajudar', 'Investir', 'Planejamento'];
@@ -20,77 +28,111 @@ const CAT_COLORS: Record<string, string> = {
   Investir: '#3B82F6', Planejamento: '#8B5CF6',
 };
 
-const INITIAL_VIDEOS: AdminVideo[] = [
-  {
-    id: 'v-1', titulo: 'O Que é Poupar?',
-    descricao: 'Aprenda a importância de guardar dinheiro para o futuro',
-    url: 'https://youtube.com/watch?v=demo1',
-    thumbnail: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&q=80',
-    categoria: 'Poupar', duracao: '4:30', visualizacoes: 1240,
-  },
-  {
-    id: 'v-2', titulo: 'Como Gastar com Sabedoria',
-    descricao: 'Dicas para fazer boas escolhas na hora de comprar',
-    url: 'https://youtube.com/watch?v=demo2',
-    thumbnail: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600&q=80',
-    categoria: 'Gastar', duracao: '3:15', visualizacoes: 890,
-  },
-  {
-    id: 'v-3', titulo: 'Ajudar Quem Precisa',
-    descricao: 'Por que compartilhar faz bem para todos',
-    url: 'https://youtube.com/watch?v=demo3',
-    thumbnail: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&q=80',
-    categoria: 'Ajudar', duracao: '5:00', visualizacoes: 670,
-  },
-  {
-    id: 'v-4', titulo: 'O Que É Investir?',
-    descricao: 'Entenda como fazer o dinheiro trabalhar para você',
-    url: 'https://youtube.com/watch?v=demo4',
-    thumbnail: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80',
-    categoria: 'Investir', duracao: '6:20', visualizacoes: 430,
-  },
-  {
-    id: 'v-5', titulo: 'Planeja teu Orçamento',
-    descricao: 'Como organizar o dinheiro que você tem para não faltar',
-    url: 'https://youtube.com/watch?v=demo5',
-    thumbnail: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80',
-    categoria: 'Planejamento', duracao: '5:45', visualizacoes: 560,
-  },
-];
-
 type FormState = {
-  titulo: string; descricao: string; url: string;
-  thumbnail: string; categoria: string; duracao: string;
+  titulo: string; 
+  descricao: string; 
+  url: string;
+  thumbnail: string; 
+  categoria: string; 
+  duracao: string;
+  id_missao: number | null;
 };
 
 export default function AdminVideos() {
   const insets = useSafeAreaInsets();
-  const [videos, setVideos] = useState<AdminVideo[]>(INITIAL_VIDEOS);
+  const queryClient = useQueryClient();
+  
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>({ titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '' });
+  const [form, setForm] = useState<FormState>({ 
+    titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '', id_missao: null 
+  });
 
-  const openAdd = () => { setEditId(null); setForm({ titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '' }); setModal(true); };
+  // Queries
+  const { data: videosData, isLoading } = useQuery({
+    queryKey: ['admin', 'videos'],
+    queryFn: () => adminService.getVideosStats(),
+  });
+  const videos: AdminVideo[] = videosData?.videos || [];
+
+  const { data: quizzesData } = useQuery({
+    queryKey: ['admin', 'quizzes'],
+    queryFn: () => adminService.getQuizzes(),
+  });
+  const quizzes = quizzesData?.quizzes || [];
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data: any) => adminService.createVideo(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'videos'] });
+      setModal(false);
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao criar vídeo'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: any }) => adminService.updateVideo(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'videos'] });
+      setModal(false);
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao atualizar vídeo'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminService.deleteVideo(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'videos'] });
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao eliminar vídeo'),
+  });
+
+  const openAdd = () => { 
+    setEditId(null); 
+    setForm({ titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '', id_missao: null }); 
+    setModal(true); 
+  };
+
   const openEdit = (v: AdminVideo) => {
     setEditId(v.id);
-    setForm({ titulo: v.titulo, descricao: v.descricao, url: v.url, thumbnail: v.thumbnail, categoria: v.categoria, duracao: v.duracao });
+    setForm({ 
+      titulo: v.titulo, 
+      descricao: v.descricao, 
+      url: v.url, 
+      thumbnail: v.thumbnail, 
+      categoria: v.categoria, 
+      duracao: v.duracao,
+      id_missao: v.id_missao || null
+    });
     setModal(true);
   };
 
   const save = () => {
-    if (!form.titulo) return;
-    const thumb = form.thumbnail || `https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&q=80`;
-    if (editId) {
-      setVideos(p => p.map(v => v.id === editId ? { ...v, ...form, thumbnail: thumb } : v));
-    } else {
-      setVideos(p => [{ id: `v-${Date.now()}`, ...form, thumbnail: thumb, visualizacoes: 0 }, ...p]);
+    if (!form.titulo || !form.url) {
+        return Alert.alert('Aviso', 'Título e URL são obrigatórios.');
     }
-    setModal(false);
+    
+    // Mapear categoria frontend para tipo backend se necessário
+    // Backend espera: 'video', 'artigo', 'infografico'. 
+    // Aqui usamos 'video' fixo por enquanto.
+    const payload = {
+      ...form,
+      tipo: 'video',
+      thumbnail_url: form.thumbnail,
+      id_missao: form.id_missao
+    };
+
+    if (editId) {
+      updateMutation.mutate({ id: editId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
   };
 
-  const del = (id: string) => Alert.alert('Eliminar Vídeo', 'Tem a certeza?', [
+  const del = (id: string) => Alert.alert('Eliminar Vídeo', 'Tem a certeza que deseja eliminar este vídeo?', [
     { text: 'Cancelar', style: 'cancel' },
-    { text: 'Eliminar', style: 'destructive', onPress: () => setVideos(p => p.filter(v => v.id !== id)) },
+    { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
   ]);
 
   return (
@@ -98,67 +140,94 @@ export default function AdminVideos() {
       <View style={styles.header}>
         <View>
           <Text style={styles.pageTitle}>Gestão de Vídeos</Text>
-          <Text style={styles.pageSub}>Total: {videos.length} vídeos cadastrados</Text>
+          <Text style={styles.pageSub}>Total: {videos.length} vídeos educativos</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={openAdd} activeOpacity={0.85}>
           <Text style={styles.addBtnText}>+ Adicionar Vídeo</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={videos}
-        keyExtractor={v => v.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item: v, index }) => {
-          const color = CAT_COLORS[v.categoria] || '#FF8C00';
-          return (
-            <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
-              <View style={styles.videoCard}>
-                {/* Thumbnail with gradient overlay */}
-                <View style={styles.thumbWrap}>
-                  <Image source={{ uri: v.thumbnail }} style={styles.thumb} resizeMode="cover" />
-                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.65)']} style={styles.thumbGrad} />
-                  <View style={styles.playCircle}>
-                    <Play size={24} color="#0B1222" style={{ marginLeft: 3 }} />
-                  </View>
-                  <View style={[styles.catLabel, { backgroundColor: color }]}>
-                    <Text style={styles.catLabelText}>{v.categoria}</Text>
-                  </View>
-                  {v.duracao ? (
-                    <View style={styles.durationWrap}>
-                      <Text style={styles.durationText}>{v.duracao}</Text>
-                    </View>
-                  ) : null}
-                </View>
+      {isLoading ? (
+        <View style={styles.loading}>
+            <ActivityIndicator size="large" color="#FF8C00" />
+            <Text style={styles.loadingText}>Carregando conteúdos...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={videos}
+          keyExtractor={v => String(v.id)}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item: v, index }) => {
+            const color = CAT_COLORS[v.categoria] || '#FF8C00';
+            const linkedQuiz = quizzes.find((q: any) => q.id === v.id_missao);
 
-                {/* Info */}
-                <View style={styles.videoInfo}>
-                  <Text style={styles.videoTitle}>{v.titulo}</Text>
-                  <Text style={styles.videoDesc} numberOfLines={2}>{v.descricao}</Text>
-                  <View style={styles.videoMeta}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Eye size={14} color="#8FA1C7" />
-                      <Text style={styles.viewCount}>{v.visualizacoes.toLocaleString()} visualizações</Text>
+            return (
+              <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
+                <View style={styles.videoCard}>
+                  {/* Thumbnail with gradient overlay */}
+                  <View style={styles.thumbWrap}>
+                    <Image source={{ uri: v.thumbnail || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&q=80' }} style={styles.thumb} resizeMode="cover" />
+                    <LinearGradient colors={['transparent', 'rgba(0,0,0,0.65)']} style={styles.thumbGrad} />
+                    <View style={styles.playCircle}>
+                      <Play size={24} color="#0B1222" style={{ marginLeft: 3 }} />
+                    </View>
+                    <View style={[styles.catLabel, { backgroundColor: color }]}>
+                      <Text style={styles.catLabelText}>{v.categoria}</Text>
+                    </View>
+                    {v.duracao ? (
+                      <View style={styles.durationWrap}>
+                        <Text style={styles.durationText}>{v.duracao}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+  
+                  {/* Info */}
+                  <View style={styles.videoInfo}>
+                    <Text style={styles.videoTitle}>{v.titulo}</Text>
+                    <Text style={styles.videoDesc} numberOfLines={2}>{v.descricao}</Text>
+                    
+                    {linkedQuiz && (
+                      <View style={styles.linkedBadge}>
+                        <BrainCircuit size={12} color="#8B5CF6" />
+                        <Text style={styles.linkedBadgeText}>Quiz: {linkedQuiz.titulo}</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.videoMeta}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Eye size={14} color="#8FA1C7" />
+                        <Text style={styles.viewCount}>{v.visualizacoes.toLocaleString()} visualizações</Text>
+                      </View>
+                    </View>
+                    <View style={styles.videoActions}>
+                      <TouchableOpacity style={[styles.actionBtn, { flex: 2 }]} onPress={() => openEdit(v)}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                          <Pencil size={14} color="#8FA1C7" />
+                          <Text style={styles.actionBtnText}>Editar</Text>
+                        </View>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.actionBtn, styles.delBtn, deleteMutation.isPending && { opacity: 0.5 }]} 
+                        onPress={() => del(String(v.id))}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 size={16} color="#EF4444" />
+                      </TouchableOpacity>
                     </View>
                   </View>
-                  <View style={styles.videoActions}>
-                    <TouchableOpacity style={[styles.actionBtn, { flex: 2 }]} onPress={() => openEdit(v)}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                        <Pencil size={14} color="#8FA1C7" />
-                        <Text style={styles.actionBtnText}>Editar</Text>
-                      </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionBtn, styles.delBtn]} onPress={() => del(v.id)}>
-                      <Trash2 size={16} color="#EF4444" />
-                    </TouchableOpacity>
-                  </View>
                 </View>
-              </View>
-            </Animated.View>
-          );
-        }}
-      />
+              </Animated.View>
+            );
+          }}
+          ListEmptyComponent={() => (
+            <View style={styles.empty}>
+              <Clapperboard size={48} color="#4A5F8A" style={{ marginBottom: 12 }} />
+              <Text style={styles.emptyText}>Nenhum vídeo cadastrado</Text>
+            </View>
+          )}
+        />
+      )}
 
       {/* Modal */}
       <Modal visible={modal} transparent animationType="slide" onRequestClose={() => setModal(false)}>
@@ -183,33 +252,21 @@ export default function AdminVideos() {
                   onChangeText={v => setForm(p => ({ ...p, descricao: v }))} />
               </Field>
 
-              {/* Video upload area */}
-              <Text style={styles.fieldLabel}>Vídeo *</Text>
-              <View style={styles.uploadBox}>
-                <UploadCloud size={32} color="#8FA1C7" style={{ marginBottom: 12 }} />
-                <Text style={styles.uploadHint}>Arraste um vídeo ou clique para fazer upload</Text>
-                <TextInput style={[styles.input, styles.uploadInput]}
-                  placeholder="Ou cole a URL do vídeo (YouTube, Vimeo...)"
+              {/* Video URL */}
+              <Field label="URL do Vídeo *">
+                <TextInput style={styles.input}
+                  placeholder="URL do vídeo (YouTube, Vimeo, etc.)"
                   placeholderTextColor="#4A5F8A" value={form.url}
                   onChangeText={v => setForm(p => ({ ...p, url: v }))} />
-                <TouchableOpacity style={styles.chooseBtn}>
-                  <Text style={styles.chooseBtnText}>Escolher Arquivo</Text>
-                </TouchableOpacity>
-              </View>
+              </Field>
 
               {/* Thumbnail */}
-              <Text style={styles.fieldLabel}>Thumbnail</Text>
-              <View style={styles.uploadBox}>
-                <ImageIcon size={32} color="#8FA1C7" style={{ marginBottom: 12 }} />
-                <Text style={styles.uploadHint}>Imagem de capa do vídeo</Text>
-                <TextInput style={[styles.input, styles.uploadInput]}
-                  placeholder="Cole a URL da thumbnail..."
+              <Field label="Thumbnail URL">
+                <TextInput style={styles.input}
+                  placeholder="URL da imagem de capa..."
                   placeholderTextColor="#4A5F8A" value={form.thumbnail}
                   onChangeText={v => setForm(p => ({ ...p, thumbnail: v }))} />
-                <TouchableOpacity style={styles.chooseBtn}>
-                  <Text style={styles.chooseBtnText}>Escolher Imagem</Text>
-                </TouchableOpacity>
-              </View>
+              </Field>
 
               <View style={styles.row2}>
                 <Field label="Categoria *" flex={1}>
@@ -229,14 +286,47 @@ export default function AdminVideos() {
                     onChangeText={v => setForm(p => ({ ...p, duracao: v }))} />
                 </Field>
               </View>
+
+              {/* Quiz Selection */}
+              <Field label="Quiz Relacionado (aparece após o vídeo)">
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quizSelector}>
+                  <TouchableOpacity 
+                    style={[styles.quizChip, form.id_missao === null && styles.quizChipActive]}
+                    onPress={() => setForm(p => ({ ...p, id_missao: null }))}
+                  >
+                    <Text style={[styles.quizChipText, form.id_missao === null && { color: '#FF8C00' }]}>Nenhum</Text>
+                  </TouchableOpacity>
+                  {quizzes.map((q: any) => (
+                    <TouchableOpacity 
+                        key={q.id}
+                        style={[styles.quizChip, form.id_missao === q.id && styles.quizChipActive]}
+                        onPress={() => setForm(p => ({ ...p, id_missao: q.id }))}
+                    >
+                        <BrainCircuit size={12} color={form.id_missao === q.id ? '#FF8C00' : '#8FA1C7'} style={{ marginRight: 6 }} />
+                        <Text style={[styles.quizChipText, form.id_missao === q.id && { color: '#FF8C00' }]}>{q.titulo}</Text>
+                        {form.id_missao === q.id && <Check size={12} color="#FF8C00" style={{ marginLeft: 6 }} />}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </Field>
             </ScrollView>
             <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.btnCancel} onPress={() => setModal(false)}>
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.btnSave, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]} onPress={save}>
-                <Clapperboard size={16} color="#fff" />
-                <Text style={styles.btnSaveText}>{editId ? 'Salvar' : 'Adicionar Vídeo'}</Text>
+              <TouchableOpacity 
+                style={[styles.btnSave, (createMutation.isPending || updateMutation.isPending) && { opacity: 0.7 }]} 
+                onPress={save}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {(createMutation.isPending || updateMutation.isPending) ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Clapperboard size={16} color="#fff" />
+                  )}
+                  <Text style={styles.btnSaveText}>{editId ? 'Salvar' : 'Adicionar Vídeo'}</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -277,7 +367,7 @@ const styles = StyleSheet.create({
     backgroundColor: S.card, borderRadius: 18,
     overflow: 'hidden', borderWidth: 1, borderColor: S.border,
   },
-  thumbWrap: { width: '100%', height: 190, position: 'relative' },
+  thumbWrap: { width: '100%', height: 180, position: 'relative' },
   thumb: { width: '100%', height: '100%' },
   thumbGrad: { position: 'absolute', inset: 0 },
   playCircle: {
@@ -287,7 +377,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginTop: -26, marginLeft: -26,
   },
-  playIcon: { fontSize: 18, color: '#0B1222', paddingLeft: 4 },
   catLabel: {
     position: 'absolute', top: 10, left: 10,
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
@@ -302,6 +391,14 @@ const styles = StyleSheet.create({
   videoInfo: { padding: 16 },
   videoTitle: { fontSize: 15, fontFamily: 'Nunito_700Bold', color: S.text, marginBottom: 5 },
   videoDesc: { fontSize: 12, color: S.sub, fontFamily: 'Nunito_400Regular', lineHeight: 18, marginBottom: 10 },
+  
+  linkedBadge: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(139,92,246,0.1)',
+    alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
+    borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)', marginBottom: 10,
+  },
+  linkedBadgeText: { fontSize: 11, color: '#A78BFA', fontFamily: 'Nunito_600SemiBold', marginLeft: 6 },
+
   videoMeta: { marginBottom: 12 },
   viewCount: { fontSize: 12, color: S.muted, fontFamily: 'Nunito_400Regular' },
   videoActions: { flexDirection: 'row', gap: 8 },
@@ -320,19 +417,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: S.text },
   closeBtn: { padding: 6 },
-  closeBtnText: { fontSize: 18, color: S.muted },
   modalBody: { paddingHorizontal: 20, paddingTop: 16 },
   modalFooter: { flexDirection: 'row', gap: 10, padding: 20, borderTopWidth: 1, borderTopColor: S.border },
-
-  uploadBox: {
-    backgroundColor: S.sidebar, borderRadius: 14, borderWidth: 1, borderColor: S.border,
-    borderStyle: 'dashed', padding: 20, alignItems: 'center', marginBottom: 16,
-  },
-  uploadIcon: { fontSize: 28, marginBottom: 8 },
-  uploadHint: { fontSize: 12, color: S.muted, fontFamily: 'Nunito_400Regular', textAlign: 'center', marginBottom: 12 },
-  uploadInput: { width: '100%', marginBottom: 10 },
-  chooseBtn: { backgroundColor: S.bg, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: S.border },
-  chooseBtnText: { fontSize: 13, color: S.sub, fontFamily: 'Nunito_600SemiBold' },
 
   fieldLabel: { fontSize: 11, color: S.sub, fontFamily: 'Nunito_700Bold', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   input: {
@@ -344,8 +430,23 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginRight: 6, backgroundColor: S.sidebar, borderWidth: 1, borderColor: S.border },
   chipActive: { backgroundColor: 'rgba(255,140,0,0.15)', borderColor: 'rgba(255,140,0,0.3)' },
   chipText: { fontSize: 12, fontFamily: 'Nunito_600SemiBold', color: S.sub },
+
+  quizSelector: { flexDirection: 'row', marginBottom: 5 },
+  quizChip: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: S.sidebar,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
+    marginRight: 8, borderWidth: 1, borderColor: S.border,
+  },
+  quizChipActive: { backgroundColor: 'rgba(255,140,0,0.12)', borderColor: 'rgba(255,140,0,0.3)' },
+  quizChipText: { fontSize: 12, color: S.sub, fontFamily: 'Nunito_600SemiBold' },
+
   btnCancel: { flex: 1, padding: 14, borderRadius: 12, backgroundColor: S.sidebar, borderWidth: 1, borderColor: S.border, alignItems: 'center' },
   btnCancelText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
   btnSave: { flex: 2, padding: 14, borderRadius: 12, backgroundColor: S.orange, alignItems: 'center' },
   btnSaveText: { color: '#fff', fontFamily: 'Nunito_700Bold', fontSize: 14 },
+
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', marginTop: 12 },
+  empty: { flex: 1, alignItems: 'center', paddingVertical: 60 },
+  emptyText: { fontSize: 15, color: S.muted, fontFamily: 'Nunito_600SemiBold' },
 });

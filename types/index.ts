@@ -109,6 +109,7 @@ export interface ConteudoEducativo {
   video_url?: string;
   duracao?: string;
   topico?: string;
+  id_missao?: string | number;
   completo: boolean;
 }
 
