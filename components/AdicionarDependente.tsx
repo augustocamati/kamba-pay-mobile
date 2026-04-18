@@ -43,8 +43,8 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios!');
       return;
     }
-    if (pin.length < 4) {
-      Alert.alert('Erro', 'O PIN deve ter pelo menos 4 caracteres!');
+    if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+      Alert.alert('Erro', 'O PIN deve ser numérico e ter exatamente 4 dígitos!');
       return;
     }
     if (pin !== confirmarPin) {
@@ -206,11 +206,13 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                   <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
                     style={[styles.textInput, { flex: 1 }]}
-                    placeholder="••••••••"
+                    placeholder="1234"
                     placeholderTextColor="#94a3b8"
                     secureTextEntry={!mostrarPin}
                     value={pin}
-                    onChangeText={setPin}
+                    onChangeText={(t) => setPin(t.replace(/[^0-9]/g, ''))}
+                    keyboardType="numeric"
+                    maxLength={4}
                   />
                   <TouchableOpacity onPress={() => setMostrarPin(!mostrarPin)} style={{ padding: 8 }}>
                     <Ionicons name={mostrarPin ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94a3b8" />
@@ -223,11 +225,13 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                   <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
                     style={[styles.textInput, { flex: 1 }]}
-                    placeholder="••••••••"
+                    placeholder="1234"
                     placeholderTextColor="#94a3b8"
                     secureTextEntry={!mostrarConfirmarPin}
                     value={confirmarPin}
-                    onChangeText={setConfirmarPin}
+                    onChangeText={(t) => setConfirmarPin(t.replace(/[^0-9]/g, ''))}
+                    keyboardType="numeric"
+                    maxLength={4}
                   />
                   <TouchableOpacity onPress={() => setMostrarConfirmarPin(!mostrarConfirmarPin)} style={{ padding: 8 }}>
                     <Ionicons name={mostrarConfirmarPin ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94a3b8" />
