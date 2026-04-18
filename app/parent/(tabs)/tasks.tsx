@@ -70,7 +70,7 @@ export default function ParentTasksScreen() {
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <View style={styles.header}>
         <View style={{ width: 24 }} />
-        <Text style={styles.headerTitle}>Todas as Tarefas</Text>
+        <Text style={styles.headerTitle}>Gestão de Tarefas</Text>
         <Pressable onPress={() => setNovaTarefaModal(true)}>
           <Ionicons name="add-circle" size={28} color="#fb923c" />
         </Pressable>
@@ -91,7 +91,7 @@ export default function ParentTasksScreen() {
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.actionCardTitle}>Criar Nova Tarefa</Text>
-              <Text style={styles.actionCardSubtitle}>Atribua tarefas para seus filhos</Text>
+              <Text style={styles.actionCardSubtitle}>Defina o que precisa ser feito</Text>
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => setNovaTarefaModal(true)}

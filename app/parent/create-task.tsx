@@ -3,27 +3,29 @@ import { View, Text, TextInput, Pressable, StyleSheet, Alert, ScrollView, Platfo
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '@/lib/auth-context';
+import { useApp } from '@/context/AppContext';
 import Colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 
-type Category = 'save' | 'spend' | 'help';
+type Category = 'casa' | 'escola' | 'estudo' | 'comportamento';
 
 export default function CreateTaskScreen() {
   const insets = useSafeAreaInsets();
-  const { children, createTask } = useAuth();
+  const { dependentes, criarTarefa } = useApp();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [reward, setReward] = useState('');
-  const [category, setCategory] = useState<Category>('save');
-  const [selectedChild, setSelectedChild] = useState<string>(children[0]?.id || '');
+  const [category, setCategory] = useState<Category>('casa');
+  const [selectedChild, setSelectedChild] = useState<string>(dependentes[0]?.id || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [icone, setIcone] = useState('bed');
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
 
-  const categories: { key: Category; label: string; icon: string; color: string }[] = [
-    { key: 'save', label: 'Poupar', icon: 'piggy-bank', color: Colors.chart.save },
-    { key: 'spend', label: 'Gastar', icon: 'cart-outline', color: Colors.chart.spend },
-    { key: 'help', label: 'Ajudar', icon: 'heart-outline', color: Colors.chart.help },
+  const categories: { key: Category; label: string; icon: string; color: string; iconeName: string }[] = [
+    { key: 'casa', label: 'Casa', icon: 'home-outline', color: '#FF8C00', iconeName: 'broom' },
+    { key: 'escola', label: 'Escola', icon: 'school-outline', color: '#3b82f6', iconeName: 'book' },
+    { key: 'estudo', label: 'Estudo', icon: 'pencil-outline', color: '#7c3aed', iconeName: 'pencil' },
+    { key: 'comportamento', label: 'Comp.', icon: 'star-outline', color: '#10b981', iconeName: 'plant' },
   ];
 
   const handleCreate = async () => {
@@ -38,7 +40,15 @@ export default function CreateTaskScreen() {
     }
     setIsSubmitting(true);
     try {
-      await createTask({ title, description, reward: rewardNum, category, assignedTo: selectedChild });
+      await criarTarefa({ 
+        titulo: title, 
+        descricao: description, 
+        recompensa: rewardNum, 
+        categoria: category, 
+        crianca_id: selectedChild,
+        status: 'pendente',
+        icone: icone
+      });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } finally {
@@ -77,29 +87,29 @@ export default function CreateTaskScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Categoria</Text>
-          <View style={styles.categoryRow}>
+          <Text style={styles.label}>Categoria e Ícone</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRowScroll}>
             {categories.map(cat => (
               <Pressable
                 key={cat.key}
                 style={[styles.categoryBtn, category === cat.key && { borderColor: cat.color, backgroundColor: `${cat.color}15` }]}
-                onPress={() => { setCategory(cat.key); Haptics.selectionAsync(); }}
+                onPress={() => { 
+                  setCategory(cat.key); 
+                  setIcone(cat.iconeName);
+                  Haptics.selectionAsync(); 
+                }}
               >
-                {cat.key === 'save' ? (
-                  <MaterialCommunityIcons name="piggy-bank" size={20} color={category === cat.key ? cat.color : Colors.parent.textMuted} />
-                ) : (
-                  <Ionicons name={cat.icon as any} size={20} color={category === cat.key ? cat.color : Colors.parent.textMuted} />
-                )}
+                <Ionicons name={cat.icon as any} size={20} color={category === cat.key ? cat.color : Colors.parent.textMuted} />
                 <Text style={[styles.categoryLabel, category === cat.key && { color: cat.color }]}>{cat.label}</Text>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
-        {children.length > 0 && (
+        {dependentes.length > 0 && (
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Atribuir a</Text>
-            {children.map(child => (
+            {dependentes.map(child => (
               <Pressable
                 key={child.id}
                 style={[styles.childOption, selectedChild === child.id && styles.childOptionSelected]}
@@ -108,14 +118,14 @@ export default function CreateTaskScreen() {
                 <View style={styles.childOptionAvatar}>
                   <Ionicons name="person" size={18} color={selectedChild === child.id ? '#FF8C00' : Colors.parent.textMuted} />
                 </View>
-                <Text style={[styles.childOptionName, selectedChild === child.id && styles.childOptionNameSelected]}>{child.name}</Text>
+                <Text style={[styles.childOptionName, selectedChild === child.id && styles.childOptionNameSelected]}>{child.nome}</Text>
                 {selectedChild === child.id && <Ionicons name="checkmark-circle" size={22} color="#FF8C00" />}
               </Pressable>
             ))}
           </View>
         )}
 
-        {children.length === 0 && (
+        {dependentes.length === 0 && (
           <View style={styles.noChildWarn}>
             <Ionicons name="warning" size={20} color="#F59E0B" />
             <Text style={styles.noChildText}>Adicione um dependente primeiro para criar tarefas</Text>
@@ -123,9 +133,9 @@ export default function CreateTaskScreen() {
         )}
 
         <Pressable
-          style={({ pressed }) => [styles.createBtn, pressed && styles.btnPressed, (isSubmitting || children.length === 0) && styles.disabled]}
+          style={({ pressed }) => [styles.createBtn, pressed && styles.btnPressed, (isSubmitting || dependentes.length === 0) && styles.disabled]}
           onPress={handleCreate}
-          disabled={isSubmitting || children.length === 0}
+          disabled={isSubmitting || dependentes.length === 0}
         >
           <Text style={styles.createBtnText}>{isSubmitting ? 'Criando...' : 'Criar Tarefa'}</Text>
         </Pressable>
@@ -164,6 +174,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.parent.border,
   },
   categoryLabel: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: Colors.parent.textMuted },
+  categoryRowScroll: { gap: 10, paddingRight: 20 },
   childOption: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: Colors.parent.surface, borderRadius: 12, padding: 14,

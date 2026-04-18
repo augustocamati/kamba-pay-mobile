@@ -9,9 +9,10 @@ import { missionService } from '../../../lib/api';
 
 export default function GoalsScreen() {
   const insets = useSafeAreaInsets();
-  const { missoes, crianca, dependentes, isLoading, refreshData } = useApp();
+  const { missoes, crianca, dependentes, isLoading } = useApp();
   const [novaMissaoModal, setNovaMissaoModal] = useState(false);
   const [creatingMission, setCreatingMission] = useState(false);
+  const { criarMissao } = useApp();
 
   const handleCriarMissao = async (dados: any) => {
     if (!dados.titulo || !dados.objetivo_valor) {
@@ -20,19 +21,16 @@ export default function GoalsScreen() {
     }
     setCreatingMission(true);
     try {
-      await missionService.createMission({
-        titulo: dados.titulo,
-        descricao: dados.descricao || '',
-        tipo: dados.tipo || 'poupanca',
+      await criarMissao({
+        ...dados,
         objetivo_valor: parseFloat(dados.objetivo_valor),
-        crianca_id: dados.crianca_id || dependentes[0]?.id || crianca.id,
         recompensa: parseFloat(dados.recompensa || 0),
+        crianca_id: dados.crianca_id || crianca.id,
       });
-      await refreshData();
       Alert.alert('Sucesso 🎯', `Missão "${dados.titulo}" criada!`);
       setNovaMissaoModal(false);
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.mensagem || 'Não foi possível criar a missão.');
+      Alert.alert('Erro', 'Não foi possível criar a missão.');
     } finally {
       setCreatingMission(false);
     }
@@ -52,7 +50,7 @@ export default function GoalsScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.actionCardTitle}>Criar Nova Missão</Text>
             <Text style={styles.actionCardSubtitle}>
-              Defina metas para {dependentes.length > 0 ? dependentes.map(d => d.nome).join(', ') : crianca.nome}
+              Defina metas para seus filhos
             </Text>
             <TouchableOpacity
               style={styles.actionBtn}
@@ -126,6 +124,7 @@ export default function GoalsScreen() {
         visible={novaMissaoModal}
         onClose={() => setNovaMissaoModal(false)}
         onCriar={handleCriarMissao}
+        dependentes={dependentes}
       />
     </LinearGradient>
   );

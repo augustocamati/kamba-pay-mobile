@@ -24,10 +24,12 @@ interface AppContextType {
   
   // Ações para Pai
   criarTarefa: (tarefa: Omit<Tarefa, 'id' | 'criado_em'>) => Promise<void>;
+  criarMissao: (missao: Omit<Missao, 'id' | 'progresso_atual' | 'ativa'>) => Promise<void>;
   aprovarTarefa: (tarefaId: string) => void;
   rejeitarTarefa: (tarefaId: string) => void;
   adicionarSaldo: (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => void;
   atualizarDadosCrianca: (nome: string, idade: number) => void;
+  selecionarCrianca: (criancaId: string) => void;
   criarCampanha: (campanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => void;
   concluirAula: () => void;
   refreshData: () => Promise<void>;
@@ -132,9 +134,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       setTimeout(() => {
         setDependentes(DEMO_CHILDREN);
-        setCrianca(user.role === 'child' ? DEMO_CHILDREN[0] : DEMO_CHILDREN[0]);
-        setTarefas(DEMO_TAREFAS);
-        setMissoes(DEMO_MISSOES);
+        
+        // Se for pai, mantém a criança selecionada ou pega a primeira
+        if (user.role === 'parent') {
+          const idParaSelecionar = crianca.id !== 'novo' ? crianca.id : DEMO_CHILDREN[0].id;
+          const criancaAtiva = DEMO_CHILDREN.find(c => c.id === idParaSelecionar) || DEMO_CHILDREN[0];
+          setCrianca(criancaAtiva);
+          
+          // Pai vê todas as tarefas e missões
+          setTarefas(DEMO_TAREFAS);
+          setMissoes(DEMO_MISSOES);
+        } else {
+          // Se for criança, pega os dados da criança logada (simulado com a primeira do demo)
+          setCrianca(DEMO_CHILDREN[0]);
+          setTarefas(DEMO_TAREFAS.filter(t => t.crianca_id === DEMO_CHILDREN[0].id));
+          setMissoes(DEMO_MISSOES.filter(m => m.crianca_id === DEMO_CHILDREN[0].id));
+        }
+
         setCampanhas(DEMO_CAMPANHAS);
         setConteudoEducativo(DEMO_CONTEUDO);
         setHistorico(DEMO_HISTORICO);
@@ -172,17 +188,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Todas as tarefas (não só pendentes)
+        // Todas as tarefas
         if (tasksRes.tarefas) {
           setTarefas(tasksRes.tarefas.map(mapTarefa));
-        } else if (dashRes.tarefas_pendentes_aprovacao) {
-          setTarefas(dashRes.tarefas_pendentes_aprovacao.map(mapTarefa));
         }
 
         if (campaignsRes.campanhas) {
           setCampanhas(campaignsRes.campanhas.map(mapCampanha));
-        } else if (dashRes.campanhas_ativas) {
-          setCampanhas(dashRes.campanhas_ativas.map(mapCampanha));
         }
 
         if (dashRes.missoes_ativas) {
@@ -198,25 +210,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ]);
 
         if (dashRes.crianca) {
-          setCrianca(prev => ({
-            ...prev,
-            id: dashRes.crianca.id,
-            nome: dashRes.crianca.nome,
-            idade: dashRes.crianca.idade,
-            nivel: dashRes.crianca.nivel,
-            xp: dashRes.crianca.xp || 0,
-            potes: dashRes.crianca.potes || prev.potes,
-          }));
+          const c = dashRes.crianca;
+          setCrianca({
+            id: c.id,
+            nome: c.nome,
+            idade: c.idade,
+            nivel: c.nivel,
+            xp: c.xp || 0,
+            paiId: '',
+            potes: c.potes || fallbackCrianca.potes,
+            avatar: c.avatar || fallbackCrianca.avatar,
+            tarefas: [], missoes: [], historico: []
+          });
         }
 
         if (dashRes.tarefas_do_dia) {
           setTarefas(dashRes.tarefas_do_dia.map(mapTarefa));
         }
 
-        if (dashRes.missao_destaque) {
-          setMissoes([mapMissao({ ...dashRes.missao_destaque, ativa: true, cor: ['#BF5AF2', '#A335EE'] })]);
-        } else if (dashRes.missoes) {
+        if (dashRes.missoes) {
           setMissoes(dashRes.missoes.map(mapMissao));
+        } else if (dashRes.missao_destaque) {
+          setMissoes([mapMissao({ ...dashRes.missao_destaque, ativa: true })]);
         }
 
         if (campaignsRes.campanhas) {
@@ -350,6 +365,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Criar missão (ação do pai)
+  const criarMissao = async (novaMissao: Omit<Missao, 'id' | 'progresso_atual' | 'ativa'>) => {
+    if (isDemo) {
+      const missao: Missao = {
+        ...novaMissao,
+        id: `demo-m${Date.now()}`,
+        progresso_atual: 0,
+        ativa: true,
+      };
+      setMissoes(prev => [missao, ...prev]);
+      return;
+    }
+    try {
+      const res = await missionService.createMission(novaMissao);
+      const missao: Missao = {
+        ...novaMissao,
+        id: res.id || `missao-${Date.now()}`,
+        progresso_atual: 0,
+        ativa: true,
+      };
+      setMissoes(prev => [missao, ...prev]);
+    } catch(e) {
+      console.error('Erro ao criar missão:', e);
+      throw e;
+    }
+  };
+
   // Aprovar tarefa — demo ou API real
   const aprovarTarefa = async (tarefaId: string) => {
     if (isDemo) {
@@ -419,6 +461,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCrianca(prev => ({ ...prev, nome, idade }));
   };
 
+  const selecionarCrianca = (criancaId: string) => {
+    const selecionada = dependentes.find(d => d.id === criancaId);
+    if (selecionada) {
+      setCrianca(selecionada);
+      // Recarregar dados específicos desta criança
+      carregarDadosAPI();
+    }
+  };
+
   // Criar campanha — API real
   const criarCampanha = async (novaCampanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => {
     try {
@@ -477,10 +528,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       atualizarAvatar,
       marcarConteudoCompleto,
       criarTarefa,
+      criarMissao,
       aprovarTarefa,
       rejeitarTarefa,
       adicionarSaldo,
       atualizarDadosCrianca,
+      selecionarCrianca,
       criarCampanha,
       adicionarXP,
       concluirAula,

@@ -52,9 +52,10 @@ export default function ParentDashboard() {
     criarCampanha,
     campanhas,
     dependentes,
+    criarMissao,
     refreshData
   } = useApp();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const [novaTarefaModal, setNovaTarefaModal] = useState(false);
   const [novaCampanhaModal, setNovaCampanhaModal] = useState(false);
@@ -80,10 +81,19 @@ export default function ParentDashboard() {
     Alert.alert('Sucesso ❤️', `${dados.titulo} foi adicionada à lista de campanhas disponíveis.`);
   };
 
-  const handleCriarMissao = (dados: any) => {
-    // Note: implementation depends on AppContext availability
-    // criarMissao(dados);
-    Alert.alert('Sucesso 🎯', `Missão "${dados.titulo}" criada!`);
+  const handleCriarMissao = async (dados: any) => {
+    try {
+      await criarMissao({
+        ...dados,
+        objetivo_valor: parseFloat(dados.objetivo_valor),
+        recompensa: parseFloat(dados.recompensa || 0),
+        crianca_id: dados.crianca_id || (dependentes.length > 0 ? dependentes[0].id : ''),
+      });
+      Alert.alert('Sucesso 🎯', `Missão "${dados.titulo}" criada!`);
+      setNovaMissaoModal(false);
+    } catch (e: any) {
+      Alert.alert('Erro', 'Não foi possível criar a missão.');
+    }
   };
 
   // Sync default crianca_id when dependentes load
@@ -175,8 +185,8 @@ export default function ParentDashboard() {
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Painel dos Pais</Text>
-            <Text style={styles.headerSubtitle}>Acompanhe o progresso financeiro de {crianca.nome}</Text>
+            <Text style={styles.headerTitle}>Olá, {user?.name || 'Paizão'} 👋</Text>
+            <Text style={styles.headerSubtitle}>Acompanhe o progresso financeiro de seus filhos</Text>
           </View>
           <TouchableOpacity 
             style={styles.logoutBtn} 
@@ -398,6 +408,7 @@ export default function ParentDashboard() {
           visible={novaMissaoModal}
           onClose={() => setNovaMissaoModal(false)}
           onCriar={handleCriarMissao}
+          dependentes={dependentes}
         />
 
         <CriarCampanha

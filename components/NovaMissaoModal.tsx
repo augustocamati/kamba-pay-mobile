@@ -15,23 +15,47 @@ interface NovaMissaoModalProps {
   visible: boolean;
   onClose: () => void;
   onCriar: (dados: any) => void;
+  dependentes?: any[];
 }
 
-export function NovaMissaoModal({ visible, onClose, onCriar }: NovaMissaoModalProps) {
+export function NovaMissaoModal({ visible, onClose, onCriar, dependentes = [] }: NovaMissaoModalProps) {
   const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
   const [recompensa, setRecompensa] = useState('');
-  const [tipo, setTipo] = useState('poupanca');
+  const [tipo, setTipo] = useState<{ key: string, label: string, color: string[], icone_nome: string }>({ key: 'poupanca', label: 'Meta', color: ['#3b82f6', '#7c3aed'], icone_nome: 'trending-up' });
+  const [criancaId, setCriancaId] = useState('');
+
+  const missionTypes = [
+    { key: 'poupanca', label: 'Poupança', icon: '💰', color: ['#3b82f6', '#22c55e'], icone_nome: 'trending-up' },
+    { key: 'estudo', label: 'Estudo', icon: '📚', color: ['#7c3aed', '#3b82f6'], icone_nome: 'book' },
+    { key: 'comportamento', label: 'Comp.', icon: '⭐', color: ['#f59e0b', '#ef4444'], icone_nome: 'star' },
+    { key: 'autonomia', label: 'Autonomia', icon: '☀️', color: ['#10b981', '#3b82f6'], icone_nome: 'flash' },
+    { key: 'saude', label: 'Saúde', icon: '❤️', color: ['#ef4444', '#f43f5e'], icone_nome: 'heart' },
+    { key: 'solidariedade', label: 'Social', icon: '🤝', color: ['#ec4899', '#f43f5e'], icone_nome: 'hand-heart' },
+  ];
+
+  React.useEffect(() => {
+    if (dependentes.length > 0 && (!criancaId || !dependentes.find(d => d.id === criancaId))) {
+      setCriancaId(dependentes[0].id);
+    }
+  }, [dependentes, visible]);
 
   const handleCriar = () => {
     onCriar({
       titulo,
+      descricao,
       objetivo_valor: parseFloat(valor),
       recompensa: parseFloat(recompensa),
-      tipo,
-      icone: tipo === 'poupanca' ? '💰' : '🎯',
+      tipo: tipo.key,
+      crianca_id: criancaId,
+      icone: missionTypes.find(t => t.key === tipo.key)?.icon || '🎯',
+      cor: tipo.color,
+      tipo_label: tipo.label,
+      icone_nome: tipo.icone_nome
     });
     setTitulo('');
+    setDescricao('');
     setValor('');
     setRecompensa('');
     onClose();
@@ -49,6 +73,28 @@ export function NovaMissaoModal({ visible, onClose, onCriar }: NovaMissaoModalPr
               </TouchableOpacity>
             </View>
 
+            {dependentes.length > 0 && (
+              <>
+                <Text style={styles.fieldLabel}>Atribuir a</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+                  {dependentes.map((dep) => (
+                    <TouchableOpacity
+                      key={dep.id}
+                      onPress={() => setCriancaId(dep.id)}
+                      style={[
+                        styles.chipBtn,
+                        criancaId === dep.id && styles.chipBtnActive,
+                      ]}
+                    >
+                      <Text style={[styles.chipText, criancaId === dep.id && styles.chipTextActive]}>
+                        {dep.nome}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
             <Text style={styles.fieldLabel}>Título da Missão</Text>
             <TextInput
               style={styles.textInput}
@@ -56,6 +102,16 @@ export function NovaMissaoModal({ visible, onClose, onCriar }: NovaMissaoModalPr
               placeholderTextColor="#94a3b8"
               value={titulo}
               onChangeText={setTitulo}
+            />
+
+            <Text style={styles.fieldLabel}>Descrição</Text>
+            <TextInput
+              style={[styles.textInput, { height: 80, textAlignVertical: 'top' }]}
+              placeholder="Detalhes da missão"
+              placeholderTextColor="#94a3b8"
+              value={descricao}
+              onChangeText={setDescricao}
+              multiline
             />
 
             <Text style={styles.fieldLabel}>Valor do Objetivo (Kz)</Text>
@@ -79,20 +135,22 @@ export function NovaMissaoModal({ visible, onClose, onCriar }: NovaMissaoModalPr
             />
 
             <Text style={styles.fieldLabel}>Tipo de Missão</Text>
-            <View style={styles.row}>
-              <TouchableOpacity
-                style={[styles.chip, tipo === 'poupanca' && styles.chipActive]}
-                onPress={() => setTipo('poupanca')}
-              >
-                <Text style={[styles.chipText, tipo === 'poupanca' && styles.chipTextActive]}>💰 Poupança</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.chip, tipo === 'estudo' && styles.chipActive]}
-                onPress={() => setTipo('estudo')}
-              >
-                <Text style={[styles.chipText, tipo === 'estudo' && styles.chipTextActive]}>📚 Estudo</Text>
-              </TouchableOpacity>
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {missionTypes.map((t) => (
+                <TouchableOpacity
+                  key={t.key}
+                  style={[
+                    styles.chipBtn,
+                    tipo.key === t.key && styles.chipBtnActive,
+                  ]}
+                  onPress={() => setTipo(t)}
+                >
+                  <Text style={[styles.chipText, tipo.key === t.key && styles.chipTextActive]}>
+                    {t.icon} {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
             <TouchableOpacity onPress={handleCriar} style={styles.primaryBtn}>
               <LinearGradient colors={['#3b82f6', '#7c3aed']} style={styles.gradientBtn}>
@@ -119,6 +177,21 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: 'rgba(59,130,246,0.2)', borderColor: '#3b82f6' },
   chipText: { color: '#94a3b8', fontWeight: '600' },
   chipTextActive: { color: '#fff' },
+  chipBtn: {
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipBtnActive: {
+    backgroundColor: 'rgba(59,130,246,0.3)',
+    borderColor: '#3b82f6',
+  },
   primaryBtn: { borderRadius: 14, overflow: 'hidden', marginTop: 10 },
   gradientBtn: { paddingVertical: 16, alignItems: 'center' },
   primaryBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },

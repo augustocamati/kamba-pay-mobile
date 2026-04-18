@@ -5,19 +5,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '@/lib/auth-context';
+import { useApp } from '@/context/AppContext';
 import Colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 
 export default function SubmitTaskScreen() {
   const insets = useSafeAreaInsets();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
-  const { tasks, submitTask } = useAuth();
+  const { tarefas, enviarFotoTarefa } = useApp();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
 
-  const task = tasks.find(t => t.id === taskId);
+  const task = tarefas.find(t => t.id === taskId);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -56,7 +56,7 @@ export default function SubmitTaskScreen() {
     }
     setIsSubmitting(true);
     try {
-      await submitTask(taskId, photoUri);
+      await enviarFotoTarefa(taskId, photoUri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } finally {
@@ -87,11 +87,11 @@ export default function SubmitTaskScreen() {
           <View style={styles.taskIconWrap}>
             <MaterialCommunityIcons name="clipboard-check-outline" size={28} color="#8B5CF6" />
           </View>
-          <Text style={styles.taskTitle}>{task.title}</Text>
-          {task.description ? <Text style={styles.taskDesc}>{task.description}</Text> : null}
+          <Text style={styles.taskTitle}>{task.titulo}</Text>
+          {task.descricao ? <Text style={styles.taskDesc}>{task.descricao}</Text> : null}
           <View style={styles.rewardBadge}>
             <MaterialCommunityIcons name="cash" size={18} color="#FF8C00" />
-            <Text style={styles.rewardText}>{task.reward.toLocaleString()} Kz</Text>
+            <Text style={styles.rewardText}>{task.recompensa.toLocaleString()} Kz</Text>
           </View>
         </View>
 

@@ -1,7 +1,7 @@
 // Tipos de dados completos do Kamba Kid Pay
 
 export type StatusTarefa = 'pendente' | 'aguardando_aprovacao' | 'concluida' | 'rejeitada';
-export type TipoMissao = 'poupanca' | 'consumo' | 'solidariedade';
+export type TipoMissao = 'poupanca' | 'consumo' | 'solidariedade' | 'estudo' | 'saude' | 'autonomia' | 'comportamento';
 export type FaixaEtaria = '6-8' | '9-10' | '11-12';
 
 export interface Usuario {
