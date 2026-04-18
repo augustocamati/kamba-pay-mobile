@@ -142,3 +142,48 @@ export const shopService = {
 export const reportService = {
   getProgress: (crianca_id: string, periodo: string) => api.get('/reports/progress', { params: { crianca_id, periodo } }).then(res => res.data),
 };
+
+// ============================================
+// Admin Services
+// ============================================
+
+export const adminService = {
+  // Auth
+  login: (email: string, senha: string) => api.post('/admin/auth/login', { email, senha }).then(res => res.data),
+  me: () => api.get('/admin/auth/me').then(res => res.data),
+
+  // Dashboard & Stats
+  getDashboard: () => api.get('/admin/dashboard').then(res => res.data),
+  getStats: (periodo: string) => api.get('/admin/stats', { params: { periodo } }).then(res => res.data),
+
+  // Users (Responsáveis)
+  getResponsaveis: (params?: any) => api.get('/admin/utilizadores/responsaveis', { params }).then(res => res.data),
+  getResponsavelDependentes: (id: string) => api.get(`/admin/utilizadores/responsaveis/${id}/dependentes`).then(res => res.data),
+  updateResponsavel: (id: string, data: any) => api.put(`/admin/utilizadores/responsaveis/${id}`, data).then(res => res.data),
+  updateStatusResponsavel: (id: string, status: 'Ativo' | 'Inativo') => {
+    const endpoint = status === 'Ativo' ? 'ativar' : 'desativar';
+    return api.patch(`/admin/utilizadores/responsaveis/${id}/${endpoint}`).then(res => res.data);
+  },
+  deleteResponsavel: (id: string) => api.delete(`/admin/utilizadores/responsaveis/${id}`).then(res => res.data),
+
+  // Users (Crianças)
+  getCriancas: (params?: any) => api.get('/admin/utilizadores/criancas', { params }).then(res => res.data),
+  getCriancaResponsavel: (id: string) => api.get(`/admin/utilizadores/criancas/${id}/responsavel`).then(res => res.data),
+  updateCrianca: (id: string, data: any) => api.put(`/admin/utilizadores/criancas/${id}`, data).then(res => res.data),
+  updateStatusCrianca: (id: string, status: string) => api.patch(`/admin/utilizadores/criancas/${id}/status`, { status }).then(res => res.data),
+  deleteCrianca: (id: string) => api.delete(`/admin/utilizadores/criancas/${id}`).then(res => res.data),
+
+  // Tasks
+  getTasks: (params?: any) => api.get('/admin/tarefas', { params }).then(res => res.data),
+  createTask: (data: any) => api.post('/admin/tarefas', data).then(res => res.data),
+  updateTask: (id: string, data: any) => api.put(`/admin/tarefas/${id}`, data).then(res => res.data),
+  updateTaskStatus: (id: string, status: string) => api.patch(`/admin/tarefas/${id}/status`, { status }).then(res => res.data),
+  deleteTask: (id: string) => api.delete(`/admin/tarefas/${id}`).then(res => res.data),
+  getCriancasParaTarefas: () => api.get('/admin/criancas/para-tarefas').then(res => res.data),
+
+  // Quizzes
+  getQuizzes: () => api.get('/admin/quizzes').then(res => res.data),
+  createQuiz: (data: any) => api.post('/admin/quizzes', data).then(res => res.data),
+  updateQuiz: (id: string, data: any) => api.put(`/admin/quizzes/${id}`, data).then(res => res.data),
+  deleteQuiz: (id: string) => api.delete(`/admin/quizzes/${id}`).then(res => res.data),
+};

@@ -22,6 +22,16 @@ interface AdicionarDependenteProps {
 
 const IDADES = [6, 7, 8, 9, 10, 11, 12];
 
+const MUNICIPIOS_MAP: Record<string, string[]> = {
+  Luanda: ['Cazenga', 'Belas', 'Talatona', 'Viana', 'Luanda', 'Kilamba Kiaxi', 'Cacuaco', 'Icolo e Bengo', 'Quiçama'],
+  Benguela: ['Benguela', 'Lobito', 'Catumbela', 'Baía Farta', 'Ganda'],
+  Huambo: ['Huambo', 'Caála', 'Bailundo', 'Ekunha', 'Londuimbali'],
+  Huíla: ['Lubango', 'Humpata', 'Chibia', 'Quipungo', 'Caluquembe'],
+  Cabinda: ['Cabinda', 'Cacongo', 'Buco-Zau', 'Belize', 'Dinge'],
+  Uíge: ['Uíge', 'Negage', 'Maquela do Zombo', 'Damba', 'Bungo'],
+  Namibe: ['Moçâmedes', 'Bibala', 'Virei', 'Camucuio', 'Tômbwa'],
+};
+
 export function AdicionarDependente({ open, onOpenChange, onAdicionar }: AdicionarDependenteProps) {
   const [nome, setNome] = useState('');
   const [idade, setIdade] = useState('');
@@ -33,8 +43,9 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
   const [mostrarPin, setMostrarPin] = useState(false);
   const [mostrarConfirmarPin, setMostrarConfirmarPin] = useState(false);
   const [provincia, setProvincia] = useState('Luanda');
-  const [municipio, setMunicipio] = useState('Belas');
+  const [municipio, setMunicipio] = useState('Cazenga');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'provincia' | 'municipio' | null>(null);
 
   const poteGastar = 100 - potePoupar - poteAjudar;
 
@@ -78,7 +89,7 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
       setPin('');
       setConfirmarPin('');
       setProvincia('Luanda');
-      setMunicipio('Belas');
+      setMunicipio('Cazenga');
       setPotePoupar(30);
       setPoteAjudar(10);
       onOpenChange(false);
@@ -171,28 +182,74 @@ export function AdicionarDependente({ open, onOpenChange, onAdicionar }: Adicion
                 </ScrollView>
 
                 <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Província *</Text>
-                <View style={styles.inputRow}>
+                <TouchableOpacity 
+                  style={styles.inputRow}
+                  onPress={() => setPickerMode('provincia')}
+                >
                   <Ionicons name="map-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Luanda"
-                    placeholderTextColor="#94a3b8"
-                    value={provincia}
-                    onChangeText={setProvincia}
-                  />
-                </View>
+                  <View style={styles.textInput}>
+                    <Text style={{ color: '#1e293b', fontSize: 15 }}>{provincia}</Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={18} color="#94a3b8" />
+                </TouchableOpacity>
 
                 <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Município *</Text>
-                <View style={styles.inputRow}>
+                <TouchableOpacity 
+                  style={styles.inputRow}
+                  onPress={() => setPickerMode('municipio')}
+                >
                   <Ionicons name="business-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Belas"
-                    placeholderTextColor="#94a3b8"
-                    value={municipio}
-                    onChangeText={setMunicipio}
-                  />
-                </View>
+                  <View style={styles.textInput}>
+                    <Text style={{ color: '#1e293b', fontSize: 15 }}>{municipio}</Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={18} color="#94a3b8" />
+                </TouchableOpacity>
+
+                {/* Picker Overlay */}
+                {pickerMode && (
+                  <View style={styles.pickerOverlay}>
+                    <View style={styles.pickerContent}>
+                      <View style={styles.pickerHeader}>
+                        <Text style={styles.pickerTitle}>
+                          {pickerMode === 'provincia' ? 'Escolher Província' : 'Escolher Município'}
+                        </Text>
+                        <TouchableOpacity onPress={() => setPickerMode(null)}>
+                          <Ionicons name="close" size={20} color="#64748b" />
+                        </TouchableOpacity>
+                      </View>
+                      <ScrollView style={{ maxHeight: 250 }}>
+                        {(pickerMode === 'provincia' 
+                          ? Object.keys(MUNICIPIOS_MAP)
+                          : MUNICIPIOS_MAP[provincia] || ['Sede']
+                        ).map((item) => (
+                          <TouchableOpacity
+                            key={item}
+                            style={styles.pickerItem}
+                            onPress={() => {
+                              if (pickerMode === 'provincia') {
+                                setProvincia(item);
+                                setMunicipio(MUNICIPIOS_MAP[item][0]);
+                              } else {
+                                setMunicipio(item);
+                              }
+                              setPickerMode(null);
+                            }}
+                          >
+                            <Text style={[
+                              styles.pickerItemText,
+                              (pickerMode === 'provincia' ? provincia : municipio) === item && styles.pickerItemTextActive
+                            ]}>
+                              {item}
+                            </Text>
+                            {(pickerMode === 'provincia' ? provincia : municipio) === item && (
+                              <Ionicons name="checkmark" size={18} color="#ea580c" />
+                            )}
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </View>
+                )}
               </LinearGradient>
             </View>
 
@@ -522,5 +579,52 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 15,
+  },
+  pickerOverlay: {
+    marginTop: 10,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  pickerContent: {
+    width: '100%',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  pickerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  pickerItemText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  pickerItemTextActive: {
+    color: '#ea580c',
+    fontWeight: '700',
   },
 });

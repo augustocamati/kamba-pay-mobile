@@ -3,10 +3,12 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { adminService } from '@/lib/api';
 
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'admin123';
@@ -26,14 +28,25 @@ export default function AdminLoginScreen() {
     }
     setLoading(true);
     setError('');
-    // Simula latência de rede
-    await new Promise(r => setTimeout(r, 800));
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
-      router.replace('/admin' as any);
-    } else {
-      setError('Credenciais inválidas. Tente novamente.');
+    
+    try {
+      const response = await adminService.login(username, password);
+      
+      if (response.token) {
+        await AsyncStorage.setItem('kamba_token', response.token);
+        if (response.usuario) {
+          await AsyncStorage.setItem('kamba_user', JSON.stringify(response.usuario));
+        }
+        router.replace('/admin' as any);
+      } else {
+        setError('Falha na autenticação. Tente novamente.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.erro || 'Credenciais inválidas ou erro no servidor.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

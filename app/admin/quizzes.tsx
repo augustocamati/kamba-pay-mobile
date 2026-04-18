@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import {
+import { 
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Modal, ScrollView, TextInput, Alert, Pressable,
+  Modal, ScrollView, TextInput, Alert, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '../../lib/api';
 import { 
   BrainCircuit, Pencil, Trash2, Puzzle, X, PlusCircle, Coins, Landmark, BookOpen, Target, CheckCircle2 
 } from 'lucide-react-native';
@@ -14,56 +16,20 @@ export interface AdminQuiz {
   titulo: string;
   descricao: string;
   categoria: string;
-  dificuldade: 'Fácil' | 'Médio' | 'Difícil';
-  pontos: number;
+  dificuldade: 'Fácil' | 'Média' | 'Difícil';
+  pontosRecompensa: number;
   pergunta: string;
-  opcoes: { texto: string; correta: boolean }[];
+  opcoes: { id?: string; texto: string; correta: boolean }[];
   explicacao: string;
-  completados: number;
+  vezesCompletado: number;
 }
 
-const INITIAL_QUIZZES: AdminQuiz[] = [
-  {
-    id: 'q-1',
-    titulo: 'O que é Poupar?',
-    descricao: 'Teste seus conhecimentos sobre poupança',
-    categoria: 'Poupar',
-    dificuldade: 'Fácil',
-    pontos: 50,
-    pergunta: 'O que significa poupar dinheiro?',
-    opcoes: [
-      { texto: 'Guardar parte do dinheiro para o futuro', correta: true },
-      { texto: 'Gastar todo o dinheiro que tem', correta: false },
-      { texto: 'Dar dinheiro para outras pessoas', correta: false },
-      { texto: 'Perder dinheiro', correta: false },
-    ],
-    explicacao: 'Poupar significa reservar uma parte do dinheiro que ganhamos para usar no futuro.',
-    completados: 450,
-  },
-  {
-    id: 'q-2',
-    titulo: 'Gastar com Sabedoria',
-    descricao: 'Aprenda sobre decisões inteligentes de compra',
-    categoria: 'Gastar',
-    dificuldade: 'Médio',
-    pontos: 75,
-    pergunta: 'Antes de comprar algo, você deve:',
-    opcoes: [
-      { texto: 'Pensar se realmente precisa', correta: true },
-      { texto: 'Comprar imediatamente', correta: false },
-      { texto: 'Pedir dinheiro emprestado', correta: false },
-    ],
-    explicacao: 'Sempre pense antes de comprar: é uma necessidade ou apenas um desejo?',
-    completados: 320,
-  },
-];
-
 const CATEGORIAS = ['Poupar', 'Gastar', 'Ajudar', 'Investir', 'Planejamento'];
-const DIFICULDADES = ['Fácil', 'Médio', 'Difícil'] as const;
+const DIFICULDADES = ['Fácil', 'Média', 'Difícil'] as const;
 
 const DIFF_STYLE: Record<string, { bg: string; text: string }> = {
   'Fácil':   { bg: 'rgba(34,197,94,0.15)',  text: '#22C55E' },
-  'Médio':   { bg: 'rgba(245,158,11,0.15)', text: '#F59E0B' },
+  'Média':   { bg: 'rgba(245,158,11,0.15)', text: '#F59E0B' },
   'Difícil': { bg: 'rgba(239,68,68,0.15)',  text: '#EF4444' },
 };
 const CAT_COLOR: Record<string, string> = {
@@ -75,8 +41,8 @@ type FormState = {
   titulo: string;
   descricao: string;
   categoria: string;
-  dificuldade: 'Fácil' | 'Médio' | 'Difícil';
-  pontos: string;
+  dificuldade: 'Fácil' | 'Média' | 'Difícil';
+  pontosRecompensa: string;
   pergunta: string;
   opcoes: { texto: string; correta: boolean }[];
   explicacao: string;
@@ -84,27 +50,65 @@ type FormState = {
 
 const blankForm = (): FormState => ({
   titulo: '', descricao: '', categoria: 'Poupar', dificuldade: 'Fácil',
-  pontos: '50', pergunta: '',
+  pontosRecompensa: '50', pergunta: '',
   opcoes: [{ texto: '', correta: false }, { texto: '', correta: false }],
   explicacao: '',
 });
 
 export default function AdminQuizzes() {
   const insets = useSafeAreaInsets();
-  const [quizzes, setQuizzes] = useState<AdminQuiz[]>(INITIAL_QUIZZES);
+  const queryClient = useQueryClient();
+  
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(blankForm());
+
+  // Queries
+  const { data: quizzesData, isLoading } = useQuery({
+    queryKey: ['admin', 'quizzes'],
+    queryFn: () => adminService.getQuizzes(),
+  });
+  const quizzes: AdminQuiz[] = quizzesData?.quizzes || [];
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data: any) => adminService.createQuiz(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'quizzes'] });
+      setModal(false);
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao criar quiz'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: any }) => adminService.updateQuiz(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'quizzes'] });
+      setModal(false);
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao atualizar quiz'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminService.deleteQuiz(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'quizzes'] });
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao eliminar quiz'),
+  });
 
   const openAdd = () => { setEditId(null); setForm(blankForm()); setModal(true); };
 
   const openEdit = (q: AdminQuiz) => {
     setEditId(q.id);
     setForm({
-      titulo: q.titulo, descricao: q.descricao, categoria: q.categoria,
-      dificuldade: q.dificuldade, pontos: String(q.pontos),
+      titulo: q.titulo, 
+      descricao: q.descricao, 
+      categoria: q.categoria,
+      dificuldade: q.dificuldade, 
+      pontosRecompensa: String(q.pontosRecompensa),
       pergunta: q.pergunta,
-      opcoes: q.opcoes.map(o => ({ ...o })),
+      opcoes: q.opcoes.map(o => ({ texto: o.texto, correta: o.correta })),
       explicacao: q.explicacao,
     });
     setModal(true);
@@ -127,23 +131,31 @@ export default function AdminQuizzes() {
   };
 
   const save = () => {
-    if (!form.titulo || !form.pergunta || form.opcoes.filter(o => o.texto).length < 2) return;
-    const quiz: AdminQuiz = {
-      id: editId || `q-${Date.now()}`,
-      titulo: form.titulo, descricao: form.descricao,
-      categoria: form.categoria, dificuldade: form.dificuldade,
-      pontos: Number(form.pontos) || 50, pergunta: form.pergunta,
+    if (!form.titulo || !form.pergunta || form.opcoes.filter(o => o.texto).length < 2) {
+      return Alert.alert('Aviso', 'Preencha todos os campos obrigatórios e pelo menos 2 opções.');
+    }
+    
+    // Validar se existe pelo menos uma opção correta
+    if (!form.opcoes.some(o => o.correta)) {
+      return Alert.alert('Aviso', 'Selecione pelo menos uma opção como correta.');
+    }
+    
+    const payload = {
+      ...form,
+      pontosRecompensa: Number(form.pontosRecompensa) || 50,
       opcoes: form.opcoes.filter(o => o.texto),
-      explicacao: form.explicacao, completados: 0,
     };
-    if (editId) setQuizzes(p => p.map(q => q.id === editId ? quiz : q));
-    else setQuizzes(p => [quiz, ...p]);
-    setModal(false);
+
+    if (editId) {
+      updateMutation.mutate({ id: editId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
   };
 
-  const del = (id: string) => Alert.alert('Eliminar Quiz', 'Tem a certeza?', [
+  const del = (id: string) => Alert.alert('Eliminar Quiz', 'Tem a certeza que deseja eliminar este quiz?', [
     { text: 'Cancelar', style: 'cancel' },
-    { text: 'Eliminar', style: 'destructive', onPress: () => setQuizzes(p => p.filter(q => q.id !== id)) },
+    { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
   ]);
 
   return (
@@ -159,72 +171,84 @@ export default function AdminQuizzes() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={quizzes}
-        keyExtractor={q => q.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
-        renderItem={({ item: q, index }) => {
-          const diff = DIFF_STYLE[q.dificuldade];
-          const catColor = CAT_COLOR[q.categoria] || '#FF8C00';
-          return (
-            <Animated.View entering={FadeInDown.delay(index * 60).duration(400)} style={{ flex: 1 }}>
-              <View style={styles.quizCard}>
-                {/* Top row: brain + badges */}
-                <View style={styles.quizCardTop}>
-                  <View style={styles.brainWrap}>
-                    <BrainCircuit size={20} color="#8B5CF6" />
-                  </View>
-                  <View style={styles.quizBadges}>
-                    <View style={[styles.chip, { backgroundColor: `${catColor}22`, borderColor: `${catColor}44` }]}>
-                      <Text style={[styles.chipText, { color: catColor }]}>{q.categoria}</Text>
+      {isLoading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#FF8C00" />
+          <Text style={styles.loadingText}>Carregando quizzes...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={quizzes}
+          keyExtractor={q => String(q.id)}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          numColumns={2}
+          columnWrapperStyle={{ gap: 12 }}
+          renderItem={({ item: q, index }) => {
+            const diff = DIFF_STYLE[q.dificuldade] || DIFF_STYLE['Fácil'];
+            const catColor = CAT_COLOR[q.categoria] || '#FF8C00';
+            return (
+              <Animated.View entering={FadeInDown.delay(index * 60).duration(400)} style={{ flex: 1 }}>
+                <View style={styles.quizCard}>
+                  {/* Top row: brain + badges */}
+                  <View style={styles.quizCardTop}>
+                    <View style={styles.brainWrap}>
+                      <BrainCircuit size={20} color="#8B5CF6" />
                     </View>
-                    <View style={[styles.chip, { backgroundColor: diff.bg }]}>
-                      <Text style={[styles.chipText, { color: diff.text }]}>{q.dificuldade}</Text>
+                    <View style={styles.quizBadges}>
+                      <View style={[styles.chip, { backgroundColor: `${catColor}22`, borderColor: `${catColor}44` }]}>
+                        <Text style={[styles.chipText, { color: catColor }]}>{q.categoria}</Text>
+                      </View>
+                      <View style={[styles.chip, { backgroundColor: diff.bg }]}>
+                        <Text style={[styles.chipText, { color: diff.text }]}>{q.dificuldade}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-
-                <Text style={styles.quizTitle}>{q.titulo}</Text>
-                <Text style={styles.quizQuestion} numberOfLines={2}>{q.pergunta}</Text>
-                <Text style={styles.quizOpcoes}>{q.opcoes.length} opções de resposta</Text>
-
-                {/* Stats */}
-                <View style={styles.quizStats}>
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: '#F59E0B' }]}>{q.pontos}</Text>
-                    <Text style={styles.statLabel}>Pontos</Text>
+  
+                  <Text style={styles.quizTitle}>{q.titulo}</Text>
+                  <Text style={styles.quizQuestion} numberOfLines={2}>{q.pergunta}</Text>
+                  <Text style={styles.quizOpcoes}>{q.opcoes.length} opções de resposta</Text>
+  
+                  {/* Stats */}
+                  <View style={styles.quizStats}>
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statValue, { color: '#F59E0B' }]}>{q.pontosRecompensa}</Text>
+                      <Text style={styles.statLabel}>Pontos</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                      <Text style={[styles.statValue, { color: '#22C55E' }]}>{q.vezesCompletado}</Text>
+                      <Text style={styles.statLabel}>Completados</Text>
+                    </View>
                   </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: '#22C55E' }]}>{q.completados}</Text>
-                    <Text style={styles.statLabel}>Completados</Text>
+  
+                  {/* Actions */}
+                  <View style={styles.quizActions}>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(q)} activeOpacity={0.8}>
+                      <Pencil size={14} color="#8FA1C7" style={{ marginRight: 6 }} />
+                      <Text style={styles.editBtnText}>Editar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.delBtn, deleteMutation.isPending && { opacity: 0.5 }]} 
+                      onPress={() => del(String(q.id))} 
+                      disabled={deleteMutation.isPending}
+                      activeOpacity={0.8}
+                    >
+                      <Trash2 size={16} color="#EF4444" />
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                {/* Actions */}
-                <View style={styles.quizActions}>
-                  <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(q)} activeOpacity={0.8}>
-                    <Pencil size={14} color="#8FA1C7" style={{ marginRight: 6 }} />
-                    <Text style={styles.editBtnText}>Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.delBtn} onPress={() => del(q.id)} activeOpacity={0.8}>
-                    <Trash2 size={16} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Animated.View>
-          );
-        }}
-        ListEmptyComponent={() => (
-          <View style={styles.empty}>
-            <Puzzle size={48} color="#4A5F8A" style={{ marginBottom: 12 }} />
-            <Text style={styles.emptyText}>Nenhum quiz cadastrado</Text>
-          </View>
-        )}
-      />
+              </Animated.View>
+            );
+          }}
+          ListEmptyComponent={() => (
+            <View style={styles.empty}>
+              <Puzzle size={48} color="#4A5F8A" style={{ marginBottom: 12 }} />
+              <Text style={styles.emptyText}>Nenhum quiz cadastrado</Text>
+            </View>
+          )}
+        />
+      )}
 
       {/* Add/Edit Modal */}
       <Modal visible={modal} transparent animationType="slide" onRequestClose={() => setModal(false)}>
@@ -286,7 +310,7 @@ export default function AdminQuizzes() {
                       <TouchableOpacity
                         key={d}
                         style={[styles.seg, form.dificuldade === d && styles.segActive]}
-                        onPress={() => setForm(p => ({ ...p, dificuldade: d }))}
+                        onPress={() => setForm(p => ({ ...p, dificuldade: d as any }))}
                       >
                         <Text style={[styles.segText, form.dificuldade === d && { color: '#FF8C00' }]}>{d}</Text>
                       </TouchableOpacity>
@@ -297,8 +321,8 @@ export default function AdminQuizzes() {
                   <TextInput
                     style={styles.input}
                     keyboardType="numeric"
-                    value={form.pontos}
-                    onChangeText={v => setForm(p => ({ ...p, pontos: v }))}
+                    value={form.pontosRecompensa}
+                    onChangeText={v => setForm(p => ({ ...p, pontosRecompensa: v }))}
                     placeholderTextColor="#4A5F8A"
                     placeholder="50"
                   />
@@ -372,9 +396,17 @@ export default function AdminQuizzes() {
               <TouchableOpacity style={styles.btnCancel} onPress={() => setModal(false)}>
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btnSave} onPress={save}>
+              <TouchableOpacity 
+                style={[styles.btnSave, (createMutation.isPending || updateMutation.isPending) && { opacity: 0.7 }]} 
+                onPress={save}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Puzzle size={16} color="#fff" />
+                  { (createMutation.isPending || updateMutation.isPending) ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Puzzle size={16} color="#fff" />
+                  )}
                   <Text style={styles.btnSaveText}>{editId ? 'Salvar Alterações' : 'Adicionar Quiz'}</Text>
                 </View>
               </TouchableOpacity>
@@ -549,4 +581,6 @@ const styles = StyleSheet.create({
   btnCancelText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
   btnSave: { flex: 2, padding: 14, borderRadius: 12, backgroundColor: S.orange, alignItems: 'center' },
   btnSaveText: { color: '#fff', fontFamily: 'Nunito_700Bold', fontSize: 14 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', marginTop: 12 },
 });

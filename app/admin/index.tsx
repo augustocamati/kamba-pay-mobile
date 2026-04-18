@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Pressable, Dimensions, Platform,
+  Pressable, Dimensions, Platform, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Users, TrendingUp, Wallet, Award, MapPin, Zap, UserCheck } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import { adminService } from '@/lib/api';
 
 const ADMIN_ACTIVITY = [
   { name: 'João Manuel', action: 'Completou Quiz "Poupar é Legal"', time: '1 min atrás', color: '#3B82F6' },
@@ -42,6 +44,34 @@ const PROVINCES = [
 export default function AdminDashboard() {
   const insets = useSafeAreaInsets();
 
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['admin', 'dashboard'],
+    queryFn: () => adminService.getDashboard(),
+  });
+
+  const resumo = dashboardData?.resumo || {
+    total_responsaveis: 0,
+    total_criancas: 0,
+    total_tarefas_mes: 0,
+    total_missoes_completas: 0,
+    total_doacoes: 0,
+    total_campanhas_ativas: 0,
+  };
+
+  const chartData = useMemo(() => {
+    if (!dashboardData?.graficos) return MONTHLY;
+    const { tarefas_por_mes, meses } = dashboardData.graficos;
+    // Map last 4 months for the chart
+    return meses.slice(-4).map((m: string, i: number) => ({
+      label: m,
+      users: 0, // Not in API summary currently
+      tx: tarefas_por_mes[meses.length - 4 + i] || 0,
+    }));
+  }, [dashboardData]);
+
+  const maxTx = Math.max(...chartData.map((m: any) => m.tx), 1);
+  const maxUsers = Math.max(...chartData.map((m: any) => m.users), 1);
+
   return (
     <View style={styles.root}>
       {/* Header */}
@@ -69,73 +99,67 @@ export default function AdminDashboard() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 20 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* KPI Cards */}
-        <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.kpiGrid}>
-          <KpiCard
-            Icon={Users} label="Total de Usuários" value="1.247"
-            change="+12,5%" color="#3B82F6" colorSoft="rgba(59,130,246,0.15)"
-          />
-          <KpiCard
-            Icon={TrendingUp} label="Transações Mensais" value="8.542"
-            change="+28,3%" color="#F59E0B" colorSoft="rgba(245,158,11,0.15)"
-          />
-          <KpiCard
-            Icon={Wallet} label="Volume (Kz)" value="2,8M"
-            change="+18,7%" color="#22C55E" colorSoft="rgba(34,197,94,0.15)"
-          />
-          <KpiCard
-            Icon={Award} label="Quizzes Feitos" value="3.456"
-            change="+35,2%" color="#8B5CF6" colorSoft="rgba(139,92,246,0.15)"
-          />
-        </Animated.View>
-
-        {/* Growth Chart */}
-        <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.chartCard}>
-          <View style={styles.sectionHeaderRow}>
-            <TrendingUp size={18} color="#F0F4FF" />
-            <Text style={styles.sectionTitle}>Crescimento Mensal</Text>
+        {isLoading ? (
+          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#FF8C00" />
           </View>
-          <View style={styles.chartLegend}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.legendLabel}>Usuários</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendLabel}>Transações</Text>
-            </View>
-          </View>
+        ) : (
+          <>
+            {/* KPI Cards */}
+            <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.kpiGrid}>
+              <KpiCard
+                Icon={Users} label="Pais Registados" value={String(resumo.total_responsaveis)}
+                change="Total" color="#3B82F6" colorSoft="rgba(59,130,246,0.15)"
+              />
+              <KpiCard
+                Icon={TrendingUp} label="Crianças Ativas" value={String(resumo.total_criancas)}
+                change="Total" color="#F59E0B" colorSoft="rgba(245,158,11,0.15)"
+              />
+              <KpiCard
+                Icon={Wallet} label="Doações (Kz)" value={resumo.total_doacoes.toLocaleString()}
+                change="Total" color="#22C55E" colorSoft="rgba(34,197,94,0.15)"
+              />
+              <KpiCard
+                Icon={Award} label="Missões Concluídas" value={String(resumo.total_missoes_completas)}
+                change="Total" color="#8B5CF6" colorSoft="rgba(139,92,246,0.15)"
+              />
+            </Animated.View>
 
-          <View style={styles.barChart}>
-            {MONTHLY.map((m, i) => (
-              <View key={i} style={styles.barGroup}>
-                <View style={styles.barsRow}>
-                  {/* Users bar */}
-                  <View style={styles.barColumn}>
-                    <Animated.View
-                      entering={FadeInUp.delay(300 + i * 80).duration(500)}
-                      style={[
-                        styles.bar,
-                        { height: (m.users / MAX_USERS) * 100, backgroundColor: '#3B82F6' },
-                      ]}
-                    />
-                  </View>
-                  {/* Tx bar */}
-                  <View style={styles.barColumn}>
-                    <Animated.View
-                      entering={FadeInUp.delay(360 + i * 80).duration(500)}
-                      style={[
-                        styles.bar,
-                        { height: (m.tx / MAX_TX) * 100, backgroundColor: '#F59E0B' },
-                      ]}
-                    />
-                  </View>
-                </View>
-                <Text style={styles.barLabel}>{m.label}</Text>
+            {/* Growth Chart */}
+            <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.chartCard}>
+              <View style={styles.sectionHeaderRow}>
+                <TrendingUp size={18} color="#F0F4FF" />
+                <Text style={styles.sectionTitle}>Atividade de Tarefas</Text>
               </View>
-            ))}
-          </View>
-        </Animated.View>
+              <View style={styles.chartLegend}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+                  <Text style={styles.legendLabel}>Tarefas</Text>
+                </View>
+              </View>
+
+              <View style={styles.barChart}>
+                {chartData.map((m, i) => (
+                  <View key={i} style={styles.barGroup}>
+                    <View style={styles.barsRow}>
+                      {/* Tx bar */}
+                      <View style={styles.barColumn}>
+                        <Animated.View
+                          entering={FadeInUp.delay(360 + i * 80).duration(500)}
+                          style={[
+                            styles.bar,
+                            { height: (m.tx / maxTx) * 100, backgroundColor: '#F59E0B' },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                    <Text style={styles.barLabel}>{m.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </Animated.View>
+          </>
+        )}
 
         {/* Province Distribution */}
         <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.chartCard}>

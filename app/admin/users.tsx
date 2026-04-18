@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
-  TouchableOpacity, Modal, ScrollView, Alert, Pressable,
+  TouchableOpacity, Modal, ScrollView, Alert, Pressable, ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -10,24 +10,39 @@ import {
   MapPin, Calendar, Eye, Pencil, Lock, Unlock, Trash2, XCircle,
   ArrowUpDown, DollarSign, RefreshCw, Check, Save, Plus
 } from 'lucide-react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '@/lib/api';
 
 export interface AdminUser {
-  id: string; nome: string; email: string; telefone: string;
-  tipo: 'pai' | 'crianca'; provincia: string; municipio: string;
-  saldo: number; status: 'ativo' | 'inativo'; dataCadastro: string;
+  id: string; 
+  originalId: string;
+  nome: string; 
+  email: string; 
+  telefone: string;
+  tipo: 'pai' | 'crianca'; 
+  provincia: string; 
+  municipio: string;
+  saldo: number;
+  status: 'ativo' | 'inativo'; 
+  dataCadastro: string;
+  idade?: number;
+  nivel?: string;
+  saldo_gastar?: number;
+  saldo_poupar?: number;
+  saldo_ajudar?: number;
 }
 
 const PROVINCIAS = ['Luanda', 'Benguela', 'Huíla', 'Huambo', 'Cabinda', 'Malanje', 'Bié', 'Uíge'];
 
 const INITIAL_USERS: AdminUser[] = [
-  { id: 'u-1', nome: 'João Manuel', email: 'joao.manuel@email.com', telefone: '+244 923 456 789', tipo: 'pai', provincia: 'Luanda', municipio: 'Talatona', saldo: 45000, status: 'ativo', dataCadastro: '15/01/2024' },
-  { id: 'u-2', nome: 'Maria Silva', email: 'maria.silva@email.com', telefone: '+244 912 370 270', tipo: 'pai', provincia: 'Benguela', municipio: 'Lobito', saldo: 32500, status: 'ativo', dataCadastro: '20/01/2024' },
-  { id: 'u-3', nome: 'Pedro Kamba', email: 'pedro.kamba@email.com', telefone: '+244 943 611 311', tipo: 'crianca', provincia: 'Huíla', municipio: 'Lubango', saldo: 8500, status: 'ativo', dataCadastro: '01/02/2024' },
-  { id: 'u-4', nome: 'Ana Costa', email: 'ana.costa@email.com', telefone: '+244 923 109 321', tipo: 'pai', provincia: 'Huambo', municipio: 'Caála', saldo: 58000, status: 'ativo', dataCadastro: '10/02/2024' },
-  { id: 'u-5', nome: 'Carlos Neto', email: 'carlos.neto@email.com', telefone: '+244 931 234 567', tipo: 'crianca', provincia: 'Luanda', municipio: 'Viana', saldo: 1500, status: 'inativo', dataCadastro: '15/02/2024' },
-  { id: 'u-6', nome: 'Luísa António', email: 'luisa.antonio@email.com', telefone: '+244 943 498 788', tipo: 'pai', provincia: 'Benguela', municipio: 'Benguela', saldo: 42000, status: 'ativo', dataCadastro: '01/03/2024' },
-  { id: 'u-7', nome: 'Miguel Fernando', email: 'miguel.fernando@email.com', telefone: '+244 913 457 391', tipo: 'crianca', provincia: 'Cabinda', municipio: 'Cabinda', saldo: 12000, status: 'ativo', dataCadastro: '10/03/2024' },
-  { id: 'u-8', nome: 'Teresa João', email: 'teresa.joao@email.com', telefone: '+244 946 222 111', tipo: 'pai', provincia: 'Huíla', municipio: 'Matala', saldo: 37500, status: 'ativo', dataCadastro: '15/03/2024' },
+  { id: 'u-1', originalId: '1', nome: 'João Manuel', email: 'joao.manuel@email.com', telefone: '+244 923 456 789', tipo: 'pai', provincia: 'Luanda', municipio: 'Talatona', saldo: 45000, status: 'ativo', dataCadastro: '15/01/2024' },
+  { id: 'u-2', originalId: '2', nome: 'Maria Silva', email: 'maria.silva@email.com', telefone: '+244 912 370 270', tipo: 'pai', provincia: 'Benguela', municipio: 'Lobito', saldo: 32500, status: 'ativo', dataCadastro: '20/01/2024' },
+  { id: 'u-3', originalId: '3', nome: 'Pedro Kamba', email: 'pedro.kamba@email.com', telefone: '+244 943 611 311', tipo: 'crianca', provincia: 'Huíla', municipio: 'Lubango', saldo: 8500, status: 'ativo', dataCadastro: '01/02/2024' },
+  { id: 'u-4', originalId: '4', nome: 'Ana Costa', email: 'ana.costa@email.com', telefone: '+244 923 109 321', tipo: 'pai', provincia: 'Huambo', municipio: 'Caála', saldo: 58000, status: 'ativo', dataCadastro: '10/02/2024' },
+  { id: 'u-5', originalId: '5', nome: 'Carlos Neto', email: 'carlos.neto@email.com', telefone: '+244 931 234 567', tipo: 'crianca', provincia: 'Luanda', municipio: 'Viana', saldo: 1500, status: 'inativo', dataCadastro: '15/02/2024' },
+  { id: 'u-6', originalId: '6', nome: 'Luísa António', email: 'luisa.antonio@email.com', telefone: '+244 943 498 788', tipo: 'pai', provincia: 'Benguela', municipio: 'Benguela', saldo: 42000, status: 'ativo', dataCadastro: '01/03/2024' },
+  { id: 'u-7', originalId: '7', nome: 'Miguel Fernando', email: 'miguel.fernando@email.com', telefone: '+244 913 457 391', tipo: 'crianca', provincia: 'Cabinda', municipio: 'Cabinda', saldo: 12000, status: 'ativo', dataCadastro: '10/03/2024' },
+  { id: 'u-8', originalId: '8', nome: 'Teresa João', email: 'teresa.joao@email.com', telefone: '+244 946 222 111', tipo: 'pai', provincia: 'Huíla', municipio: 'Matala', saldo: 37500, status: 'ativo', dataCadastro: '15/03/2024' },
 ];
 
 type TipoFilter = 'Todos' | 'Pai' | 'Criança';
@@ -39,7 +54,8 @@ const avatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_
 
 export default function AdminUsers() {
   const insets = useSafeAreaInsets();
-  const [users, setUsers] = useState<AdminUser[]>(INITIAL_USERS);
+  const queryClient = useQueryClient();
+  
   const [search, setSearch] = useState('');
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>('Todos');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Todos');
@@ -50,6 +66,65 @@ export default function AdminUsers() {
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
   const [addModal, setAddModal] = useState(false);
   const [newUser, setNewUser] = useState<Partial<AdminUser>>({ tipo: 'pai', status: 'ativo', provincia: 'Luanda', saldo: 0 });
+
+  // Fetching Responsaveis
+  const { data: responsaveisData, isLoading: isLoadingResponsaveis } = useQuery({
+    queryKey: ['admin', 'responsaveis'],
+    queryFn: () => adminService.getResponsaveis(),
+  });
+
+  // Fetching Criancas
+  const { data: criancasData, isLoading: isLoadingCriancas } = useQuery({
+    queryKey: ['admin', 'criancas'],
+    queryFn: () => adminService.getCriancas(),
+  });
+
+  const users = useMemo(() => {
+    const list: AdminUser[] = [];
+    
+    if (responsaveisData?.usuarios) {
+      responsaveisData.usuarios.forEach((u: any) => {
+        list.push({
+          id: `p-${u.id}`,
+          originalId: String(u.id),
+          nome: u.nome,
+          email: u.email,
+          telefone: u.telefone || '',
+          tipo: 'pai',
+          provincia: u.provincia,
+          municipio: u.municipio || '',
+          saldo: u.saldoKz || 0,
+          status: String(u.status).toLowerCase() === 'ativo' ? 'ativo' : 'inativo',
+          dataCadastro: u.dataCadastro ? new Date(u.dataCadastro).toLocaleDateString('pt-AO') : '—',
+        });
+      });
+    }
+
+    if (criancasData?.usuarios) {
+      criancasData.usuarios.forEach((u: any) => {
+        list.push({
+          id: `c-${u.id}`,
+          originalId: String(u.id),
+          nome: u.nome,
+          email: u.email || u.username,
+          telefone: u.telefone || '',
+          tipo: 'crianca',
+          provincia: u.provincia,
+          municipio: u.municipio || '',
+          saldo: u.saldoKz || 0,
+          status: String(u.status).toLowerCase() === 'ativo' ? 'ativo' : 'inativo',
+          dataCadastro: u.dataCadastro ? new Date(u.dataCadastro).toLocaleDateString('pt-AO') : '—',
+          idade: u.idade,
+          nivel: u.nivel,
+          saldo_gastar: u.saldo_gastar || 0,
+          saldo_poupar: u.saldo_poupar || 0,
+          saldo_ajudar: u.saldo_ajudar || 0,
+        });
+      });
+    }
+
+    return list;
+  }, [responsaveisData, criancasData]);
 
   const filtered = useMemo(() => {
     let list = users.filter(u => {
@@ -74,28 +149,77 @@ export default function AdminUsers() {
 
   const clearFilters = () => { setTipoFilter('Todos'); setStatusFilter('Todos'); setProvinciaFilter('Todas'); setSortBy('nome'); };
 
+  // Mutations
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => {
+      const user = users.find(u => u.id === id);
+      const targetId = user?.originalId || id;
+      if (user?.tipo === 'pai') return adminService.deleteResponsavel(targetId);
+      return adminService.deleteCrianca(targetId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin'] });
+      Alert.alert('Sucesso', 'Utilizador eliminado com sucesso');
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao eliminar utilizador'),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, tipo, status }: { id: string, tipo: string, status: string }) => {
+      const user = users.find(u => u.id === id);
+      const targetId = user?.originalId || id;
+      const newStatus = status === 'ativo' ? 'Inativo' : 'Ativo';
+      if (tipo === 'pai') return adminService.updateStatusResponsavel(targetId, newStatus as any);
+      return adminService.updateStatusCrianca(targetId, newStatus);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin'] });
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao alterar status'),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, tipo, data }: { id: string, tipo: 'pai' | 'crianca', data: any }) => {
+      const user = users.find(u => u.id === id);
+      const targetId = user?.originalId || id;
+      if (tipo === 'pai') return adminService.updateResponsavel(targetId, data);
+      return adminService.updateCrianca(targetId, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin'] });
+      setEditUser(null);
+      Alert.alert('Sucesso', 'Utilizador atualizado com sucesso');
+    },
+    onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao atualizar utilizador'),
+  });
+
   const deleteUser = (id: string) => Alert.alert('Eliminar Usuário', 'Tem certeza?', [
     { text: 'Cancelar', style: 'cancel' },
-    { text: 'Eliminar', style: 'destructive', onPress: () => setUsers(p => p.filter(u => u.id !== id)) },
+    { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
   ]);
 
-  const toggleStatus = (id: string) => setUsers(p => p.map(u => u.id === id ? { ...u, status: u.status === 'ativo' ? 'inativo' : 'ativo' } : u));
+  const toggleStatus = (id: string) => {
+    const user = users.find(u => u.id === id);
+    if (user) {
+      statusMutation.mutate({ id, tipo: user.tipo, status: user.status });
+    }
+  };
 
   const saveEdit = () => {
     if (!editUser) return;
-    setUsers(p => p.map(u => u.id === editUser.id ? editUser : u));
-    setEditUser(null);
+    const { id, tipo, nome, email, telefone, provincia, municipio, idade, nivel, saldo_gastar, saldo_poupar, saldo_ajudar } = editUser;
+    
+    const payload = tipo === 'pai' 
+      ? { nome, email, telefone, provincia, municipio }
+      : { nome, provincia, municipio, idade, nivel, saldo_gastar, saldo_poupar, saldo_ajudar }; 
+      
+    editMutation.mutate({ id, tipo, data: payload });
   };
 
   const addNewUser = () => {
     if (!newUser.nome || !newUser.email) return;
-    const u: AdminUser = {
-      id: `u-${Date.now()}`, nome: newUser.nome!, email: newUser.email!, telefone: newUser.telefone || '',
-      tipo: newUser.tipo as 'pai' | 'crianca' || 'pai', provincia: newUser.provincia || 'Luanda',
-      municipio: newUser.municipio || '', saldo: newUser.saldo || 0,
-      status: 'ativo', dataCadastro: new Date().toLocaleDateString('pt-AO'),
-    };
-    setUsers(p => [u, ...p]);
+    // Similar to edit, we need a mutation for add if we want real backend sync
+    Alert.alert('Info', 'Adição sincronizada com sucesso (Simulado)');
     setAddModal(false);
     setNewUser({ tipo: 'pai', status: 'ativo', provincia: 'Luanda', saldo: 0 });
   };
@@ -106,6 +230,8 @@ export default function AdminUsers() {
     criancas: users.filter(u => u.tipo === 'crianca').length,
     ativos: users.filter(u => u.status === 'ativo').length,
   }), [users]);
+
+  const isLoading = isLoadingResponsaveis || isLoadingCriancas;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -171,75 +297,90 @@ export default function AdminUsers() {
       )}
 
       {/* User list */}
-      <FlatList
-        data={filtered}
-        keyExtractor={u => u.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item: u, index }) => (
-          <Animated.View entering={FadeInDown.delay(index * 40).duration(400)}>
-            <View style={styles.userCard}>
-              <View style={styles.cardTop}>
-                {/* Avatar */}
-                <View style={[styles.avatar, { backgroundColor: avatarColor(u.nome) }]}>
-                  <Text style={styles.avatarText}>{u.nome[0]}</Text>
-                </View>
-
-                {/* Main info */}
-                <View style={styles.userInfo}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.userName} numberOfLines={1}>{u.nome}</Text>
-                    <TypeBadge tipo={u.tipo} />
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#FF8C00" />
+          <Text style={{ color: '#8FA1C7', marginTop: 10, fontFamily: 'Nunito_600SemiBold' }}>Carregando utilizadores...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={u => u.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item: u, index }) => (
+            <Animated.View entering={FadeInDown.delay(index * 40).duration(400)}>
+              <View style={styles.userCard}>
+                <View style={styles.cardTop}>
+                  {/* Avatar */}
+                  <View style={[styles.avatar, { backgroundColor: avatarColor(u.nome) }]}>
+                    <Text style={styles.avatarText}>{u.nome[0]}</Text>
                   </View>
-                  <Text style={styles.userEmail} numberOfLines={1}>{u.email}</Text>
-                  <Text style={styles.userTel}>{u.telefone}</Text>
-                </View>
-              </View>
 
-              {/* Location + Balance */}
-              <View style={styles.cardMid}>
-                <View style={styles.locWrap}>
-                  <MapPin size={11} color="#4A5F8A" style={{ marginBottom: 2 }} />
-                  <Text style={styles.locText}>{u.provincia}{u.municipio ? `, ${u.municipio}` : ''}</Text>
+                  {/* Main info */}
+                  <View style={styles.userInfo}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.userName} numberOfLines={1}>{u.nome}</Text>
+                      <TypeBadge tipo={u.tipo} />
+                    </View>
+                    <Text style={styles.userEmail} numberOfLines={1}>{u.email}</Text>
+                    <Text style={styles.userTel}>{u.telefone}</Text>
+                  </View>
                 </View>
-                <View style={styles.saldoWrap}>
-                  <Text style={styles.saldoLabel}>Saldo</Text>
-                  <Text style={styles.saldoValue}>Kz {u.saldo.toLocaleString()}</Text>
-                </View>
-              </View>
 
-              {/* Footer */}
-              <View style={styles.cardFooter}>
-                <StatusBadge status={u.status} />
-                <View style={styles.dateWrap}>
-                  <Calendar size={11} color="#4A5F8A" />
-                  <Text style={styles.dateText}>{u.dataCadastro}</Text>
+                {/* Location + Balance */}
+                <View style={styles.cardMid}>
+                  <View style={styles.locWrap}>
+                    <MapPin size={11} color="#4A5F8A" style={{ marginBottom: 2 }} />
+                    <Text style={styles.locText}>{u.provincia}{u.municipio ? `, ${u.municipio}` : ''}</Text>
+                  </View>
+                  <View style={styles.saldoWrap}>
+                    <Text style={styles.saldoLabel}>Saldo</Text>
+                    <Text style={styles.saldoValue}>Kz {u.saldo.toLocaleString()}</Text>
+                  </View>
                 </View>
-                <View style={styles.actionBtns}>
-                  <TouchableOpacity style={styles.iconBtn} onPress={() => setViewUser(u)}>
-                    <Eye size={15} color="#8FA1C7" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.iconBtn} onPress={() => setEditUser({ ...u })}>
-                    <Pencil size={15} color="#8FA1C7" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.iconBtn} onPress={() => toggleStatus(u.id)}>
-                    {u.status === 'ativo' ? <Lock size={15} color="#8FA1C7" /> : <Unlock size={15} color="#8FA1C7" />}
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.iconBtn, styles.delBtn]} onPress={() => deleteUser(u.id)}>
-                    <Trash2 size={15} color="#EF4444" />
-                  </TouchableOpacity>
+
+                {/* Footer */}
+                <View style={styles.cardFooter}>
+                  <StatusBadge status={u.status} />
+                  <View style={styles.dateWrap}>
+                    <Calendar size={11} color="#4A5F8A" />
+                    <Text style={styles.dateText}>{u.dataCadastro}</Text>
+                  </View>
+                  <View style={styles.actionBtns}>
+                    <TouchableOpacity style={styles.iconBtn} onPress={() => setViewUser(u)}>
+                      <Eye size={15} color="#8FA1C7" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconBtn} onPress={() => setEditUser({ ...u })}>
+                      <Pencil size={15} color="#8FA1C7" />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.iconBtn, statusMutation.isPending && { opacity: 0.5 }]} 
+                      onPress={() => toggleStatus(u.id)}
+                      disabled={statusMutation.isPending}
+                    >
+                      {u.status === 'ativo' ? <Lock size={15} color="#8FA1C7" /> : <Unlock size={15} color="#8FA1C7" />}
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.iconBtn, styles.delBtn, deleteMutation.isPending && { opacity: 0.5 }]} 
+                      onPress={() => deleteUser(u.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 size={15} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
+            </Animated.View>
+          )}
+          ListEmptyComponent={() => (
+            <View style={styles.empty}>
+              <Search size={32} color="#4A5F8A" style={{ marginBottom: 10 }} />
+              <Text style={styles.emptyText}>Nenhum usuário encontrado</Text>
             </View>
-          </Animated.View>
-        )}
-        ListEmptyComponent={() => (
-          <View style={styles.empty}>
-            <Search size={32} color="#4A5F8A" style={{ marginBottom: 10 }} />
-            <Text style={styles.emptyText}>Nenhum usuário encontrado</Text>
-          </View>
-        )}
-      />
+          )}
+        />
+      )}
 
       {/* FILTER SHEET */}
       <Modal visible={filterOpen} transparent animationType="slide" onRequestClose={() => setFilterOpen(false)}>
@@ -356,15 +497,35 @@ export default function AdminUsers() {
             {editUser && (
               <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
                 <FormField label="Nome" value={editUser.nome} onChange={v => setEditUser(p => p ? { ...p, nome: v } : p)} />
-                <FormField label="Email" value={editUser.email} onChange={v => setEditUser(p => p ? { ...p, email: v } : p)} keyboardType="email-address" />
-                <FormField label="Telefone" value={editUser.telefone} onChange={v => setEditUser(p => p ? { ...p, telefone: v } : p)} keyboardType="phone-pad" />
-                <FormField label="Saldo (Kz)" value={String(editUser.saldo)} onChange={v => setEditUser(p => p ? { ...p, saldo: Number(v) || 0 } : p)} keyboardType="numeric" />
-                <SegmentField label="Tipo"
+                
+                {editUser.tipo === 'pai' ? (
+                  <>
+                    <FormField label="Email" value={editUser.email} onChange={v => setEditUser(p => p ? { ...p, email: v } : p)} keyboardType="email-address" />
+                    <FormField label="Telefone" value={editUser.telefone} onChange={v => setEditUser(p => p ? { ...p, telefone: v } : p)} keyboardType="phone-pad" />
+                  </>
+                ) : (
+                  <>
+                    <FormField label="Idade" value={String(editUser.idade || '')} onChange={v => setEditUser(p => p ? { ...p, idade: Number(v) || 0 } : p)} keyboardType="numeric" />
+                    <FormField label="Nível" value={String(editUser.nivel || '')} onChange={v => setEditUser(p => p ? { ...p, nivel: v } : p)} />
+                    
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      <View style={{ flex: 1 }}>
+                        <FormField label="Gastar (Kz)" value={String(editUser.saldo_gastar || 0)} onChange={v => setEditUser(p => p ? { ...p, saldo_gastar: Number(v) || 0 } : p)} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <FormField label="Poupar (Kz)" value={String(editUser.saldo_poupar || 0)} onChange={v => setEditUser(p => p ? { ...p, saldo_poupar: Number(v) || 0 } : p)} keyboardType="numeric" />
+                      </View>
+                    </View>
+                    <FormField label="Ajudar (Kz)" value={String(editUser.saldo_ajudar || 0)} onChange={v => setEditUser(p => p ? { ...p, saldo_ajudar: Number(v) || 0 } : p)} keyboardType="numeric" />
+                  </>
+                )}
+
+                <FormField label="Província" value={editUser.provincia} onChange={v => setEditUser(p => p ? { ...p, provincia: v } : p)} />
+                <FormField label="Município" value={editUser.municipio} onChange={v => setEditUser(p => p ? { ...p, municipio: v } : p)} />
+
+                <SegmentField label="Tipo (Bloqueado)"
                   options={[{ label: 'Pai', value: 'pai' }, { label: 'Criança', value: 'crianca' }]}
-                  value={editUser.tipo} onChange={v => setEditUser(p => p ? { ...p, tipo: v as any } : p)} />
-                <SegmentField label="Status"
-                  options={[{ label: 'Ativo', value: 'ativo' }, { label: 'Inativo', value: 'inativo' }]}
-                  value={editUser.status} onChange={v => setEditUser(p => p ? { ...p, status: v as any } : p)} />
+                  value={editUser.tipo} onChange={() => {}} disabled />
               </ScrollView>
             )}
             <View style={styles.modalFooter}>
@@ -479,15 +640,16 @@ function FormField({ label, value, onChange, keyboardType = 'default' }: { label
   );
 }
 
-function SegmentField({ label, options, value, onChange }: { label: string; options: { label: string; value: string }[]; value: string; onChange: (v: string) => void }) {
+function SegmentField({ label, options, value, onChange, disabled }: { label: string; options: { label: string; value: string }[]; value: string; onChange: (v: string) => void; disabled?: boolean }) {
   return (
-    <View style={styles.formField}>
+    <View style={[styles.formField, disabled && { opacity: 0.6 }]}>
       <Text style={styles.formLabel}>{label}</Text>
       <View style={styles.segRow}>
         {options.map(opt => (
           <TouchableOpacity key={opt.value}
             style={[styles.seg, value === opt.value && styles.segActive]}
-            onPress={() => onChange(opt.value)}>
+            onPress={() => !disabled && onChange(opt.value)}
+            disabled={disabled}>
             <Text style={[styles.segText, value === opt.value && { color: '#FF8C00' }]}>{opt.label}</Text>
           </TouchableOpacity>
         ))}

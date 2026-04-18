@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Modal, ScrollView, TextInput, Alert,
+  Modal, ScrollView, TextInput, Alert, ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { 
   Bed, Book, Utensils, Paintbrush, Trophy, Music, Leaf, BookOpen, 
-  Dumbbell, Smile, Broom, Shirt, Coins, Dog, Droplets, Pencil, 
+  Dumbbell, Smile, Coins, Dog, Droplets, Pencil, 
   Trash2, X, Plus, CheckCircle2, Clock, CheckSquare, Save
 } from 'lucide-react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '@/lib/api';
 
 interface AdminTask {
   id: string; icone: string; titulo: string; descricao: string;
@@ -29,7 +31,7 @@ const INITIAL_TASKS: AdminTask[] = [
 const ICON_MAP: Record<string, any> = {
   bed: Bed, book: Book, utensils: Utensils, paint: Paintbrush,
   trophy: Trophy, music: Music, leaf: Leaf, book_open: BookOpen,
-  dumbbell: Dumbbell, smile: Smile, broom: Broom, shirt: Shirt,
+  dumbbell: Dumbbell, smile: Smile,
   coins: Coins, dog: Dog, drop: Droplets,
 };
 
@@ -39,12 +41,76 @@ const CATEGORIES = ['Casa', 'Escola', 'Esporte', 'Arte', 'Saúde', 'Responsabili
 
 export default function AdminTasks() {
   const insets = useSafeAreaInsets();
-  const [tasks, setTasks] = useState<AdminTask[]>(INITIAL_TASKS);
+  const queryClient = useQueryClient();
+  
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<AdminTask>>({
     icone: 'bed', titulo: '', descricao: '', categoria: 'Casa',
     dificuldade: 'Fácil', recompensa: 100, tempo: '5 min', status: 'ativo',
+  });
+
+  // Queries
+  const { data: tasksData, isLoading } = useQuery({
+    queryKey: ['admin', 'tasks'],
+    queryFn: () => adminService.getTasks(),
+  });
+
+  const tasks = useMemo(() => {
+    if (!tasksData?.tarefas) return [];
+    return tasksData.tarefas.map((t: any) => ({
+      id: String(t.id),
+      icone: t.icone || 'bed',
+      titulo: t.titulo,
+      descricao: t.descricao,
+      categoria: t.categoria,
+      dificuldade: t.dificuldade,
+      recompensa: t.recompensaKz || 0,
+      tempo: t.tempoEstimado || '—',
+      status: String(t.status).toLowerCase() === 'ativa' ? 'ativo' : 'inativo',
+      completadas: t.vezesCompletada || 0,
+      ativas: 0, // Not explicitly in API but we can default
+    })) as AdminTask[];
+  }, [tasksData]);
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data: any) => adminService.createTask(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'tasks'] });
+      setModal(false);
+      Alert.alert('Sucesso', 'Tarefa criada com sucesso');
+    },
+    onError: (err) => Alert.alert('Erro', 'Falha ao criar tarefa'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: any }) => adminService.updateTask(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'tasks'] });
+      setModal(false);
+      Alert.alert('Sucesso', 'Tarefa atualizada com sucesso');
+    },
+    onError: (err) => Alert.alert('Erro', 'Falha ao atualizar tarefa'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminService.deleteTask(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'tasks'] });
+      Alert.alert('Sucesso', 'Tarefa removida com sucesso');
+    },
+    onError: (err) => Alert.alert('Erro', 'Falha ao remover tarefa'),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string, status: string }) => {
+      const newStatus = status === 'ativo' ? 'Inativa' : 'Ativa';
+      return adminService.updateTaskStatus(id, newStatus);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'tasks'] });
+    },
   });
 
   const openAdd = () => {
@@ -61,30 +127,36 @@ export default function AdminTasks() {
 
   const saveTask = () => {
     if (!form.titulo || !form.descricao) return;
+    
+    const payload = {
+      titulo: form.titulo,
+      descricao: form.descricao,
+      recompensa: form.recompensa,
+      categoria: form.categoria,
+      icone: form.icone,
+      dificuldade: form.dificuldade,
+      tempoEstimado: form.tempo,
+    };
+
     if (editId) {
-      setTasks(p => p.map(t => t.id === editId ? { ...t, ...form } as AdminTask : t));
+      updateMutation.mutate({ id: editId, data: payload });
     } else {
-      const newTask: AdminTask = {
-        id: `task-${Date.now()}`, icone: form.icone || 'bed', titulo: form.titulo!,
-        descricao: form.descricao!, categoria: form.categoria || 'Casa',
-        dificuldade: form.dificuldade || 'Fácil', recompensa: form.recompensa || 100,
-        tempo: form.tempo || '5 min', status: 'ativo',
-        completadas: 0, ativas: 1,
-      };
-      setTasks(p => [newTask, ...p]);
+      createMutation.mutate(payload);
     }
-    setModal(false);
   };
 
   const deleteTask = (id: string) => {
     Alert.alert('Eliminar Tarefa', 'Tem a certeza?', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => setTasks(p => p.filter(t => t.id !== id)) },
+      { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
     ]);
   };
 
   const toggleStatus = (id: string) => {
-    setTasks(p => p.map(t => t.id === id ? { ...t, status: t.status === 'ativo' ? 'inativo' : 'ativo' } : t));
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      statusMutation.mutate({ id, status: task.status });
+    }
   };
 
   const DIFF_COLOR: Record<string, { bg: string; text: string }> = {
@@ -108,66 +180,81 @@ export default function AdminTasks() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={tasks}
-        keyExtractor={t => t.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        numColumns={1}
-        renderItem={({ item: t, index }) => {
-          const diff = DIFF_COLOR[t.dificuldade] || DIFF_COLOR['Fácil'];
-          return (
-            <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
-              <View style={styles.taskCard}>
-                <View style={styles.taskCardTop}>
-                  <View style={styles.taskIconWrap}>
-                    {(() => {
-                      const IconComp = ICON_MAP[t.icone] || BookOpen;
-                      return <IconComp size={24} color="#FF8C00" />;
-                    })()}
-                  </View>
-                  <View style={styles.taskBadges}>
-                    <View style={[styles.pill, { backgroundColor: diff.bg }]}>
-                      <Text style={[styles.pillText, { color: diff.text }]}>{t.dificuldade}</Text>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#FF8C00" />
+          <Text style={{ color: '#8FA1C7', marginTop: 10, fontFamily: 'Nunito_600SemiBold' }}>Carregando tarefas...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={tasks}
+          keyExtractor={t => t.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          numColumns={1}
+          renderItem={({ item: t, index }) => {
+            const diff = DIFF_COLOR[t.dificuldade] || DIFF_COLOR['Fácil'];
+            return (
+              <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
+                <View style={styles.taskCard}>
+                  <View style={styles.taskCardTop}>
+                    <View style={styles.taskIconWrap}>
+                      {(() => {
+                        const IconComp = ICON_MAP[t.icone] || BookOpen;
+                        return <IconComp size={24} color="#FF8C00" />;
+                      })()}
                     </View>
-                    <View style={[styles.pill, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
-                      <Text style={[styles.pillText, { color: '#3B82F6' }]}>{t.categoria}</Text>
+                    <View style={styles.taskBadges}>
+                      <View style={[styles.pill, { backgroundColor: diff.bg }]}>
+                        <Text style={[styles.pillText, { color: diff.text }]}>{t.dificuldade}</Text>
+                      </View>
+                      <View style={[styles.pill, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
+                        <Text style={[styles.pillText, { color: '#3B82F6' }]}>{t.categoria}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                <Text style={styles.taskTitle}>{t.titulo}</Text>
-                <Text style={styles.taskDesc} numberOfLines={2}>{t.descricao}</Text>
+                  <Text style={styles.taskTitle}>{t.titulo}</Text>
+                  <Text style={styles.taskDesc} numberOfLines={2}>{t.descricao}</Text>
 
-                <View style={styles.taskMeta}>
-                  <MetaItem Icon={Coins} label="Recompensa" value={`Kz ${t.recompensa}`} />
-                  <MetaItem Icon={Clock} label="Tempo" value={t.tempo} />
-                  <MetaItem Icon={CheckSquare} label="Completadas" value={String(t.completadas)} />
-                </View>
+                  <View style={styles.taskMeta}>
+                    <MetaItem Icon={Coins} label="Recompensa" value={`Kz ${t.recompensa}`} />
+                    <MetaItem Icon={Clock} label="Tempo" value={t.tempo} />
+                    <MetaItem Icon={CheckSquare} label="Completadas" value={String(t.completadas)} />
+                  </View>
 
-                <View style={[styles.statusBar, t.status === 'ativo' ? styles.statusBarAtivo : styles.statusBarInativo]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    {t.status === 'ativo' ? <CheckCircle2 size={14} color="#22C55E" /> : <X size={14} color="#EF4444" />}
-                    <Text style={[styles.statusBarText, t.status === 'ativo' ? { color: '#22C55E' } : { color: '#EF4444' }]}>
-                      {t.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                    </Text>
+                  <TouchableOpacity 
+                    style={[styles.statusBar, t.status === 'ativo' ? styles.statusBarAtivo : styles.statusBarInativo, statusMutation.isPending && { opacity: 0.5 }]}
+                    onPress={() => toggleStatus(t.id)}
+                    disabled={statusMutation.isPending}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      {t.status === 'ativo' ? <CheckCircle2 size={14} color="#22C55E" /> : <X size={14} color="#EF4444" />}
+                      <Text style={[styles.statusBarText, t.status === 'ativo' ? { color: '#22C55E' } : { color: '#EF4444' }]}>
+                        {t.status === 'ativo' ? 'Ativa' : 'Inativa'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <View style={styles.taskActions}>
+                    <TouchableOpacity style={[styles.taskActionBtn, { flex: 2, flexDirection: 'row', justifyContent: 'center', gap: 6 }]} onPress={() => openEdit(t)}>
+                      <Pencil size={14} color="#8FA1C7" />
+                      <Text style={styles.taskActionBtnText}>Editar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.taskActionBtn, { flex: 1, alignItems: 'center' }, deleteMutation.isPending && { opacity: 0.5 }]} 
+                      onPress={() => deleteTask(t.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 size={16} color="#EF4444" />
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                <View style={styles.taskActions}>
-                  <TouchableOpacity style={[styles.taskActionBtn, { flex: 2, flexDirection: 'row', justifyContent: 'center', gap: 6 }]} onPress={() => openEdit(t)}>
-                    <Pencil size={14} color="#8FA1C7" />
-                    <Text style={styles.taskActionBtnText}>Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.taskActionBtn, { flex: 1, alignItems: 'center' }]} onPress={() => deleteTask(t.id)}>
-                    <Trash2 size={16} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Animated.View>
-          );
-        }}
-      />
+              </Animated.View>
+            );
+          }}
+        />
+      )}
 
       {/* Add/Edit Modal */}
       <Modal visible={modal} transparent animationType="slide" onRequestClose={() => setModal(false)}>
