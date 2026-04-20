@@ -15,7 +15,7 @@ interface AppContextType {
   
   // Ações para Criança
   atualizarSaldo: (tipo: 'gastar' | 'poupar' | 'ajudar', valor: number) => void;
-  enviarFotoTarefa: (tarefaId: string, fotoUrl: string) => void;
+  enviarFotoTarefa: (tarefaId: string, fotoUrl: string) => Promise<void>;
   realizarDoacao: (campanhaId: string, valor: number) => Promise<void>;
   comprarItem: (itemId: string) => void;
   atualizarAvatar: (parte: string, valor: string) => void;
@@ -275,9 +275,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Enviar foto de prova da tarefa
-  const enviarFotoTarefa = (tarefaId: string, fotoUrl: string) => {
-    setTarefas(prev => prev.map(t => 
-      t.id === tarefaId 
+  const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
+    if (!isDemo) {
+      try {
+        const formData = new FormData();
+        formData.append('foto', {
+          uri: fotoUrl,
+          name: `tarefa-${tarefaId}.jpg`,
+          type: 'image/jpeg',
+        } as any);
+        await taskService.submitTask(tarefaId, formData);
+      } catch (e) {
+        console.error('Erro ao enviar foto da tarefa:', e);
+      }
+    }
+
+    setTarefas(prev => prev.map(t =>
+      t.id === tarefaId
         ? { ...t, foto_url: fotoUrl, status: 'aguardando_aprovacao', concluido_em: new Date() }
         : t
     ));

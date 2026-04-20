@@ -195,4 +195,69 @@ export const adminService = {
   createVideo: (data: any) => api.post('/admin/videos', data).then(res => res.data),
   updateVideo: (id: string, data: any) => api.put(`/admin/videos/${id}`, data).then(res => res.data),
   deleteVideo: (id: string) => api.delete(`/admin/videos/${id}`).then(res => res.data),
+
+  // Campanhas
+  getCampaigns: async (params?: any) => {
+    try {
+      const res = await api.get('/admin/campanhas', { params });
+      return res.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const res = await api.get('/campaigns', { params });
+        return res.data;
+      }
+      throw error;
+    }
+  },
+  createCampaign: async (data: any) => {
+    try {
+      const res = await api.post('/admin/campanhas', data);
+      return res.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const res = await api.post('/campaigns', data);
+        return res.data;
+      }
+      throw error;
+    }
+  },
+  updateCampaign: async (id: string, data: any) => {
+    try {
+      const res = await api.put(`/admin/campanhas/${id}`, data);
+      return res.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const res = await api.patch(`/campaigns/${id}`, data);
+        return res.data;
+      }
+      throw error;
+    }
+  },
+  updateCampaignStatus: async (id: string, ativa: boolean) => {
+    try {
+      const res = await api.patch(`/admin/campanhas/${id}/status`, {
+        ativa,
+        status: ativa ? 'Ativa' : 'Inativa',
+      });
+      return res.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const res = await api.patch(`/campaigns/${id}`, { ativa });
+        return res.data;
+      }
+      throw error;
+    }
+  },
+  deleteCampaign: async (id: string) => {
+    try {
+      const res = await api.delete(`/admin/campanhas/${id}`);
+      return res.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const res = await api.delete(`/campaigns/${id}`);
+        return res.data;
+      }
+      throw error;
+    }
+  },
 };

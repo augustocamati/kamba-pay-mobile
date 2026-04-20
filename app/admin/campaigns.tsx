@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Modal, TextInput, Alert, FlatList, Image,
+  Modal, TextInput, Alert, FlatList, Image, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '@/lib/api';
 import { 
   Target, Users, TrendingUp, HeartHandshake, Building, MapPin, 
   Calendar, Pause, Play, Lock, Pencil, Trash2, X, UploadCloud, Tag
@@ -42,43 +44,20 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; label: string }> 
   finalizada: { bg: '#6B7280', text: '#fff', label: 'FINALIZADA' },
 };
 
-const INITIAL: Campaign[] = [
-  {
-    id: 'c-1', titulo: 'Livros para Escolas de Luanda',
-    descricao: 'Ajude a levar educação de qualidade para crianças de comunidades carentes em Luanda',
-    organizacao: 'ONG Educação Para Todos', localizacao: 'Luanda',
-    categoria: 'Educação', meta: 520000, arrecadado: 348000, doadores: 156,
-    status: 'ativa', dataInicio: '2024-01-10', dataFim: '2024-03-31',
-    imagem: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=80',
-  },
-  {
-    id: 'c-2', titulo: 'Água Potável em Benguela',
-    descricao: 'Construção de poços de água potável para comunidades rurais',
-    organizacao: 'Água Para Angola', localizacao: 'Benguela',
-    categoria: 'Saúde', meta: 1000000, arrecadado: 700000, doadores: 234,
-    status: 'ativa', dataInicio: '2024-02-01', dataFim: '2024-09-21',
-    imagem: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80',
-  },
-  {
-    id: 'c-3', titulo: 'Plantio de Árvores no Huambo',
-    descricao: 'Reflorestamento de áreas degradadas e reconstrução ambiental',
-    organizacao: 'Verde Angola', localizacao: 'Huambo',
-    categoria: 'Ambiente', meta: 300000, arrecadado: 300000, doadores: 189,
-    status: 'finalizada', dataInicio: '2023-08-01', dataFim: '2024-01-01',
-    imagem: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80',
-  },
-  {
-    id: 'c-4', titulo: 'Cestas Básicas — Emergência',
-    descricao: 'Distribuição de cestas básicas para famílias em situação de vulnerabilidade',
-    organizacao: 'Solidariedade Angola', localizacao: 'Luanda',
-    categoria: 'Emergência', meta: 800000, arrecadado: 520000, doadores: 312,
-    status: 'ativa', dataInicio: '2024-03-01', dataFim: '2024-12-31',
-    imagem: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
-  },
-];
-
 const CATEGORIAS = ['Educação', 'Saúde', 'Ambiente', 'Alimentação', 'Emergência', 'Social'];
 const STATUS_OPT = ['ativa', 'pausada', 'finalizada'] as const;
+
+const mapCategoriaParaAdmin = (categoria: string) => {
+  const mapa: Record<string, string> = {
+    Educação: 'Educação',
+    Saúde: 'Saúde',
+    Ambiente: 'Meio Ambiente',
+    Alimentação: 'Comunidade',
+    Emergência: 'Comunidade',
+    Social: 'Comunidade',
+  };
+  return mapa[categoria] || 'Comunidade';
+};
 
 type FormState = {
   titulo: string; descricao: string; organizacao: string; localizacao: string;
@@ -95,10 +74,84 @@ const blankForm = (): FormState => ({
 
 export default function AdminCampaigns() {
   const insets = useSafeAreaInsets();
-  const [campaigns, setCampaigns] = useState<Campaign[]>(INITIAL);
+  const queryClient = useQueryClient();
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(blankForm());
+  
+  const { data: campaignsData, isLoading } = useQuery({
+    queryKey: ['admin', 'campaigns'],
+    queryFn: () => adminService.getCampaigns(),
+  });
+
+  const campaigns = useMemo<Campaign[]>(() => {
+    const raw = campaignsData?.campanhas || campaignsData?.campaigns || [];
+    return raw.map((item: any) => {
+      const statusRaw = String(item.status || '').toLowerCase();
+      const ativa = typeof item.ativa === 'boolean' ? item.ativa : statusRaw === 'ativa';
+      const status: Campaign['status'] =
+        statusRaw === 'finalizada'
+          ? 'finalizada'
+          : statusRaw === 'pausada'
+            ? 'pausada'
+            : ativa
+              ? 'ativa'
+              : 'pausada';
+
+      return {
+        id: String(item.id),
+        titulo: item.titulo || item.nome || '',
+        descricao: item.descricao || '',
+        organizacao: item.organizacao || '',
+        localizacao: item.localizacao || item.provincia || '',
+        categoria: item.categoria || item.causa || 'Social',
+        meta: Number(item.meta || item.meta_valor || 0),
+        arrecadado: Number(item.arrecadado || item.valor_arrecadado || 0),
+        doadores: Number(item.doadores || item.total_doadores || 0),
+        status,
+        dataInicio: item.dataInicio || item.data_inicio || item.criado_em || '',
+        dataFim: item.dataFim || item.data_fim || '',
+        imagem: item.imagem || item.imagem_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
+      };
+    });
+  }, [campaignsData]);
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => adminService.createCampaign(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'campaigns'] });
+      setModal(false);
+      Alert.alert('Sucesso', 'Campanha criada com sucesso.');
+    },
+    onError: (err: any) => Alert.alert('Erro', err?.response?.data?.mensagem || 'Falha ao criar campanha.'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => adminService.updateCampaign(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'campaigns'] });
+      setModal(false);
+      Alert.alert('Sucesso', 'Campanha atualizada com sucesso.');
+    },
+    onError: (err: any) => Alert.alert('Erro', err?.response?.data?.mensagem || 'Falha ao atualizar campanha.'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminService.deleteCampaign(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'campaigns'] });
+      Alert.alert('Sucesso', 'Campanha eliminada com sucesso.');
+    },
+    onError: (err: any) => Alert.alert('Erro', err?.response?.data?.mensagem || 'Falha ao eliminar campanha.'),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, ativa }: { id: string; ativa: boolean }) => adminService.updateCampaignStatus(id, ativa),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'campaigns'] });
+    },
+    onError: (err: any) => Alert.alert('Erro', err?.response?.data?.mensagem || 'Falha ao atualizar status da campanha.'),
+  });
 
   const stats = {
     ativas: campaigns.filter(c => c.status === 'ativa').length,
@@ -121,29 +174,51 @@ export default function AdminCampaigns() {
 
   const save = () => {
     if (!form.titulo || !form.organizacao) return;
-    const camp: Campaign = {
-      id: editId || `c-${Date.now()}`,
-      titulo: form.titulo, descricao: form.descricao,
-      organizacao: form.organizacao, localizacao: form.localizacao,
-      categoria: form.categoria,
-      meta: Number(form.meta) || 100000, arrecadado: Number(form.arrecadado) || 0,
-      doadores: 0, status: form.status,
-      dataInicio: form.dataInicio, dataFim: form.dataFim,
-      imagem: form.imagem || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
+    const metaNumerica = Number(form.meta) || 100000;
+    const arrecadadoNumerico = Number(form.arrecadado) || 0;
+    const categoriaAdmin = mapCategoriaParaAdmin(form.categoria);
+
+    const payload = {
+      // Campos esperados pelo backend admin (/admin/campanhas)
+      titulo: form.titulo,
+      descricao: form.descricao,
+      categoria: categoriaAdmin,
+      metaKz: metaNumerica,
+      organizacao: form.organizacao,
+      localizacao: form.localizacao,
+      dataInicio: form.dataInicio,
+      dataFim: form.dataFim,
+      imagemCapa: form.imagem || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
+
+      // Campos de compatibilidade (fallback /campaigns)
+      nome: form.titulo,
+      provincia: form.localizacao,
+      causa: form.categoria,
+      meta: metaNumerica,
+      meta_valor: metaNumerica,
+      arrecadado: arrecadadoNumerico,
+      valor_arrecadado: arrecadadoNumerico,
+      status: form.status,
+      ativa: form.status === 'ativa',
+      data_inicio: form.dataInicio,
+      data_fim: form.dataFim,
+      imagem_url: form.imagem || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
     };
-    if (editId) setCampaigns(p => p.map(c => c.id === editId ? camp : c));
-    else setCampaigns(p => [camp, ...p]);
-    setModal(false);
+    if (editId) {
+      updateMutation.mutate({ id: editId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
   };
 
   const del = (id: string) => Alert.alert('Eliminar Campanha', 'Tem a certeza?', [
     { text: 'Cancelar', style: 'cancel' },
-    { text: 'Eliminar', style: 'destructive', onPress: () => setCampaigns(p => p.filter(c => c.id !== id)) },
+    { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
   ]);
 
   const toggleStatus = (c: Campaign) => {
-    const next: Campaign['status'] = c.status === 'ativa' ? 'pausada' : 'ativa';
-    setCampaigns(p => p.map(x => x.id === c.id ? { ...x, status: next } : x));
+    if (c.status === 'finalizada') return;
+    statusMutation.mutate({ id: c.id, ativa: c.status !== 'ativa' });
   };
 
   const fmtKz = (n: number) => n >= 1000000 ? `Kz ${(n / 1000000).toFixed(1)}M` : `Kz ${(n / 1000).toFixed(0)}k`;
@@ -161,24 +236,30 @@ export default function AdminCampaigns() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={campaigns}
-        keyExtractor={c => c.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={() => (
-          /* KPI row */
-          <View style={styles.kpiRow}>
-            <KpiCard Icon={Target} label="Campanhas Ativas" value={String(stats.ativas)} tag="ATIVAS" color="#22C55E" />
-            <KpiCard Icon={Users} label="Doadores" value={stats.doadores.toLocaleString()} tag="TOTAL" color="#3B82F6" />
-            <KpiCard Icon={TrendingUp} label="Meta Total" value={fmtKz(stats.meta)} tag="META" color="#F59E0B" />
-            <KpiCard Icon={HeartHandshake} label="Arrecadado" value={fmtKz(stats.arrecadado)} tag="ARRECADADO" color="#EC4899" />
-          </View>
-        )}
-        renderItem={({ item: c, index }) => {
+      {isLoading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#EC4899" />
+          <Text style={styles.loadingText}>Carregando campanhas...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={campaigns}
+          keyExtractor={c => c.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={() => (
+            /* KPI row */
+            <View style={styles.kpiRow}>
+              <KpiCard Icon={Target} label="Campanhas Ativas" value={String(stats.ativas)} tag="ATIVAS" color="#22C55E" />
+              <KpiCard Icon={Users} label="Doadores" value={stats.doadores.toLocaleString()} tag="TOTAL" color="#3B82F6" />
+              <KpiCard Icon={TrendingUp} label="Meta Total" value={fmtKz(stats.meta)} tag="META" color="#F59E0B" />
+              <KpiCard Icon={HeartHandshake} label="Arrecadado" value={fmtKz(stats.arrecadado)} tag="ARRECADADO" color="#EC4899" />
+            </View>
+          )}
+          renderItem={({ item: c, index }) => {
           const causeStyle = CAUSA_COLORS[c.categoria] || CAUSA_COLORS['Social'];
           const statusStyle = STATUS_STYLE[c.status];
-          const pct = Math.min(100, Math.round((c.arrecadado / c.meta) * 100));
+          const pct = c.meta > 0 ? Math.min(100, Math.round((c.arrecadado / c.meta) * 100)) : 0;
           const progressColor = c.status === 'finalizada' ? '#22C55E' : c.status === 'pausada' ? '#F59E0B' : '#EC4899';
 
           return (
@@ -262,6 +343,7 @@ export default function AdminCampaigns() {
                     <TouchableOpacity
                       style={[styles.pauseBtn, c.status === 'pausada' && styles.pauseBtnActive]}
                       onPress={() => toggleStatus(c)}
+                      disabled={statusMutation.isPending || c.status === 'finalizada'}
                       activeOpacity={0.8}
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
@@ -274,7 +356,11 @@ export default function AdminCampaigns() {
                     <TouchableOpacity style={styles.iconBtn} onPress={() => openEdit(c)}>
                       <Pencil size={18} color="#8FA1C7" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.iconBtn, styles.delIconBtn]} onPress={() => del(c.id)}>
+                    <TouchableOpacity
+                      style={[styles.iconBtn, styles.delIconBtn, deleteMutation.isPending && { opacity: 0.5 }]}
+                      onPress={() => del(c.id)}
+                      disabled={deleteMutation.isPending}
+                    >
                       <Trash2 size={18} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
@@ -282,8 +368,14 @@ export default function AdminCampaigns() {
               </View>
             </Animated.View>
           );
-        }}
-      />
+          }}
+          ListEmptyComponent={() => (
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>Nenhuma campanha cadastrada.</Text>
+            </View>
+          )}
+        />
+      )}
 
       {/* Add/Edit Modal */}
       <Modal visible={modal} transparent animationType="slide" onRequestClose={() => setModal(false)}>
@@ -393,7 +485,15 @@ export default function AdminCampaigns() {
               <TouchableOpacity style={styles.btnCancel} onPress={() => setModal(false)}>
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.btnSave, { backgroundColor: '#EC4899', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]} onPress={save}>
+              <TouchableOpacity
+                style={[
+                  styles.btnSave,
+                  { backgroundColor: '#EC4899', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+                  (createMutation.isPending || updateMutation.isPending) && { opacity: 0.7 },
+                ]}
+                onPress={save}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 <Tag size={16} color="#fff" />
                 <Text style={styles.btnSaveText}>{editId ? 'Salvar' : 'Criar Campanha'}</Text>
               </TouchableOpacity>
@@ -561,4 +661,8 @@ const styles = StyleSheet.create({
   btnCancelText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
   btnSave: { flex: 2, padding: 14, borderRadius: 12, backgroundColor: S.orange, alignItems: 'center' },
   btnSaveText: { color: '#fff', fontFamily: 'Nunito_700Bold', fontSize: 14 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
+  loadingText: { color: S.sub, fontFamily: 'Nunito_600SemiBold' },
+  empty: { alignItems: 'center', paddingVertical: 40 },
+  emptyText: { fontSize: 14, color: S.muted, fontFamily: 'Nunito_600SemiBold' },
 });

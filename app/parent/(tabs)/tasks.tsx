@@ -9,7 +9,7 @@ import type { StatusTarefa } from '../../../types';
 
 export default function ParentTasksScreen() {
   const insets = useSafeAreaInsets();
-  const { tarefas, crianca, criarTarefa, dependentes } = useApp();
+  const { tarefas, criarTarefa, dependentes, aprovarTarefa, rejeitarTarefa } = useApp();
   const [novaTarefaModal, setNovaTarefaModal] = useState(false);
   const [formTarefa, setFormTarefa] = useState({
     titulo: '',
@@ -37,6 +37,7 @@ export default function ParentTasksScreen() {
   };
 
   const sortedTasks = [...tarefas].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
+  const pendentesAprovacao = sortedTasks.filter((t) => t.status === 'aguardando_aprovacao');
 
   const handleCriarTarefa = async () => {
     if (!formTarefa.titulo || !formTarefa.descricao || !formTarefa.recompensa || !formTarefa.crianca_id) {
@@ -66,6 +67,24 @@ export default function ParentTasksScreen() {
     setNovaTarefaModal(false);
   };
 
+  const handleAprovar = async (tarefaId: string) => {
+    try {
+      await aprovarTarefa(tarefaId);
+      Alert.alert('Sucesso', 'Tarefa aprovada com sucesso.');
+    } catch {
+      Alert.alert('Erro', 'Não foi possível aprovar a tarefa.');
+    }
+  };
+
+  const handleRejeitar = async (tarefaId: string) => {
+    try {
+      await rejeitarTarefa(tarefaId);
+      Alert.alert('Atualizado', 'Tarefa rejeitada. A criança pode reenviar.');
+    } catch {
+      Alert.alert('Erro', 'Não foi possível rejeitar a tarefa.');
+    }
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <View style={styles.header}>
@@ -83,26 +102,53 @@ export default function ParentTasksScreen() {
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 20 }]}
         scrollEnabled={sortedTasks.length > 0}
         ListHeaderComponent={
-          <LinearGradient 
-            colors={['#3b82f6', '#7c3aed']} 
-            style={[styles.actionCard, { marginBottom: 16 }]} 
-            start={{ x: 0, y: 0 }} 
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.actionCardTitle}>Criar Nova Tarefa</Text>
-              <Text style={styles.actionCardSubtitle}>Defina o que precisa ser feito</Text>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => setNovaTarefaModal(true)}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="add" size={18} color="#2563eb" />
-                <Text style={[styles.actionBtnText, { color: '#2563eb' }]}>Criar Tarefa</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={{ fontSize: 52 }}>✅</Text>
-          </LinearGradient>
+          <>
+            <LinearGradient 
+              colors={['#3b82f6', '#7c3aed']} 
+              style={[styles.actionCard, { marginBottom: 16 }]} 
+              start={{ x: 0, y: 0 }} 
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionCardTitle}>Criar Nova Tarefa</Text>
+                <Text style={styles.actionCardSubtitle}>Defina o que precisa ser feito</Text>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => setNovaTarefaModal(true)}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="add" size={18} color="#2563eb" />
+                  <Text style={[styles.actionBtnText, { color: '#2563eb' }]}>Criar Tarefa</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={{ fontSize: 52 }}>✅</Text>
+            </LinearGradient>
+
+            {pendentesAprovacao.length > 0 && (
+              <View style={styles.approvalSection}>
+                <Text style={styles.approvalTitle}>Aguardando sua aprovação</Text>
+                {pendentesAprovacao.map((item) => {
+                  const criancaAtribuida = dependentes.find(d => d.id === item.crianca_id);
+                  return (
+                    <View key={`approval-${item.id}`} style={styles.approvalCard}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.taskTitle}>{item.titulo}</Text>
+                        <Text style={styles.taskChild}>{criancaAtribuida?.nome || 'Filho'}</Text>
+                      </View>
+                      <View style={styles.approvalActions}>
+                        <Pressable style={styles.rejectBtn} onPress={() => handleRejeitar(item.id)}>
+                          <Text style={styles.rejectBtnText}>Rejeitar</Text>
+                        </Pressable>
+                        <Pressable style={styles.approveBtn} onPress={() => handleAprovar(item.id)}>
+                          <Text style={styles.approveBtnText}>Aprovar</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
@@ -203,4 +249,35 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  approvalSection: { marginBottom: 16, gap: 10 },
+  approvalTitle: { color: '#BFDBFE', fontSize: 14, fontWeight: '700' },
+  approvalCard: {
+    backgroundColor: 'rgba(59,130,246,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.3)',
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  approvalActions: { flexDirection: 'row', gap: 8 },
+  rejectBtn: {
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.35)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  rejectBtnText: { color: '#FCA5A5', fontSize: 12, fontWeight: '700' },
+  approveBtn: {
+    backgroundColor: 'rgba(34,197,94,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.35)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  approveBtnText: { color: '#86EFAC', fontSize: 12, fontWeight: '700' },
 });

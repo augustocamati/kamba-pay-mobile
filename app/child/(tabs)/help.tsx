@@ -1,44 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Pressable, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Image, Alert, ActivityIndicator, Pressable, Platform, Modal, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
-import { campaignService } from '@/lib/api';
 import { router } from 'expo-router';
 
 export default function ChildHelpScreen() {
   const insets = useSafeAreaInsets();
   const { campanhas, crianca, realizarDoacao, isLoading } = useApp();
   const [donating, setDonating] = useState<string | null>(null);
+  const [selectedCampanha, setSelectedCampanha] = useState<{ id: string; titulo: string } | null>(null);
+  const [valorDoacao, setValorDoacao] = useState('');
 
   const handleDoar = (campanhaId: string, titulo: string) => {
-    const valorDoacao = 200;
-    Alert.alert(
-      "Fazer Doação ❤️",
-      `Deseja doar ${valorDoacao} Kz para a campanha "${titulo}"?\n\nPote Ajudar disponível: ${crianca.potes.saldo_ajudar.toLocaleString()} Kz`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Doar",
-          style: "default",
-          onPress: async () => {
-            if (crianca.potes.saldo_ajudar < valorDoacao) {
-              Alert.alert("Saldo Insuficiente", "O teu pote Ajudar não tem saldo suficiente.");
-              return;
-            }
-            setDonating(campanhaId);
-            try {
-              await realizarDoacao(campanhaId, valorDoacao);
-              Alert.alert("Sucesso! ✨", "A tua doação foi realizada. És um herói!");
-            } catch (e) {
-              Alert.alert("Erro", "Não foi possível completar a doação.");
-            } finally {
-              setDonating(null);
-            }
-          }
-        }
-      ]
-    );
+    setSelectedCampanha({ id: campanhaId, titulo });
+    setValorDoacao('');
+  };
+
+  const confirmarDoacao = async () => {
+    if (!selectedCampanha) return;
+    const valor = Number(valorDoacao);
+
+    if (!Number.isFinite(valor) || valor <= 0) {
+      Alert.alert('Valor inválido', 'Escolhe um valor maior que zero.');
+      return;
+    }
+    if (valor > crianca.potes.saldo_ajudar) {
+      Alert.alert('Saldo insuficiente', 'O teu pote Ajudar não tem saldo suficiente.');
+      return;
+    }
+
+    setDonating(selectedCampanha.id);
+    try {
+      await realizarDoacao(selectedCampanha.id, valor);
+      setSelectedCampanha(null);
+      setValorDoacao('');
+      Alert.alert('Sucesso! ✨', `Doação de ${valor.toLocaleString()} Kz realizada com sucesso.`);
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível completar a doação.');
+    } finally {
+      setDonating(null);
+    }
   };
 
   return (
@@ -129,6 +131,48 @@ export default function ChildHelpScreen() {
           })
         )}
       </ScrollView>
+
+      <Modal visible={!!selectedCampanha} transparent animationType="slide" onRequestClose={() => setSelectedCampanha(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Escolher valor da doação</Text>
+            <Text style={styles.modalCampanha}>{selectedCampanha?.titulo}</Text>
+            <Text style={styles.modalSaldo}>Saldo no pote Ajudar: {crianca.potes.saldo_ajudar.toLocaleString()} Kz</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Quanto queres doar? (Kz)"
+              placeholderTextColor="#94A3B8"
+              keyboardType="numeric"
+              value={valorDoacao}
+              onChangeText={setValorDoacao}
+            />
+            <View style={styles.suggestedRow}>
+              {[100, 200, 500, 1000].map((v) => (
+                <Pressable
+                  key={v}
+                  style={[styles.suggestedBtn, v > crianca.potes.saldo_ajudar && { opacity: 0.4 }]}
+                  onPress={() => setValorDoacao(String(v))}
+                  disabled={v > crianca.potes.saldo_ajudar}
+                >
+                  <Text style={styles.suggestedText}>{v} Kz</Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={styles.modalActions}>
+              <Pressable style={styles.cancelBtn} onPress={() => setSelectedCampanha(null)}>
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.confirmBtn, (!!donating || !valorDoacao) && { opacity: 0.7 }]}
+                onPress={confirmarDoacao}
+                disabled={!!donating || !valorDoacao}
+              >
+                {donating ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.confirmBtnText}>Doar agora</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -176,4 +220,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center', paddingVertical: 14, borderRadius: 16, gap: 8,
   },
   donateButtonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    gap: 10,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B' },
+  modalCampanha: { fontSize: 14, fontWeight: '700', color: '#334155' },
+  modalSaldo: { fontSize: 13, color: '#64748B' },
+  modalInput: {
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#0F172A',
+    marginTop: 4,
+  },
+  suggestedRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  suggestedBtn: { backgroundColor: '#F8FAFC', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+  suggestedText: { fontSize: 12, fontWeight: '700', color: '#334155' },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 6 },
+  cancelBtn: { flex: 1, borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
+  cancelBtnText: { color: '#64748B', fontWeight: '700' },
+  confirmBtn: { flex: 1.5, backgroundColor: '#2563EB', borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
+  confirmBtnText: { color: '#fff', fontWeight: '800' },
 });

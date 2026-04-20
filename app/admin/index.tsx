@@ -3,20 +3,14 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Pressable, Dimensions, Platform, ActivityIndicator
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Users, TrendingUp, Wallet, Award, MapPin, Zap, UserCheck } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { adminService } from '@/lib/api';
-
-const ADMIN_ACTIVITY = [
-  { name: 'João Manuel', action: 'Completou Quiz "Poupar é Legal"', time: '1 min atrás', color: '#3B82F6' },
-  { name: 'Maria Silva', action: 'Transferiu Kz 5.000 para o filho', time: '18 min atrás', color: '#F59E0B' },
-  { name: 'Pedro Kamba', action: 'Assistiu vídeo "O Que é Poupar?"', time: '1 hora atrás', color: '#22C55E' },
-  { name: 'Ana Costa', action: 'Criou nova meta de poupança', time: '2 horas atrás', color: '#8B5CF6' },
-  { name: 'Carlos Neto', action: 'Concluiu tarefa "Arrumar a Cama"', time: '3 horas atrás', color: '#EF4444' },
-];
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;
@@ -41,12 +35,58 @@ const PROVINCES = [
   { label: 'Outros', pct: 10, color: '#3B82F6' },
 ];
 
+const ADMIN_ACTIVITY_FALLBACK = [
+  { name: 'Sistema', action: 'Nenhuma atividade recente disponível', time: 'agora', color: '#3B82F6' },
+];
+
+const PALETTE = ['#F59E0B', '#EF4444', '#22C55E', '#8B5CF6', '#3B82F6', '#0EA5E9'];
+
+function getRelativeTime(dateValue?: string) {
+  if (!dateValue) return 'agora';
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 'agora';
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.max(1, Math.floor(diffMs / 60000));
+  if (diffMins < 60) return `${diffMins} min atrás`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} h atrás`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} d atrás`;
+}
+
 export default function AdminDashboard() {
   const insets = useSafeAreaInsets();
+  
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('kamba_token');
+    await AsyncStorage.removeItem('kamba_user');
+    router.replace('/admin-login' as any);
+  };
 
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['admin', 'dashboard'],
     queryFn: () => adminService.getDashboard(),
+  });
+
+  const { data: responsaveisData } = useQuery({
+    queryKey: ['admin', 'responsaveis', 'dashboard-supplement'],
+    queryFn: () => adminService.getResponsaveis(),
+  });
+
+  const { data: criancasData } = useQuery({
+    queryKey: ['admin', 'criancas', 'dashboard-supplement'],
+    queryFn: () => adminService.getCriancas(),
+  });
+
+  const { data: tasksData } = useQuery({
+    queryKey: ['admin', 'tasks', 'dashboard-supplement'],
+    queryFn: () => adminService.getTasks(),
+  });
+
+  const { data: campaignsData } = useQuery({
+    queryKey: ['admin', 'campaigns', 'dashboard-supplement'],
+    queryFn: () => adminService.getCampaigns(),
   });
 
   const resumo = dashboardData?.resumo || {
@@ -71,6 +111,75 @@ export default function AdminDashboard() {
 
   const maxTx = Math.max(...chartData.map((m: any) => m.tx), 1);
   const maxUsers = Math.max(...chartData.map((m: any) => m.users), 1);
+  void maxUsers;
+
+  const provinceData = useMemo(() => {
+    const fromDashboard = dashboardData?.provincias || dashboardData?.distribuicao_provincias;
+    if (Array.isArray(fromDashboard) && fromDashboard.length > 0) {
+      return fromDashboard
+        .slice(0, 5)
+        .map((p: any, i: number) => ({
+          label: String(p.label || p.provincia || p.nome || '—'),
+          pct: Number(p.pct || p.percentual || p.percentagem || p.percentage || 0),
+          color: PALETTE[i % PALETTE.length],
+        }));
+    }
+
+    const users = [
+      ...(responsaveisData?.usuarios || []),
+      ...(criancasData?.usuarios || []),
+    ];
+    if (!users.length) return PROVINCES;
+
+    const grouped = users.reduce((acc: Record<string, number>, user: any) => {
+      const key = String(user.provincia || 'Outros').trim() || 'Outros';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    const total = users.length;
+    return Object.entries(grouped)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([label, count], i) => ({
+        label,
+        pct: Math.round((count / total) * 100),
+        color: PALETTE[i % PALETTE.length],
+      }));
+  }, [dashboardData, responsaveisData, criancasData]);
+
+  const activityData = useMemo(() => {
+    const fromDashboard = dashboardData?.atividade_recente || dashboardData?.atividades;
+    if (Array.isArray(fromDashboard) && fromDashboard.length > 0) {
+      return fromDashboard.slice(0, 6).map((item: any, i: number) => ({
+        name: String(item.nome || item.usuario || item.user || 'Utilizador'),
+        action: String(item.acao || item.descricao || item.action || 'Realizou uma ação'),
+        time: getRelativeTime(item.data || item.criado_em || item.created_at),
+        color: PALETTE[i % PALETTE.length],
+      }));
+    }
+
+    const taskActivities = (tasksData?.tarefas || [])
+      .slice(0, 3)
+      .map((task: any, i: number) => ({
+        name: 'Tarefa',
+        action: `Tarefa "${task.titulo || 'Sem título'}" em estado ${String(task.status || 'desconhecido').toLowerCase()}`,
+        time: getRelativeTime(task.atualizado_em || task.updated_at || task.criado_em),
+        color: PALETTE[i % PALETTE.length],
+      }));
+
+    const campaignActivities = (campaignsData?.campanhas || campaignsData?.campaigns || [])
+      .slice(0, 3)
+      .map((campaign: any, i: number) => ({
+        name: 'Campanha',
+        action: `Campanha "${campaign.titulo || campaign.nome || 'Sem título'}" atualizada`,
+        time: getRelativeTime(campaign.atualizado_em || campaign.updated_at || campaign.criado_em),
+        color: PALETTE[(i + 3) % PALETTE.length],
+      }));
+
+    const merged = [...taskActivities, ...campaignActivities];
+    return merged.length ? merged : ADMIN_ACTIVITY_FALLBACK;
+  }, [dashboardData, tasksData, campaignsData]);
 
   return (
     <View style={styles.root}>
@@ -92,6 +201,9 @@ export default function AdminDashboard() {
             </View>
           </View>
         </Animated.View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.85}>
+          <Text style={styles.logoutBtnText}>Sair</Text>
+        </TouchableOpacity>
       </LinearGradient>
 
       <ScrollView
@@ -168,7 +280,7 @@ export default function AdminDashboard() {
             <Text style={styles.sectionTitle}>Distribuição por Província</Text>
           </View>
           <View style={styles.provinceList}>
-            {PROVINCES.map((p, i) => (
+            {provinceData.map((p, i) => (
               <View key={i} style={styles.provinceRow}>
                 <View style={styles.provinceLabelRow}>
                   <View style={[styles.provinceDot, { backgroundColor: p.color }]} />
@@ -192,8 +304,8 @@ export default function AdminDashboard() {
             <Zap size={18} color="#F0F4FF" />
             <Text style={styles.sectionTitle}>Atividade Recente</Text>
           </View>
-          {ADMIN_ACTIVITY.map((item, i) => (
-            <View key={i} style={[styles.activityItem, i < ADMIN_ACTIVITY.length - 1 && styles.activityBorder]}>
+          {activityData.map((item, i) => (
+            <View key={i} style={[styles.activityItem, i < activityData.length - 1 && styles.activityBorder]}>
               <View style={[styles.activityAvatar, { backgroundColor: item.color }]}>
                 <Text style={styles.activityAvatarText}>{item.name[0]}</Text>
               </View>
@@ -263,6 +375,17 @@ const styles = StyleSheet.create({
   adminPillIcon: { fontSize: 22 },
   adminPillName: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
   adminPillRole: { fontSize: 10, color: '#4A5F8A', fontFamily: 'Nunito_400Regular' },
+  logoutBtn: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.4)',
+    backgroundColor: 'rgba(239,68,68,0.12)',
+  },
+  logoutBtnText: { color: '#FCA5A5', fontSize: 12, fontFamily: 'Nunito_700Bold' },
 
   // Scroll
   scroll: { flex: 1 },
