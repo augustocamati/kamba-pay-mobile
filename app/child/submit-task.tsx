@@ -17,7 +17,8 @@ export default function SubmitTaskScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
 
-  const task = tarefas.find(t => t.id === taskId);
+  const taskIdStr = Array.isArray(taskId) ? taskId[0] : String(taskId || '');
+  const task = tarefas.find(t => String(t.id) === taskIdStr);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -50,15 +51,18 @@ export default function SubmitTaskScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!photoUri || !taskId) {
+    if (!photoUri || !taskIdStr) {
       Alert.alert('Erro', 'Tire uma foto ou selecione uma imagem como prova');
       return;
     }
     setIsSubmitting(true);
     try {
-      await enviarFotoTarefa(taskId, photoUri);
+      await enviarFotoTarefa(taskIdStr, photoUri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Sucesso', 'Tarefa enviada para aprovação dos pais.');
       router.back();
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível enviar a tarefa. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }

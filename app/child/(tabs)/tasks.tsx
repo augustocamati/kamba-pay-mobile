@@ -11,6 +11,7 @@ export default function ChildTasksScreen() {
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const paraFazer = tarefas.filter(t => t.status === 'pendente');
+  const rejeitadas = tarefas.filter(t => t.status === 'rejeitada');
   const aguardando = tarefas.filter(t => t.status === 'aguardando_aprovacao');
   const concluidas = tarefas.filter(t => t.status === 'concluida');
 
@@ -60,6 +61,40 @@ export default function ChildTasksScreen() {
             >
               <Ionicons name="camera" size={20} color="#fff" />
               <Text style={styles.sendButtonText}>Enviar Foto da Tarefa</Text>
+            </Pressable>
+          </View>
+        ))}
+
+        {/* Rejeitadas (reenviar) */}
+        {rejeitadas.length > 0 && (
+          <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+            <Text style={styles.sectionTitle}>Para Refazer 🔁</Text>
+          </View>
+        )}
+
+        {rejeitadas.map(task => (
+          <View key={task.id} style={styles.rejectedCard}>
+            <View style={styles.taskHeader}>
+              <View style={[styles.taskIconBg, { backgroundColor: '#FEE2E2' }]}>
+                <MaterialCommunityIcons name={task.icone as any || 'close-circle-outline'} size={24} color="#DC2626" />
+              </View>
+              <View style={styles.taskInfo}>
+                <Text style={styles.taskTitle}>{task.titulo}</Text>
+                <Text style={styles.taskDesc}>{task.descricao}</Text>
+                <View style={styles.badgeRow}>
+                  <View style={styles.rewardBadge}>
+                    <Text style={styles.rewardText}>💰 {task.recompensa} Kz</Text>
+                  </View>
+                  <Text style={styles.statusLabelRejeitada}>Rejeitada - reenviar prova</Text>
+                </View>
+              </View>
+            </View>
+            <Pressable
+              style={[styles.sendButton, { backgroundColor: '#DC2626' }]}
+              onPress={() => router.push({ pathname: '/child/submit-task', params: { taskId: task.id } })}
+            >
+              <Ionicons name="camera" size={20} color="#fff" />
+              <Text style={styles.sendButtonText}>Reenviar Foto da Tarefa</Text>
             </Pressable>
           </View>
         ))}
@@ -157,6 +192,7 @@ const styles = StyleSheet.create({
   rewardText: { fontSize: 12, fontWeight: '800', color: '#000' },
   statusLabelPendente: { fontSize: 12, fontWeight: '700', color: '#F44336' },
   statusLabelAguardando: { fontSize: 12, fontWeight: '700', color: '#2196F3' },
+  statusLabelRejeitada: { fontSize: 12, fontWeight: '700', color: '#DC2626' },
   sendButton: {
     backgroundColor: '#FF6F00',
     flexDirection: 'row',
@@ -174,6 +210,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#BBDEFB',
+  },
+  rejectedCard: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
   proofImage: { width: '100%', height: 160, borderRadius: 16, marginTop: 4 },
   completedItem: {

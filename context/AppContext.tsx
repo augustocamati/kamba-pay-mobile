@@ -287,6 +287,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await taskService.submitTask(tarefaId, formData);
       } catch (e) {
         console.error('Erro ao enviar foto da tarefa:', e);
+        throw e;
       }
     }
 
