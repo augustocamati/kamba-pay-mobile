@@ -130,34 +130,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     // ── MODO DEMO ──────────────────────────────────────────────
-    if (isDemo) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setDependentes(DEMO_CHILDREN);
+    // if (isDemo) {
+    //   setIsLoading(true);
+    //   setTimeout(() => {
+    //     setDependentes(DEMO_CHILDREN);
         
-        // Se for pai, mantém a criança selecionada ou pega a primeira
-        if (user.role === 'parent') {
-          const idParaSelecionar = crianca.id !== 'novo' ? crianca.id : DEMO_CHILDREN[0].id;
-          const criancaAtiva = DEMO_CHILDREN.find(c => c.id === idParaSelecionar) || DEMO_CHILDREN[0];
-          setCrianca(criancaAtiva);
+    //     // Se for pai, mantém a criança selecionada ou pega a primeira
+    //     if (user.role === 'parent') {
+    //       const idParaSelecionar = crianca.id !== 'novo' ? crianca.id : DEMO_CHILDREN[0].id;
+    //       const criancaAtiva = DEMO_CHILDREN.find(c => c.id === idParaSelecionar) || DEMO_CHILDREN[0];
+    //       setCrianca(criancaAtiva);
           
-          // Pai vê todas as tarefas e missões
-          setTarefas(DEMO_TAREFAS);
-          setMissoes(DEMO_MISSOES);
-        } else {
-          // Se for criança, pega os dados da criança logada (simulado com a primeira do demo)
-          setCrianca(DEMO_CHILDREN[0]);
-          setTarefas(DEMO_TAREFAS.filter(t => t.crianca_id === DEMO_CHILDREN[0].id));
-          setMissoes(DEMO_MISSOES.filter(m => m.crianca_id === DEMO_CHILDREN[0].id));
-        }
+    //       // Pai vê todas as tarefas e missões
+    //       setTarefas(DEMO_TAREFAS);
+    //       setMissoes(DEMO_MISSOES);
+    //     } else {
+    //       // Se for criança, pega os dados da criança logada (simulado com a primeira do demo)
+    //       setCrianca(DEMO_CHILDREN[0]);
+    //       setTarefas(DEMO_TAREFAS.filter(t => t.crianca_id === DEMO_CHILDREN[0].id));
+    //       setMissoes(DEMO_MISSOES.filter(m => m.crianca_id === DEMO_CHILDREN[0].id));
+    //     }
 
-        setCampanhas(DEMO_CAMPANHAS);
-        setConteudoEducativo(DEMO_CONTEUDO);
-        setHistorico(DEMO_HISTORICO);
-        setIsLoading(false);
-      }, 800); // simula latência
-      return;
-    }
+    //     setCampanhas(DEMO_CAMPANHAS);
+    //     setConteudoEducativo(DEMO_CONTEUDO);
+    //     setHistorico(DEMO_HISTORICO);
+    //     setIsLoading(false);
+    //   }, 800); // simula latência
+    //   return;
+    // }
     // ───────────────────────────────────────────────────────────
 
     setIsLoading(true);
@@ -247,7 +247,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             video_url: c.url,
             duracao: c.duracao || '5',
             descricao: c.descricao || '',
-            faixa_etaria: c.faixa_etaria || '6-12',
+            faixa_etaria: c.faixa_etaria || '0-100',
             id_missao: c.id_missao,
             completo: c.completo || false,
           })));
@@ -276,21 +276,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Enviar foto de prova da tarefa
   const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
-    if (!isDemo) {
-      try {
-        const formData = new FormData();
-        formData.append('foto', {
-          uri: fotoUrl,
-          name: `tarefa-${tarefaId}.jpg`,
-          type: 'image/jpeg',
-        } as any);
-        await taskService.submitTask(tarefaId, formData);
-      } catch (e) {
-        console.error('Erro ao enviar foto da tarefa:', e);
-        throw e;
-      }
+    try {
+      const formData = new FormData();
+  
+      formData.append('foto', {
+        uri: fotoUrl,
+        name: `tarefa-${tarefaId}.jpg`,
+        type: 'image/jpeg',
+      } as any);
+  
+      await taskService.submitTask(tarefaId, formData);
+  
+    } catch (e) {
+      console.error('Erro ao enviar foto da tarefa:', e);
+      throw e;
     }
-
+  
     setTarefas(prev => prev.map(t =>
       t.id === tarefaId
         ? { ...t, foto_url: fotoUrl, status: 'aguardando_aprovacao', concluido_em: new Date() }

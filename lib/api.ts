@@ -87,10 +87,10 @@ export const taskService = {
   approveTask: (taskId: string) => api.patch(`/tasks/${taskId}/approve`).then(res => res.data),
   rejectTask: (taskId: string, motivo?: string) => api.patch(`/tasks/${taskId}/reject`, { motivo }).then(res => res.data),
   submitTask: (taskId: string, data: FormData | { foto_base64: string }) => {
-    // Definir cabeçalho dependendo de ser FormData ou JSON
     const isFormData = data instanceof FormData;
+  
     return api.patch(`/child/tasks/${taskId}/submit`, data, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : { 'Content-Type': 'application/json' }
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
     }).then(res => res.data);
   },
 };
