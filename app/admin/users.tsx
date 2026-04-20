@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
-  TouchableOpacity, Modal, ScrollView, Alert, Pressable, ActivityIndicator
+  TouchableOpacity, Modal, ScrollView, Alert, Pressable, ActivityIndicator, Platform
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -193,10 +193,21 @@ export default function AdminUsers() {
     onError: (err: any) => Alert.alert('Erro', err.response?.data?.mensagem || 'Falha ao atualizar utilizador'),
   });
 
-  const deleteUser = (id: string) => Alert.alert('Eliminar Usuário', 'Tem certeza?', [
-    { text: 'Cancelar', style: 'cancel' },
-    { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
-  ]);
+  const deleteUser = (id: string) => {
+    console.log('[AdminUsers] Tentando eliminar usuário:', id);
+    
+    if (Platform.OS === 'web') {
+      if (window.confirm('Eliminar Usuário: Tem certeza? Esta ação é permanente e eliminará todos os dados asociados.')) {
+        deleteMutation.mutate(id);
+      }
+      return;
+    }
+
+    Alert.alert('Eliminar Usuário', 'Tem certeza? Esta ação é permanente.', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
+    ]);
+  };
 
   const toggleStatus = (id: string) => {
     const user = users.find(u => u.id === id);

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Modal, ScrollView, TextInput, Alert, ActivityIndicator
+  Modal, ScrollView, TextInput, Alert, ActivityIndicator, Platform
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -146,6 +146,15 @@ export default function AdminTasks() {
   };
 
   const deleteTask = (id: string) => {
+    console.log('[AdminTasks] Tentando eliminar tarefa:', id);
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Eliminar Tarefa: Tem a certeza?')) {
+        deleteMutation.mutate(id);
+      }
+      return;
+    }
+
     Alert.alert('Eliminar Tarefa', 'Tem a certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
