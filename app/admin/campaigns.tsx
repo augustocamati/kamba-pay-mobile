@@ -8,6 +8,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/lib/api';
+import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { 
   Target, Users, TrendingUp, HeartHandshake, Building, MapPin, 
   Calendar, Pause, Play, Lock, Pencil, Trash2, X, UploadCloud, Tag
@@ -78,15 +80,29 @@ export default function AdminCampaigns() {
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(blankForm());
-  
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const { data: campaignsData, isLoading } = useQuery({
     queryKey: ['admin', 'campaigns'],
     queryFn: () => adminService.getCampaigns(),
   });
-
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      form.imagem = result.assets[0].uri;
+      //setForm(p => ({ ...p, imagem: form.imagem }));
+      setPhotoUri(result.assets[0].uri);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
   const campaigns = useMemo<Campaign[]>(() => {
     const raw = campaignsData?.campanhas || campaignsData?.campaigns || [];
     return raw.map((item: any) => {
+     
       const statusRaw = String(item.status || '').toLowerCase();
       const ativa = typeof item.ativa === 'boolean' ? item.ativa : statusRaw === 'ativa';
       const status: Campaign['status'] =
@@ -103,15 +119,15 @@ export default function AdminCampaigns() {
         titulo: item.titulo || item.nome || '',
         descricao: item.descricao || '',
         organizacao: item.organizacao || '',
-        localizacao: item.localizacao || item.provincia || '',
+        localizacao: item.localizacao || item.provincia || 'Luanda',
         categoria: item.categoria || item.causa || 'Social',
-        meta: Number(item.meta || item.meta_valor || 0),
-        arrecadado: Number(item.arrecadado || item.valor_arrecadado || 0),
+        meta: Number(item.metaKz || item.meta_valor || 0),
+        arrecadado: Number(item.arrecadadoKz || item.valor_arrecadado || 0),
         doadores: Number(item.doadores || item.total_doadores || 0),
         status,
         dataInicio: item.dataInicio || item.data_inicio || item.criado_em || '',
         dataFim: item.dataFim || item.data_fim || '',
-        imagem: item.imagem || item.imagem_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
+        imagem: item.imagemCapa || item.imagem_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
       };
     });
   }, [campaignsData]);
@@ -167,7 +183,8 @@ export default function AdminCampaigns() {
       titulo: c.titulo, descricao: c.descricao, organizacao: c.organizacao,
       localizacao: c.localizacao, categoria: c.categoria,
       meta: String(c.meta), arrecadado: String(c.arrecadado),
-      status: c.status, dataInicio: c.dataInicio, dataFim: c.dataFim, imagem: c.imagem,
+      imagem: photoUri || c.imagem,
+      status: c.status, dataInicio: c.dataInicio, dataFim: c.dataFim, 
     });
     setModal(true);
   };
@@ -188,7 +205,7 @@ export default function AdminCampaigns() {
       localizacao: form.localizacao,
       dataInicio: form.dataInicio,
       dataFim: form.dataFim,
-      imagemCapa: form.imagem || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
+      imagemCapa: form.imagem,
 
       // Campos de compatibilidade (fallback /campaigns)
       nome: form.titulo,
@@ -202,7 +219,7 @@ export default function AdminCampaigns() {
       ativa: form.status === 'ativa',
       data_inicio: form.dataInicio,
       data_fim: form.dataFim,
-      imagem_url: form.imagem || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80',
+      imagem_url: form.imagem,
     };
     if (editId) {
       updateMutation.mutate({ id: editId, data: payload });
@@ -401,7 +418,7 @@ export default function AdminCampaigns() {
                   value={form.imagem}
                   onChangeText={v => setForm(p => ({ ...p, imagem: v }))}
                 />
-                <TouchableOpacity style={styles.chooseImgBtn}>
+                <TouchableOpacity style={styles.chooseImgBtn} onPress={pickImage}>
                   <Text style={styles.chooseImgText}>Escolher Imagem</Text>
                 </TouchableOpacity>
               </View>

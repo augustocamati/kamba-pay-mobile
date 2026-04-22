@@ -112,6 +112,7 @@ export const missionService = {
 
 export const campaignService = {
   createCampaign: (data: any) => api.post('/campaigns', data).then(res => res.data),
+  createAdminCampaign: (data: any) => api.post('/admin/campanhas', data).then(res => res.data),
   getCampaigns: (ativa: boolean = true) => api.get('/campaigns', { params: { ativa } }).then(res => res.data),
   donate: (campanha_id: string, valor: number) => api.post('/child/donations', { campanha_id, valor }).then(res => res.data),
 };
@@ -190,7 +191,7 @@ export const adminService = {
   deleteQuiz: (id: string) => api.delete(`/admin/quizzes/${id}`).then(res => res.data),
 
   // Vídeos (Conteúdo)
-  getVideos: (params?: any) => api.get('/admin/videos', { params }).then(res => res.data),
+  getVideos: () => api.get('/admin/videos').then(res => res.data),
   getVideosStats: () => api.get('/admin/videos/estatisticas').then(res => res.data),
   createVideo: (data: any) => api.post('/admin/videos', data).then(res => res.data),
   updateVideo: (id: string, data: any) => api.put(`/admin/videos/${id}`, data).then(res => res.data),
@@ -209,18 +210,58 @@ export const adminService = {
       throw error;
     }
   },
+  //createCampaign: async (data: any) => {
+  //  try {
+  //    const res = await api.post('/admin/campanhas', data);
+  //    return res.data;
+  //  } catch (error: any) {
+  //    if (error?.response?.status === 404) {
+  //      const res = await api.post('/campaigns', data);
+  //      return res.data;
+  //    }
+  //    throw error;
+  //  },
+
   createCampaign: async (data: any) => {
+    const isFormData = data instanceof FormData;
+    const formData = new FormData();
+  // 📸 imagem
+  if (data.imagem) {
+    formData.append('foto', {
+      uri: data.imagem,
+      name: `${data.titulo || 'campanha'}.jpg`,
+      type: 'image/jpeg',
+    } as any);
+  }
+  console.log('data.imagem', data);
+  // 🧾 outros dados
+  formData.append('titulo', data.titulo);
+  formData.append('descricao', data.descricao);
+  formData.append('metaKz', String(data.metaKz));
+  formData.append('organizacao', data.organizacao);
+  formData.append('localizacao', data.localizacao);
+  formData.append('dataInicio', data.dataInicio);
+  formData.append('dataFim', data.dataFim);
+  formData.append('imagemCapa', data.imagemCapa);
+  formData.append('status', data.status);
+  formData.append('categoria', data.categoria);
+ 
     try {
-      const res = await api.post('/admin/campanhas', data);
+      const res = await api.post('/admin/campanhas', formData, {
+        ...(isFormData && { transformRequest: [(d: any) => d] }),
+      });
       return res.data;
     } catch (error: any) {
       if (error?.response?.status === 404) {
-        const res = await api.post('/campaigns', data);
+        const res = await api.post('/campaigns', data, {
+          ...(isFormData && { transformRequest: [(d: any) => d] }),
+        });
         return res.data;
       }
       throw error;
     }
   },
+
   updateCampaign: async (id: string, data: any) => {
     try {
       const res = await api.put(`/admin/campanhas/${id}`, data);

@@ -499,12 +499,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Criar campanha — API real
   const criarCampanha = async (novaCampanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => {
     try {
-      const res = await campaignService.createCampaign({
+     const formData = new FormData();
+  
+     formData.append('foto', {
+     uri: novaCampanha.imagem_url,
+       name: `${novaCampanha.titulo}.jpg`,
+       type: 'image/jpeg',
+     } as any);
+  
+
+      const res = await campaignService.createAdminCampaign({
         nome: novaCampanha.titulo,
         descricao: novaCampanha.descricao,
         organizacao: novaCampanha.organizacao,
         meta_valor: novaCampanha.meta_valor,
         causa: novaCampanha.causa,
+        imagem_url: novaCampanha.imagem_url,
+      
       });
       const campanha: Campanha = {
         ...novaCampanha,
