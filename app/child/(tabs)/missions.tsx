@@ -8,8 +8,10 @@ import { router } from 'expo-router';
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', icon: 'apps' },
   { id: 'poupanca', label: 'Poupança', icon: 'trending-up' },
-  { id: 'consumo', label: 'Consumo', icon: 'cart' },
-  { id: 'solidariedade', label: 'Solidariedade', icon: 'heart' },
+  { id: 'saude', label: 'Saúde', icon: 'heart' },
+  { id: 'social', label: 'Social', icon: 'hand-heart' },
+  { id: 'estudo', label: 'Estudo', icon: 'book' },
+  { id: 'comportamento', label: 'Comportamento', icon: 'star' },
 ];
 
 export default function ChildMissionsScreen() {
@@ -17,7 +19,7 @@ export default function ChildMissionsScreen() {
   const { missoes } = useApp();
   const [activeTab, setActiveTab] = useState('todas');
   const webTop = Platform.OS === 'web' ? 67 : 0;
-
+console.log("missoes",missoes);
   const filteredMissions = activeTab === 'todas' 
     ? missoes 
     : missoes.filter(m => m.tipo === activeTab);
@@ -65,6 +67,7 @@ export default function ChildMissionsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {filteredMissions.map(mission => {
+         
           const colors = mission.cor;
           const percent = Math.round((mission.progresso_atual / mission.objetivo_valor) * 100);
           const missing = mission.objetivo_valor - mission.progresso_atual;
@@ -74,8 +77,7 @@ export default function ChildMissionsScreen() {
               <View style={styles.cardHeader}>
                 <Text style={styles.missionIconEmoji}>{mission.icone}</Text>
                 <View style={styles.typeBadge}>
-                   <MaterialCommunityIcons name={mission.icone_nome as any} size={14} color="#fff" />
-                   <Text style={styles.typeText}>{mission.tipo_label}</Text>
+                   <Text style={styles.typeText}>{mission.tipo}</Text>
                 </View>
               </View>
 

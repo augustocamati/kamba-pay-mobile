@@ -228,8 +228,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setTarefas(dashRes.tarefas_do_dia.map(mapTarefa));
         }
 
-        if (dashRes.missoes) {
-          setMissoes(dashRes.missoes.map(mapMissao));
+        if (dashRes.missao_destaque) {
+          // console.log("das",dashRes);
+          setMissoes(dashRes.missao_destaque.map(mapMissao));
         } else if (dashRes.missao_destaque) {
           setMissoes([mapMissao({ ...dashRes.missao_destaque, ativa: true })]);
         }
