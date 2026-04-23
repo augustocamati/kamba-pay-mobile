@@ -89,7 +89,7 @@ export default function ChildSchoolScreen() {
             </Pressable>
           ))}
 
-          <View style={styles.gameCard}>
+          {/* <View style={styles.gameCard}>
             <MaterialCommunityIcons name="gamepad-variant" size={40} color="#fff" />
             <View style={{ flex: 1, marginLeft: 16 }}>
                <Text style={styles.gameTitle}>Queres testar teus conhecimentos?</Text>
@@ -98,7 +98,7 @@ export default function ChildSchoolScreen() {
             <Pressable style={styles.gameButton} onPress={() => router.push('/child/quiz' as any)}>
                <Text style={styles.gameButtonText}>Jogar</Text>
             </Pressable>
-          </View>
+          </View> */}
         </>)}
 
       </ScrollView>

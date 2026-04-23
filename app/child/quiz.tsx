@@ -31,6 +31,7 @@ export default function QuizScreen() {
 
   useEffect(() => {
     const loadQuiz = async () => {
+      
       if (!id_missao) {
         setLoading(false);
         return;

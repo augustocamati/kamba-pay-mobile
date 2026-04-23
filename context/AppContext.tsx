@@ -374,6 +374,7 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
   const marcarConteudoCompleto = async (conteudoId: string) => {
     try {
       if (!isDemo) {
+       
         await educationalService.completeContent(conteudoId);
       }
       setConteudoEducativo(prev => prev.map(c => String(c.id) === String(conteudoId) ? { ...c, completo: true } : c));
