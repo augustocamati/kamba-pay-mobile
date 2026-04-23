@@ -82,7 +82,7 @@ export default function SplashScreen() {
 
         {/* Center logo */}
         <View style={styles.centerSection}>
-          <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.logoCircle}>
+          <Animated.View entering={FadeInUp.delay(200).duration(600)} >
             {/* <MaterialCommunityIcons name="cat" size={56} color="#FF8C00" /> */}
             <Image source={require('@/assets/images/logo2.png')} style={{ width: 90, height: 90 }} />
           </Animated.View>
