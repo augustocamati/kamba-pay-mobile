@@ -7,6 +7,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import { useAuth } from '@/lib/auth-context';
 import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { Image } from 'expo-image';
+  import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,6 +46,18 @@ export default function SplashScreen() {
       </LinearGradient>
     );
   }
+
+ 
+
+
+ const limparStorage = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log('✅ AsyncStorage limpo com sucesso');
+  } catch (error) {
+    console.error('❌ Erro ao limpar AsyncStorage:', error);
+  }
+};
 
   return (
     <LinearGradient
@@ -122,6 +135,13 @@ export default function SplashScreen() {
                 onPress={() => router.push('/admin-login' as any)}
               >
                 <Text style={styles.adminButtonText}>🔐 Acesso Admin</Text>
+              </Pressable>
+               {/* Admin button */}
+              <Pressable
+                style={({ pressed }) => [styles.adminButton, pressed && styles.buttonPressed]}
+                onPress={() => limparStorage()}
+              >
+                <Text style={styles.adminButtonText}>🔐 Limpar</Text>
               </Pressable>
             </>
           ) : (
