@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,25 @@ export default function ChildStatsScreen() {
       .catch(e => console.error('Erro ao buscar stats:', e))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleExportarWhatsApp = () => {
+    const tarefasConcluidas = stats?.tarefas_concluidas_mes || 0;
+    const taxaPoupanca = Math.round((potes.saldo_poupar / potes.total) * 100);
+
+    const mensagem =
+      `📊 *Relatório Kamba Kid Pay - ${nome}*\n\n` +
+      `💰 Saldo Total: ${totalSaldo.toLocaleString()} Kz\n` +
+      `✅ Tarefas Concluídas: ${tarefasConcluidas}\n` +
+      `💚 Taxa de Poupança: ${taxaPoupanca}%\n\n` +
+      `📦 Distribuição:\n` +
+      `• Gastar: ${potes.saldo_gastar.toLocaleString()} Kz\n` +
+      `• Poupar: ${potes.saldo_poupar.toLocaleString()} Kz\n` +
+      `• Ajudar: ${potes.saldo_ajudar.toLocaleString()} Kz\n\n` +
+      `Continue incentivando a educação financeira! 🎯`;
+
+    const encoded = encodeURIComponent(mensagem);
+    Linking.openURL(`https://wa.me/?text=${encoded}`);
+  };
 
   if (loading) {
     return (
@@ -73,6 +92,22 @@ export default function ChildStatsScreen() {
           </View>
           <Text style={styles.childName}>{nome}</Text>
           <Text style={styles.childLevel}>Nível {nivel}</Text>
+        </View>
+
+        {/* Exportar Relatório */}
+        <View style={[ { marginBottom: 32 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { marginBottom: 4 }]}>Relatórios Mensais</Text>
+              <Text style={{ color: '#93c5fd', fontSize: 13 }}>Compartilhe o progresso no WhatsApp</Text>
+            </View>
+            <TouchableOpacity onPress={handleExportarWhatsApp} activeOpacity={0.85}>
+              <LinearGradient colors={['#16a34a', '#15803d']} style={styles.whatsappBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <Ionicons name="share-social" size={18} color="#fff" style={{ marginRight: 6 }} />
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Compartilhar</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Financial Overview */}
@@ -133,23 +168,7 @@ export default function ChildStatsScreen() {
           </View>
         )}
 
-        {/* Weekly Performance */}
-        {desempenhoSemanal.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Desempenho Semanal</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {desempenhoSemanal.map((s: any) => (
-                <View key={s.semana} style={styles.weekBox}>
-                  <Text style={styles.weekLabel}>{s.semana}</Text>
-                  <Text style={styles.weekTasks}>{s.tarefas}</Text>
-                  <Text style={styles.weekTasksLabel}>tarefas</Text>
-                  <Text style={styles.weekGanhou}>{(s.ganhou || 0).toLocaleString()} Kz</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
+      
         {/* Recent Activity */}
         {historicoRecente.length > 0 && (
           <View style={styles.section}>
@@ -176,6 +195,19 @@ export default function ChildStatsScreen() {
 }
 
 const styles = StyleSheet.create({
+   cardTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+  },
+   whatsappBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backBtn: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 12 },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },

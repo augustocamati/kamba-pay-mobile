@@ -130,34 +130,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     // ── MODO DEMO ──────────────────────────────────────────────
-    // if (isDemo) {
-    //   setIsLoading(true);
-    //   setTimeout(() => {
-    //     setDependentes(DEMO_CHILDREN);
+    if (isDemo) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setDependentes(DEMO_CHILDREN);
         
-    //     // Se for pai, mantém a criança selecionada ou pega a primeira
-    //     if (user.role === 'parent') {
-    //       const idParaSelecionar = crianca.id !== 'novo' ? crianca.id : DEMO_CHILDREN[0].id;
-    //       const criancaAtiva = DEMO_CHILDREN.find(c => c.id === idParaSelecionar) || DEMO_CHILDREN[0];
-    //       setCrianca(criancaAtiva);
+        // Se for pai, mantém a criança selecionada ou pega a primeira
+        if (user.role === 'parent') {
+          const idParaSelecionar = crianca.id !== 'novo' ? crianca.id : DEMO_CHILDREN[0].id;
+          const criancaAtiva = DEMO_CHILDREN.find(c => c.id === idParaSelecionar) || DEMO_CHILDREN[0];
+          setCrianca(criancaAtiva);
           
-    //       // Pai vê todas as tarefas e missões
-    //       setTarefas(DEMO_TAREFAS);
-    //       setMissoes(DEMO_MISSOES);
-    //     } else {
-    //       // Se for criança, pega os dados da criança logada (simulado com a primeira do demo)
-    //       setCrianca(DEMO_CHILDREN[0]);
-    //       setTarefas(DEMO_TAREFAS.filter(t => t.crianca_id === DEMO_CHILDREN[0].id));
-    //       setMissoes(DEMO_MISSOES.filter(m => m.crianca_id === DEMO_CHILDREN[0].id));
-    //     }
+          // Pai vê todas as tarefas e missões
+          setTarefas(DEMO_TAREFAS);
+          setMissoes(DEMO_MISSOES);
+        } else {
+          // Se for criança, pega os dados da criança logada (simulado com a primeira do demo)
+          setCrianca(DEMO_CHILDREN[0]);
+          setTarefas(DEMO_TAREFAS.filter(t => t.crianca_id === DEMO_CHILDREN[0].id));
+          setMissoes(DEMO_MISSOES.filter(m => m.crianca_id === DEMO_CHILDREN[0].id));
+        }
 
-    //     setCampanhas(DEMO_CAMPANHAS);
-    //     setConteudoEducativo(DEMO_CONTEUDO);
-    //     setHistorico(DEMO_HISTORICO);
-    //     setIsLoading(false);
-    //   }, 800); // simula latência
-    //   return;
-    // }
+        setCampanhas(DEMO_CAMPANHAS);
+        setConteudoEducativo(DEMO_CONTEUDO);
+        setHistorico(DEMO_HISTORICO);
+        setIsLoading(false);
+      }, 800); // simula latência
+      return;
+    }
     // ───────────────────────────────────────────────────────────
 
     setIsLoading(true);
@@ -225,6 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         if (dashRes.tarefas_do_dia) {
+          
           setTarefas(dashRes.tarefas_do_dia.map(mapTarefa));
         }
 
@@ -276,29 +277,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Enviar foto de prova da tarefa
-  const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
-    try {
-      const formData = new FormData();
-  
-      formData.append('foto', {
-        uri: fotoUrl,
-        name: `tarefa-${tarefaId}.jpg`,
-        type: 'image/jpeg',
-      } as any);
-  
-      await taskService.submitTask(tarefaId, formData);
-  
-    } catch (e) {
-      console.error('Erro ao enviar foto da tarefa:', e);
-      throw e;
-    }
-  
-    setTarefas(prev => prev.map(t =>
-      t.id === tarefaId
-        ? { ...t, foto_url: fotoUrl, status: 'aguardando_aprovacao', concluido_em: new Date() }
-        : t
-    ));
-  };
+const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
+  try {
+    console.log("fotoUrl", fotoUrl);
+
+    // pegar extensão segura
+    const ext = (fotoUrl.split('.').pop() || 'jpg').toLowerCase();
+
+    const mimeTypes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      heic: 'image/heic'
+    };
+
+    const mimeType = mimeTypes[ext] || 'image/jpeg';
+
+    const formData = new FormData();
+
+    const file = {
+      uri: fotoUrl, // 👈 TEM que ser file://
+      name: `tarefa-${tarefaId}.${ext}`,
+      type: mimeType,
+    };
+
+    console.log("FILE:", file);
+
+    formData.append('foto', file as any);
+
+    const res = await api.patch(`/child/tasks/${tarefaId}/submit`, formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        transformRequest: () => formData,
+      }
+    );
+
+    return res.data;
+
+  } catch (e) {
+    console.error('Erro ao enviar foto:', e);
+    throw e;
+  }
+};
 
   // Realizar doação para campanha (via API real)
   const realizarDoacao = async (campanhaId: string, valor: number) => {

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth-context';
 import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
+import { Image } from 'expo-image';
 
 const { width, height } = Dimensions.get('window');
 
@@ -82,7 +83,8 @@ export default function SplashScreen() {
         {/* Center logo */}
         <View style={styles.centerSection}>
           <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.logoCircle}>
-            <MaterialCommunityIcons name="cat" size={56} color="#FF8C00" />
+            {/* <MaterialCommunityIcons name="cat" size={56} color="#FF8C00" /> */}
+            <Image source={require('@/assets/images/logo2.png')} style={{ width: 90, height: 90 }} />
           </Animated.View>
           <Animated.View entering={FadeInUp.delay(400).duration(600)}>
             <Text style={styles.title}>Kamba Kid Pay</Text>
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
   floatIcon: { position: 'absolute' },
   centerSection: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   logoCircle: {
-    width: 110, height: 110, borderRadius: 55,
+    width: 200, height: 200, borderRadius: 100,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center', alignItems: 'center',
     marginBottom: 20,

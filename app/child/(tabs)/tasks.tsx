@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 export default function ChildTasksScreen() {
   const insets = useSafeAreaInsets();
   const { tarefas } = useApp();
+  console.log(tarefas);
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const paraFazer = tarefas.filter(t => t.status === 'pendente');

@@ -15,16 +15,16 @@ export default function ChildTasksScreen() {
 
   const myTasks = tasks.filter(t => t.assignedTo === user?.id);
   const sortedTasks = [...myTasks].sort((a, b) => {
-    const order = { pending: 0, submitted: 1, rejected: 2, approved: 3 };
+    const order = { pendente: 0, enviada: 1, rejeitada: 2, aprovada: 3 };
     return (order[a.status] || 0) - (order[b.status] || 0);
   });
 
   const getStatusInfo = (status: string) => {
     switch (status) {
-      case 'pending': return { label: 'Para Fazer', color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' };
-      case 'submitted': return { label: 'Enviada', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' };
-      case 'approved': return { label: 'Aprovada', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' };
-      case 'rejected': return { label: 'Refazer', color: '#EF4444', bg: 'rgba(239,68,68,0.1)' };
+      case 'pendente': return { label: 'Para Fazer', color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' };
+      case 'enviada': return { label: 'Enviada', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' };
+      case 'aprovada': return { label: 'Aprovada', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' };
+      case 'rejeitada': return { label: 'Refazer', color: '#EF4444', bg: 'rgba(239,68,68,0.1)' };
       default: return { label: status, color: '#999', bg: '#f0f0f0' };
     }
   };
@@ -53,7 +53,7 @@ export default function ChildTasksScreen() {
         }
         renderItem={({ item }) => {
           const statusInfo = getStatusInfo(item.status);
-          const canSubmit = item.status === 'pending' || item.status === 'rejected';
+          const canSubmit = item.status === 'pendente' || item.status === 'rejeitada';
           return (
             <Pressable
               style={({ pressed }) => [styles.taskCard, pressed && canSubmit && styles.cardPressed]}

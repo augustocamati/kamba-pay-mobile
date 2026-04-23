@@ -141,24 +141,6 @@ export default function ParentDashboard() {
     Alert.alert('Tarefa rejeitada', 'A criança poderá tentar novamente.');
   };
 
-  const handleExportarWhatsApp = () => {
-    const tarefasConcluidas = tarefas.filter((t) => t.status === 'concluida').length;
-    const taxaPoupanca = Math.round((crianca.potes.saldo_poupar / crianca.potes.total) * 100);
-
-    const mensagem =
-      `📊 *Relatório Kamba Kid Pay - ${crianca.nome}*\n\n` +
-      `💰 Saldo Total: ${crianca.potes.total.toLocaleString()} Kz\n` +
-      `✅ Tarefas Concluídas: ${tarefasConcluidas}\n` +
-      `💚 Taxa de Poupança: ${taxaPoupanca}%\n\n` +
-      `📦 Distribuição:\n` +
-      `• Gastar: ${crianca.potes.saldo_gastar.toLocaleString()} Kz\n` +
-      `• Poupar: ${crianca.potes.saldo_poupar.toLocaleString()} Kz\n` +
-      `• Ajudar: ${crianca.potes.saldo_ajudar.toLocaleString()} Kz\n\n` +
-      `Continue incentivando a educação financeira! 🎯`;
-
-    const encoded = encodeURIComponent(mensagem);
-    Linking.openURL(`https://wa.me/?text=${encoded}`);
-  };
 
   const tarefasAguardando = tarefas.filter((t) => t.status === 'aguardando_aprovacao');
   const tarefasConcluidasCount = tarefas.filter((t) => t.status === 'concluida').length;
@@ -319,12 +301,7 @@ export default function ParentDashboard() {
 
         {/* Lista de Dependentes */}
         <View style={{ marginBottom: 24 }}>
-          <View style={[styles.cardHeaderRow, { marginBottom: 12 }]}>
-            <Text style={styles.cardTitle}>Seus Filhos</Text>
-            <TouchableOpacity onPress={() => setAdicionarDependenteModal(true)}>
-               <Ionicons name="add-circle-outline" size={24} color="#93c5fd" />
-            </TouchableOpacity>
-          </View>
+        
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, paddingHorizontal: 20 }}>
             {dependentes.map(dep => (
@@ -479,21 +456,7 @@ export default function ParentDashboard() {
         </View>
 
 
-        {/* Exportar Relatório */}
-        <View style={[styles.card, { marginBottom: 32 }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardTitle, { marginBottom: 4 }]}>Relatórios Mensais</Text>
-              <Text style={{ color: '#93c5fd', fontSize: 13 }}>Compartilhe o progresso no WhatsApp</Text>
-            </View>
-            <TouchableOpacity onPress={handleExportarWhatsApp} activeOpacity={0.85}>
-              <LinearGradient colors={['#16a34a', '#15803d']} style={styles.whatsappBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                <Ionicons name="share-social" size={18} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Compartilhar</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </View>
+       
 
       </ScrollView>
     </LinearGradient>

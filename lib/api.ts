@@ -86,13 +86,13 @@ export const taskService = {
   getTasks: (params?: any) => api.get('/tasks', { params }).then(res => res.data),
   approveTask: (taskId: string) => api.patch(`/tasks/${taskId}/approve`).then(res => res.data),
   rejectTask: (taskId: string, motivo?: string) => api.patch(`/tasks/${taskId}/reject`, { motivo }).then(res => res.data),
-  submitTask: (taskId: string, data: FormData | { foto_base64: string }) => {
-    const isFormData = data instanceof FormData;
-  
-    return api.patch(`/child/tasks/${taskId}/submit`, data, {
-      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
-    }).then(res => res.data);
-  },
+  submitTask: (taskId: string, data: FormData) => {
+  const isFormData = data instanceof FormData;
+
+  return api.patch(`/child/tasks/${taskId}/submit`, data, {
+    headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+  }).then(res => res.data);
+}
 };
 
 // ============================================
@@ -233,7 +233,7 @@ export const adminService = {
       type: 'image/jpeg',
     } as any);
   }
-  console.log('data.imagem', data);
+  console.log('data.imagem', data.imagem);
   // 🧾 outros dados
   formData.append('titulo', data.titulo);
   formData.append('descricao', data.descricao);
