@@ -80,11 +80,15 @@ function DragChip({
       onPanResponderRelease: (e, gestureState) => {
         isDragging.current = false;
         RNAnimated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
-        // Check if dropped near drop zone (upper part of screen)
-        const dropped = gestureState.moveY < height * 0.52;
-        if (dropped) {
+        
+        // Precise drop zone check (centered dashed box area)
+        const isWithinY = gestureState.moveY > height * 0.35 && gestureState.moveY < height * 0.58;
+        const isWithinX = gestureState.moveX > width * 0.1 && gestureState.moveX < width * 0.9;
+        
+        if (isWithinY && isWithinX) {
           onDrop(option.id_opcao, true);
         } else {
+          // If not in the correct success zone, just spring back to original position
           RNAnimated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
         }
       },
@@ -612,14 +616,21 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'Nunito_600SemiBold',
     textAlign: 'center', marginBottom: 12,
   },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
+  chipsRow: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 12, 
+    justifyContent: 'center',
+    width: '100%',
+  },
   dragChip: {
+    width: (width - 56) / 2, // 2 columns
+    height: 90,
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 18, paddingVertical: 14,
-    borderRadius: 16, borderWidth: 2,
+    paddingHorizontal: 16,
+    borderRadius: 20, borderWidth: 2,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
-    maxWidth: width * 0.4,
   },
   dragChipDropped: { opacity: 0.6 },
   dragChipText: { fontSize: 14, fontFamily: 'Nunito_700Bold', flex: 1 },

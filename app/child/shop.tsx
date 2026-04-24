@@ -406,12 +406,12 @@ const styles = StyleSheet.create({
   },
   poorText: { fontSize: 13, color: '#DC2626', fontFamily: 'Nunito_700Bold' },
   
-  modalActions: { flexDirection: 'row', gap: 12, width: '100%' },
-  cancelBtn: { flex: 1, paddingVertical: 18, borderRadius: 20, backgroundColor: '#F3F4F6', alignItems: 'center' },
+  modalActions: { flexDirection: 'row', gap: 12, width: '100%', marginTop: 8 },
+  cancelBtn: { flex: 1, height: 56, borderRadius: 20, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
   cancelBtnText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#6B7280' },
-  confirmBtn: { flex: 1.5, borderRadius: 20, overflow: 'hidden', shadowColor: '#F59E0B', shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  confirmBtn: { flex: 1.5, height: 56, borderRadius: 20, overflow: 'hidden', shadowColor: '#F59E0B', shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   confirmBtnDisabled: { opacity: 0.7 },
-  confirmGradient: { paddingVertical: 18, alignItems: 'center', height: '100%', justifyContent: 'center' },
+  confirmGradient: { height: 56, alignItems: 'center', justifyContent: 'center' },
   confirmBtnText: { fontSize: 17, fontFamily: 'Nunito_900Black', color: '#fff' },
   
   successIcon: { marginBottom: 12, alignItems: 'center' },
