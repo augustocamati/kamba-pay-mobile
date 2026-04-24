@@ -424,6 +424,6 @@ const styles = StyleSheet.create({
   },
   successTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#1E1B4B', marginTop: 12, marginBottom: 8 },
   successDesc: { fontSize: 16, color: '#4B5563', fontFamily: 'Nunito_600SemiBold', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
-  successBtn: { paddingVertical: 18, borderRadius: 20, width: '100%', alignItems: 'center', shadowColor: '#7C3AED', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  successBtn: { height: 60, borderRadius: 20, width: '100%', alignItems: 'center', justifyContent: 'center', shadowColor: '#7C3AED', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
   successBtnText: { fontSize: 18, fontFamily: 'Nunito_900Black', color: '#fff' },
 });

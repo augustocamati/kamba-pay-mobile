@@ -81,9 +81,9 @@ function DragChip({
         isDragging.current = false;
         RNAnimated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
         
-        // Precise drop zone check (centered dashed box area)
-        const isWithinY = gestureState.moveY > height * 0.35 && gestureState.moveY < height * 0.58;
-        const isWithinX = gestureState.moveX > width * 0.1 && gestureState.moveX < width * 0.9;
+        // Expanded drop zone check (more generous detection)
+        const isWithinY = gestureState.moveY > height * 0.3 && gestureState.moveY < height * 0.65;
+        const isWithinX = gestureState.moveX > width * 0.05 && gestureState.moveX < width * 0.95;
         
         if (isWithinY && isWithinX) {
           onDrop(option.id_opcao, true);
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
 
   // Drop Zone
   dropZone: {
-    minHeight: 90, borderRadius: 20, borderWidth: 2,
+    minHeight: 130, borderRadius: 28, borderWidth: 2,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 16, padding: 16,
   },
