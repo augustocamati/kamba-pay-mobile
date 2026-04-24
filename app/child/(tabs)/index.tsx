@@ -19,6 +19,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChildOnboarding from '@/components/ChildOnboarding';
 import SpotlightTour, { TourStep } from '@/components/SpotlightTour';
+import { MascotCompanion } from '@/components/MascotCompanion';
 
 const { width, height } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -373,6 +374,14 @@ export default function ChildDashboard() {
         onPrev={() => setCurrentStep(prev => prev - 1)}
         onFinish={handleFinishTour}
       />
+
+      {/* Floating mascot companion */}
+      {!showTour && !showSlides && (
+        <MascotCompanion
+          position="bottom-right"
+          onPress={() => router.push('/child/(tabs)/school' as any)}
+        />
+      )}
     </View>
   );
 }

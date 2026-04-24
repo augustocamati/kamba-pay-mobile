@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { AuthProvider } from "@/lib/auth-context";
 import { AppProvider } from "@/context/AppContext";
+import { MascotProvider } from "@/lib/mascot-context";
 import { useFonts, Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from "@expo-google-fonts/nunito";
 import { StatusBar } from "expo-status-bar";
 import { DemoBanner } from "@/components/DemoBanner";
@@ -33,6 +34,9 @@ function RootLayoutNav() {
         <Stack.Screen name="parent/approve" />
         <Stack.Screen name="child/(tabs)" />
         <Stack.Screen name="child/submit-task" options={{ presentation: "modal" }} />
+        <Stack.Screen name="child/shop" />
+        <Stack.Screen name="child/quiz" />
+        <Stack.Screen name="child/aula" />
         <Stack.Screen name="admin-login" />
         <Stack.Screen name="admin" />
       </Stack>
@@ -63,8 +67,10 @@ export default function RootLayout() {
           <KeyboardProvider>
             <AuthProvider>
               <AppProvider>
-                <StatusBar style="light" />
-                <RootLayoutNav />
+                <MascotProvider>
+                  <StatusBar style="light" />
+                  <RootLayoutNav />
+                </MascotProvider>
               </AppProvider>
             </AuthProvider>
           </KeyboardProvider>

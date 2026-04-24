@@ -7,6 +7,7 @@ import Animated, { FadeInDown, SlideInDown } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import YoutubePlayer from 'react-native-youtube-iframe';
+import { MascotCompanion } from '@/components/MascotCompanion';
 
 const { width } = Dimensions.get('window');
 
@@ -150,6 +151,9 @@ export default function AulaScreen() {
           </Pressable>
         </Animated.View>
       )}
+
+      {/* Floating mascot companion */}
+      <MascotCompanion position="bottom-left" />
     </LinearGradient>
   );
 }
