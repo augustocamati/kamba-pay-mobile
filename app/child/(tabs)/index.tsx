@@ -213,10 +213,10 @@ export default function ChildDashboard() {
   }
 
   const name = user?.name || crianca.nome;
-  const saldoGeral = crianca.potes.total;
-  const saldoPoupar = crianca.potes.saldo_poupar;
-  const saldoGastar = crianca.potes.saldo_gastar;
-  const saldoAjudar = crianca.potes.saldo_ajudar;
+  const saldoGeral = Number(crianca.potes.total || 0).toFixed(2);
+  const saldoPoupar = Number(crianca.potes.saldo_poupar || 0).toFixed(2);
+  const saldoGastar = Number(crianca.potes.saldo_gastar || 0).toFixed(2);
+  const saldoAjudar = Number(crianca.potes.saldo_ajudar || 0).toFixed(2);
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const handleSparkle = () => {
@@ -338,6 +338,19 @@ export default function ChildDashboard() {
                   </Pressable>
                 </View>
               </View>
+
+              {/* Row 3 - New Loja Tile */}
+              <View style={[s.gridRow, { justifyContent: 'center' }]}>
+                <Pressable
+                  style={({ pressed }) => [s.tile, s.tilePurple, pressed && s.tilePressed, { width: TILE_W * 2 + TILE_GAP }]}
+                  onPress={() => router.push('/child/shop' as any)}
+                >
+                  <View style={s.tileIconBox}>
+                    <Ionicons name="storefront-outline" size={30} color="#fff" />
+                  </View>
+                  <Text style={s.tileLabel}>Loja de Mascotes</Text>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
 
@@ -419,6 +432,7 @@ const s = StyleSheet.create({
   tileBlue: { backgroundColor: BLUE },
   tileTeal: { backgroundColor: TEAL },
   tileYellow: { backgroundColor: YELLOW },
+  tilePurple: { backgroundColor: '#7C3AED' },
   tilePressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   tileIconBox: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
   tileLabel: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#FFFFFF' },

@@ -8,6 +8,9 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
 import Colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
+import { MascotCompanion } from '@/components/MascotCompanion';
+import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
+
 
 export default function SubmitTaskScreen() {
   const insets = useSafeAreaInsets();
@@ -15,6 +18,7 @@ export default function SubmitTaskScreen() {
   const { tarefas, enviarFotoTarefa } = useApp();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
 
   const taskIdStr = Array.isArray(taskId) ? taskId[0] : String(taskId || '');
@@ -59,8 +63,7 @@ export default function SubmitTaskScreen() {
     try {
       await enviarFotoTarefa(taskIdStr, photoUri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Sucesso', 'Tarefa enviada para aprovação dos pais.');
-      router.back();
+      setShowSuccess(true);
     } catch (e) {
       Alert.alert('Erro', 'Não foi possível enviar a tarefa. Tente novamente.');
     } finally {
@@ -131,6 +134,20 @@ export default function SubmitTaskScreen() {
           <Text style={styles.submitBtnText}>{isSubmitting ? 'Enviando...' : 'Enviar para Aprovacao'}</Text>
         </Pressable>
       </View>
+
+      <MascotCompanion position="bottom-right" />
+
+      <ActionSuccessPopup
+        visible={showSuccess}
+        onClose={() => {
+          setShowSuccess(false);
+          router.back();
+        }}
+        title="Tarefa Enviada! ✅"
+        description="Bom trabalho! Agora só precisas de esperar que o teu responsável aprove."
+        icon="checkmark-circle"
+        buttonText="Voltar às tarefas"
+      />
     </View>
   );
 }

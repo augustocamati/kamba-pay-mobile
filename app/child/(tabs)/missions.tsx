@@ -4,6 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
 import { router } from 'expo-router';
+import { MascotCompanion } from '@/components/MascotCompanion';
+import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
+import { useEffect } from 'react';
 
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', icon: 'apps' },
@@ -18,8 +21,17 @@ export default function ChildMissionsScreen() {
   const insets = useSafeAreaInsets();
   const { missoes } = useApp();
   const [activeTab, setActiveTab] = useState('todas');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [completedMission, setCompletedMission] = useState<string | null>(null);
   const webTop = Platform.OS === 'web' ? 67 : 0;
-console.log("missoes",missoes);
+
+  useEffect(() => {
+    const finished = missoes.find(m => m.progresso_atual >= m.objetivo_valor);
+    if (finished) {
+      setCompletedMission(finished.titulo);
+      setShowSuccess(true);
+    }
+  }, [missoes]);
   const filteredMissions = activeTab === 'todas' 
     ? missoes 
     : missoes.filter(m => m.tipo === activeTab);
@@ -86,7 +98,7 @@ console.log("missoes",missoes);
 
               <View style={styles.progressHeader}>
                 <Text style={styles.progressText}>
-                  {mission.progresso_atual.toLocaleString()} / {mission.objetivo_valor.toLocaleString()} Kz
+                  {Number(mission.progresso_atual || 0).toFixed(2)} / {Number(mission.objetivo_valor || 0).toFixed(2)} Kz
                 </Text>
                 <Text style={styles.percentText}>{percent}%</Text>
               </View>
@@ -96,12 +108,23 @@ console.log("missoes",missoes);
               </View>
 
               <Text style={styles.missingHint}>
-                Faltam {missing.toLocaleString()} Kz para completar
+                Faltam {Number(missing || 0).toFixed(2)} Kz para completar
               </Text>
             </View>
           );
         })}
       </ScrollView>
+
+      <MascotCompanion position="bottom-right" />
+
+      <ActionSuccessPopup
+        visible={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Missão Completa! 🏆"
+        description={`Uau! Completaste a missão "${completedMission}". Estás a tornar-te um mestre das finanças!`}
+        icon="trophy"
+        buttonText="Incrível! ✨"
+      />
     </View>
   );
 }

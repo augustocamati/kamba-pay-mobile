@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
 import { router } from 'expo-router';
+import { MascotCompanion } from '@/components/MascotCompanion';
+import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
 
 export default function ChildHelpScreen() {
   const insets = useSafeAreaInsets();
@@ -11,6 +13,8 @@ export default function ChildHelpScreen() {
   const [donating, setDonating] = useState<string | null>(null);
   const [selectedCampanha, setSelectedCampanha] = useState<{ id: string; titulo: string } | null>(null);
   const [valorDoacao, setValorDoacao] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [lastValor, setLastValor] = useState(0);
 
   const handleDoar = (campanhaId: string, titulo: string) => {
     setSelectedCampanha({ id: campanhaId, titulo });
@@ -33,9 +37,10 @@ export default function ChildHelpScreen() {
     setDonating(selectedCampanha.id);
     try {
       await realizarDoacao(selectedCampanha.id, valor);
+      setLastValor(valor);
       setSelectedCampanha(null);
       setValorDoacao('');
-      Alert.alert('Sucesso! ✨', `Doação de ${valor.toLocaleString()} Kz realizada com sucesso.`);
+      setShowSuccess(true);
     } catch (e) {
       Alert.alert('Erro', 'Não foi possível completar a doação.');
     } finally {
@@ -62,7 +67,7 @@ export default function ChildHelpScreen() {
         <View style={styles.balanceCard}>
           <View>
             <Text style={styles.balanceLabel}>Pote Ajudar Disponível</Text>
-            <Text style={styles.balanceValue}>{crianca.potes.saldo_ajudar.toLocaleString()} Kz</Text>
+            <Text style={styles.balanceValue}>{Number(crianca.potes.saldo_ajudar || 0).toFixed(2)} Kz</Text>
           </View>
           <Ionicons name="heart" size={60} color="rgba(255,255,255,0.3)" />
         </View>
@@ -100,7 +105,7 @@ export default function ChildHelpScreen() {
                   <View style={[styles.progressHeader, { marginTop: 16 }]}>
                     <Text style={styles.progressLabel}>Arrecadado</Text>
                     <Text style={styles.progressValue}>
-                      {valorArrecadado.toLocaleString()} / {metaValor.toLocaleString()} Kz
+                      {Number(valorArrecadado || 0).toFixed(2)} / {Number(metaValor || 0).toFixed(2)} Kz
                     </Text>
                   </View>
                   <View style={styles.progressTrack}>
@@ -137,7 +142,7 @@ export default function ChildHelpScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Escolher valor da doação</Text>
             <Text style={styles.modalCampanha}>{selectedCampanha?.titulo}</Text>
-            <Text style={styles.modalSaldo}>Saldo no pote Ajudar: {crianca.potes.saldo_ajudar.toLocaleString()} Kz</Text>
+            <Text style={styles.modalSaldo}>Saldo no pote Ajudar: {Number(crianca.potes.saldo_ajudar || 0).toFixed(2)} Kz</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Quanto queres doar? (Kz)"
@@ -173,6 +178,17 @@ export default function ChildHelpScreen() {
           </View>
         </View>
       </Modal>
+
+      <MascotCompanion position="bottom-right" />
+
+      <ActionSuccessPopup
+        visible={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Missão Cumprida! ❤️"
+        description={`Fizeste uma doação de ${lastValor.toFixed(2)} Kz. Obrigado por ajudares o mundo!`}
+        icon="heart"
+        buttonText="De nada! 😊"
+      />
     </View>
   );
 }

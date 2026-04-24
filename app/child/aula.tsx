@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { MascotCompanion } from '@/components/MascotCompanion';
+import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +19,7 @@ export default function AulaScreen() {
   
   const [isVideoFinished, setIsVideoFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Buscar conteúdo com base no ID
   const conteudo = typeof id === 'string' 
@@ -46,6 +48,7 @@ export default function AulaScreen() {
   const onStateChange = useCallback((state: string) => {
     if (state === 'ended') {
       setIsVideoFinished(true);
+      setShowSuccess(true);
       if (conteudo) marcarConteudoCompleto(conteudo.id);
     }
   }, [conteudo, marcarConteudoCompleto]);
@@ -53,6 +56,7 @@ export default function AulaScreen() {
   const handleSkip = () => {
       // Para testes ou crianças que já sabem, permitir pular (opcional)
       setIsVideoFinished(true);
+      setShowSuccess(true);
       if (conteudo) marcarConteudoCompleto(conteudo.id);
   };
 
@@ -154,6 +158,16 @@ export default function AulaScreen() {
 
       {/* Floating mascot companion */}
       <MascotCompanion position="bottom-left" />
+
+      <ActionSuccessPopup
+        visible={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Aula Concluída! 📚"
+        description={`Parabéns! Viste o vídeo "${conteudo?.titulo}" até ao fim.`}
+        xpReward={20}
+        icon="book"
+        buttonText="Fazer o Quiz! 🚀"
+      />
     </LinearGradient>
   );
 }

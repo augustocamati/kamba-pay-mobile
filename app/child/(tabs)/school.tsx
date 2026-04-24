@@ -9,30 +9,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, SlideInRight } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
-import { useMascot } from '@/lib/mascot-context';
+import { MascotCompanion } from '@/components/MascotCompanion';
 
 export default function ChildSchoolScreen() {
   const insets = useSafeAreaInsets();
   const { conteudoEducativo, isLoading } = useApp();
-  const { getActiveMascotData, getRandomMessage } = useMascot();
   const webTop = Platform.OS === 'web' ? 67 : 0;
-
-  const mascot = getActiveMascotData();
-  const [mascotVisible, setMascotVisible] = useState(true);
-  const [mascotMsg] = useState(() => getRandomMessage('greeting'));
-
-  // Mascot bounce animation
-  const mascotBounce = useRef(new RNAnimated.Value(0)).current;
-  useEffect(() => {
-    const anim = RNAnimated.loop(
-      RNAnimated.sequence([
-        RNAnimated.timing(mascotBounce, { toValue: -8, duration: 700, useNativeDriver: true }),
-        RNAnimated.timing(mascotBounce, { toValue: 0, duration: 700, useNativeDriver: true }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, []);
 
   return (
     <View style={styles.container}>
@@ -41,12 +23,7 @@ export default function ChildSchoolScreen() {
           <Ionicons name="arrow-back" size={22} color="#FF6B00" />
         </Pressable>
         <Text style={styles.topBarTitle}>Escola Kamba Kid 📚</Text>
-        <Pressable
-          style={styles.shopBtn}
-          onPress={() => router.push('/child/shop' as any)}
-        >
-          <Ionicons name="storefront-outline" size={20} color="#7C3AED" />
-        </Pressable>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
@@ -54,36 +31,6 @@ export default function ChildSchoolScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.subtitle}>Aprenda sobre dinheiro se divertindo!</Text>
-
-        {/* Mascot companion card */}
-        {mascotVisible && (
-          <Animated.View entering={SlideInRight} style={styles.mascotCard}>
-            <Pressable style={styles.closeMascot} onPress={() => setMascotVisible(false)}>
-              <Ionicons name="close" size={16} color="#94A3B8" />
-            </Pressable>
-            <RNAnimated.View style={{ transform: [{ translateY: mascotBounce }] }}>
-              <Text style={{ fontSize: 52 }}>{mascot.emoji}</Text>
-            </RNAnimated.View>
-            <View style={styles.mascotInfo}>
-              <View style={styles.mascotNameRow}>
-                <Text style={styles.mascotName}>{mascot.nome}</Text>
-                <View style={styles.mascotTypeBadge}>
-                  <Text style={styles.mascotTypeText}>{mascot.tipo}</Text>
-                </View>
-              </View>
-              <View style={styles.speechBubble}>
-                <Text style={styles.speechText}>"{mascotMsg}"</Text>
-              </View>
-              <Pressable
-                style={styles.changeCompanionBtn}
-                onPress={() => router.push('/child/shop' as any)}
-              >
-                <Ionicons name="storefront-outline" size={12} color="#7C3AED" />
-                <Text style={styles.changeCompanionText}>Trocar Companheiro</Text>
-              </Pressable>
-            </View>
-          </Animated.View>
-        )}
 
         {/* General Quiz Test Banner */}
         <Animated.View entering={FadeInDown.delay(100)}>
@@ -186,6 +133,8 @@ export default function ChildSchoolScreen() {
           </>
         )}
       </ScrollView>
+
+      <MascotCompanion position="bottom-right" />
     </View>
   );
 }

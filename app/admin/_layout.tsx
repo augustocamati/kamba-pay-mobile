@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { LayoutDashboard, Users, CheckSquare, Clapperboard, Puzzle, HeartHandshake } from 'lucide-react-native';
+import { LayoutDashboard, Users, CheckSquare, Clapperboard, Puzzle, HeartHandshake, Smile } from 'lucide-react-native';
 
 function TabIcon({ IconComponent, label, focused }: { IconComponent: any; label: string; focused: boolean }) {
   return (
@@ -42,6 +42,10 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="quizzes"
         options={{ tabBarIcon: ({ focused }) => <TabIcon IconComponent={Puzzle} label="Quizzes" focused={focused} /> }}
+      />
+      <Tabs.Screen
+        name="mascotes"
+        options={{ tabBarIcon: ({ focused }) => <TabIcon IconComponent={Smile} label="Mascotes" focused={focused} /> }}
       />
       <Tabs.Screen
         name="campaigns"

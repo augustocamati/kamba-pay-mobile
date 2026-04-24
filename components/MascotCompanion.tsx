@@ -16,8 +16,8 @@ interface MascotCompanionProps {
  * Bounces gently and shows speech bubbles.
  */
 export function MascotCompanion({ position = 'bottom-right', onPress, showShopHint = false }: MascotCompanionProps) {
-  const { getActiveMascotData, getRandomMessage } = useMascot();
-  const mascot = getActiveMascotData();
+  const { activeMascot, getRandomMessage } = useMascot();
+  const mascot = activeMascot;
 
   const bounce = useRef(new RNAnimated.Value(0)).current;
   const scale = useRef(new RNAnimated.Value(1)).current;
@@ -63,6 +63,8 @@ export function MascotCompanion({ position = 'bottom-right', onPress, showShopHi
   const posStyle = position === 'bottom-right'
     ? { right: 16, bottom: 16 }
     : { left: 16, bottom: 16 };
+
+  if (!mascot) return null;
 
   return (
     <View style={[styles.wrapper, posStyle]} pointerEvents="box-none">

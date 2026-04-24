@@ -223,7 +223,7 @@ export default function ParentDashboard() {
                 <Text style={{ fontSize: 18 }}>💰</Text>
               </View>
             </View>
-            <Text style={styles.summaryCardValue}>{crianca.potes.total.toLocaleString()} Kz</Text>
+            <Text style={styles.summaryCardValue}>{Number(crianca.potes.total || 0).toFixed(2)} Kz</Text>
             <Text style={[styles.summaryCardHint, { color: '#4ade80' }]}>Nível {crianca.nivel}</Text>
           </View>
 
@@ -287,7 +287,7 @@ export default function ParentDashboard() {
               <View key={index} style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                   <Text style={styles.barMonth}>{data.month}</Text>
-                  <Text style={styles.barTotal}>{total.toLocaleString()} Kz</Text>
+                  <Text style={styles.barTotal}>{Number(total || 0).toFixed(2)} Kz</Text>
                 </View>
                 <View style={styles.barContainer}>
                   <View style={[styles.barSegment, { flex: savedPct, backgroundColor: '#4ade80' }]} />
@@ -318,7 +318,7 @@ export default function ParentDashboard() {
                       <Ionicons name="person" size={24} color="#fff" />
                    </View>
                    <Text style={styles.childCardName}>{dep.nome}</Text>
-                   <Text style={styles.childCardBalance}>{dep.potes.total.toLocaleString()} Kz</Text>
+                   <Text style={styles.childCardBalance}>{Number(dep.potes.total || 0).toFixed(2)} Kz</Text>
                    <View style={styles.childCardLevel}>
                       <Text style={styles.childLevelText}>Nível {dep.nivel}</Text>
                    </View>

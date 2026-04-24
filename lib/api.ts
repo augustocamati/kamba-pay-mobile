@@ -129,6 +129,7 @@ export const educationalService = {
   getContent: (faixa_etaria?: string) => api.get('/educational-content', { params: { faixa_etaria } }).then(res => res.data),
   completeContent: (contentId: string) => api.patch(`/educational-content/${contentId}/complete`).then(res => res.data),
   getQuizDetails: (missaoId: string | number) => api.get(`/educational-content/quiz/${missaoId}`).then(res => res.data),
+  getGeneralQuizzes: (quantidade: number = 5) => api.get('/educational-content/quiz/geral', { params: { quantidade } }).then(res => res.data),
   submitQuiz: (quizId: string | number, id_opcao: number) => api.post(`/educational-content/quiz/${quizId}/submit`, { id_opcao }).then(res => res.data),
 };
 
@@ -136,6 +137,12 @@ export const shopService = {
   getItems: (crianca_id: string) => api.get('/shop/items', { params: { crianca_id } }).then(res => res.data),
   purchaseItem: (item_id: string, crianca_id: string) => api.post('/shop/purchase', { item_id, crianca_id }).then(res => res.data),
   updateAvatar: (data: any) => api.put('/child/avatar', data).then(res => res.data),
+};
+
+export const mascoteService = {
+  list: () => api.get('/mascotes').then(res => res.data),
+  buy: (id: number) => api.post(`/mascotes/${id}/comprar`).then(res => res.data),
+  ativar: (id: number) => api.patch(`/mascotes/${id}/ativar`).then(res => res.data),
 };
 
 // ============================================
@@ -301,4 +308,10 @@ export const adminService = {
       throw error;
     }
   },
+
+  // Mascotes
+  getMascotes: () => api.get('/admin/mascotes').then(res => res.data),
+  createMascote: (data: any) => api.post('/admin/mascotes', data).then(res => res.data),
+  updateMascote: (id: number, data: any) => api.put(`/admin/mascotes/${id}`, data).then(res => res.data),
+  deleteMascote: (id: number) => api.delete(`/admin/mascotes/${id}`).then(res => res.data),
 };

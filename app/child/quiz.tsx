@@ -16,75 +16,11 @@ import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
 
-// ── Static quiz bank for "general test" mode (no video needed) ───────────────
-const GENERAL_QUIZ_BANK = [
-  {
-    id: 'gq1',
-    pergunta: 'Quanto deves poupar de 100 Kz?',
-    opcoes: [
-      { id_opcao: 1, texto: '0 Kz', correta: false },
-      { id_opcao: 2, texto: '20 Kz', correta: true },
-      { id_opcao: 3, texto: '100 Kz (tudo)', correta: false },
-    ],
-    resposta_correta: 2,
-  },
-  {
-    id: 'gq2',
-    pergunta: 'O que é um orçamento?',
-    opcoes: [
-      { id_opcao: 4, texto: 'Uma lista de compras', correta: false },
-      { id_opcao: 5, texto: 'Um plano para gerir o dinheiro', correta: true },
-      { id_opcao: 6, texto: 'Um tipo de moeda', correta: false },
-    ],
-    resposta_correta: 5,
-  },
-  {
-    id: 'gq3',
-    pergunta: 'Se tens 500 Kz e gastas 200 Kz, quanto sobra?',
-    opcoes: [
-      { id_opcao: 7, texto: '200 Kz', correta: false },
-      { id_opcao: 8, texto: '700 Kz', correta: false },
-      { id_opcao: 9, texto: '300 Kz', correta: true },
-    ],
-    resposta_correta: 9,
-  },
-  {
-    id: 'gq4',
-    pergunta: 'Qual é o melhor hábito financeiro?',
-    opcoes: [
-      { id_opcao: 10, texto: 'Gastar tudo de imediato', correta: false },
-      { id_opcao: 11, texto: 'Poupar parte do dinheiro', correta: true },
-      { id_opcao: 12, texto: 'Nunca usar o dinheiro', correta: false },
-    ],
-    resposta_correta: 11,
-  },
-  {
-    id: 'gq5',
-    pergunta: 'Para que serve o pote "Ajudar"?',
-    opcoes: [
-      { id_opcao: 13, texto: 'Para comprar brinquedos', correta: false },
-      { id_opcao: 14, texto: 'Para guardar para o futuro', correta: false },
-      { id_opcao: 15, texto: 'Para ajudar quem precisa', correta: true },
-    ],
-    resposta_correta: 15,
-  },
-  {
-    id: 'gq6',
-    pergunta: 'O que é preciso fazer antes de comprar algo?',
-    opcoes: [
-      { id_opcao: 16, texto: 'Comprar sem pensar', correta: false },
-      { id_opcao: 17, texto: 'Pensar se é necessário', correta: true },
-      { id_opcao: 18, texto: 'Pedir dinheiro emprestado', correta: false },
-    ],
-    resposta_correta: 17,
-  },
-];
-
 type QuizItem = {
   id: string | number;
   pergunta: string;
   opcoes: { id_opcao: number; texto: string; correta?: boolean }[];
-  resposta_correta?: number;
+  xp_recompensa?: number;
 };
 
 // ── Simple audio feedback via pattern (Haptics is available) ─────────────────
@@ -265,9 +201,11 @@ function ResultPopup({
 
           {/* Mascot message */}
           <View style={styles.popupMascotRow}>
-            <Text style={{ fontSize: 32 }}>{mascotEmoji}</Text>
-            <View style={[styles.popupBubble, { backgroundColor: isCorrect ? '#DCFCE7' : '#FFF3E0' }]}>
-              <Text style={[styles.popupBubbleText, { color: isCorrect ? '#15803D' : '#D97706' }]}>
+            <View style={styles.resultMascotBg}>
+                <Text style={{ fontSize: 44 }}>{mascotEmoji}</Text>
+            </View>
+            <View style={[styles.popupBubble, { backgroundColor: isCorrect ? '#DCFCE7' : '#FEE2E2' }]}>
+              <Text style={[styles.popupBubbleText, { color: isCorrect ? '#15803D' : '#DC2626' }]}>
                 {message}
               </Text>
             </View>
@@ -309,7 +247,7 @@ export default function QuizScreen() {
   const insets = useSafeAreaInsets();
   const { id_missao, id: contentId, mode } = useLocalSearchParams();
   const { adicionarXP, refreshData, marcarConteudoCompleto } = useApp();
-  const { getActiveMascotData, getRandomMessage } = useMascot();
+  const { activeMascot, getRandomMessage } = useMascot();
 
   const isGeneralMode = mode === 'geral';
 
@@ -330,26 +268,24 @@ export default function QuizScreen() {
   const [score, setScore] = useState(0);
   const [totalXP, setTotalXP] = useState(0);
 
-  const mascotData = getActiveMascotData();
+  const mascotData = activeMascot;
 
   // ─── Load quizzes ────────────────────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
-      if (isGeneralMode) {
-        // Shuffle and pick 4-6 from bank
-        const shuffled = [...GENERAL_QUIZ_BANK].sort(() => Math.random() - 0.5).slice(0, 5);
-        setQuizList(shuffled);
-        setLoading(false);
-      } else {
-        if (!id_missao) { setLoading(false); return; }
-        try {
+      try {
+        if (isGeneralMode) {
+          const resp = await educationalService.getGeneralQuizzes(5);
+          setQuizList(resp.quizzes);
+        } else {
+          if (!id_missao) { setLoading(false); return; }
           const data = await educationalService.getQuizDetails(id_missao as string);
           setQuizList([data]);
-        } catch (e) {
-          console.error('Quiz load error:', e);
-        } finally {
-          setLoading(false);
         }
+      } catch (e) {
+        console.error('Quiz load error:', e);
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -375,28 +311,19 @@ export default function QuizScreen() {
 
     // Determine correctness
     let correct = false;
-    if (isGeneralMode) {
-      // Static mode — check correta flag
-      correct = (option as any).correta === true;
-    } else {
-      // API mode — submit and get result
-      try {
-        const resp = await educationalService.submitQuiz(currentQuiz.id as any, opcaoId);
-        correct = resp.correta;
-        if (correct) {
-          const xp = resp.recompensa?.xp || 20;
-          setTotalXP(prev => prev + xp);
-          adicionarXP(xp);
-          if (contentId) marcarConteudoCompleto(contentId as string);
-        }
-      } catch (e) {
-        console.error('Quiz submit error:', e);
+    try {
+      const resp = await educationalService.submitQuiz(currentQuiz.id as any, opcaoId);
+      correct = resp.correta;
+      if (correct) {
+        const xp = resp.recompensa?.xp || currentQuiz.xp_recompensa || 20;
+        setTotalXP(prev => prev + xp);
+        adicionarXP(xp);
+        if (contentId && !isGeneralMode) marcarConteudoCompleto(contentId as string);
       }
-    }
-
-    if (isGeneralMode && correct) {
-      setTotalXP(prev => prev + 20);
-      adicionarXP(20);
+    } catch (e) {
+      console.error('Quiz submit error:', e);
+      // Fallback for safety (though API should handle this)
+      correct = option.correta === true;
     }
 
     setIsCorrect(correct);
@@ -434,19 +361,19 @@ export default function QuizScreen() {
   };
 
   // ─── Loading ─────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <LinearGradient colors={['#1E1145', '#2D1B69']} style={styles.container}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: 48 }}>{mascotData.emoji}</Text>
-          <ActivityIndicator size="large" color="#C4B5FD" style={{ marginTop: 16 }} />
-          <Text style={{ color: '#C4B5FD', marginTop: 12, fontSize: 15 }}>
-            A preparar o desafio...
-          </Text>
-        </View>
-      </LinearGradient>
-    );
-  }
+    if (loading) {
+      return (
+        <LinearGradient colors={['#1E1145', '#2D1B69']} style={styles.container}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 48 }}>{activeMascot?.emoji || '🤖'}</Text>
+            <ActivityIndicator size="large" color="#C4B5FD" style={{ marginTop: 16 }} />
+            <Text style={{ color: '#C4B5FD', marginTop: 12, fontSize: 15 }}>
+              A preparar o desafio...
+            </Text>
+          </View>
+        </LinearGradient>
+      );
+    }
 
   if (!currentQuiz && !isFinished) {
     return (
@@ -480,7 +407,7 @@ export default function QuizScreen() {
 
             {/* Mascot */}
             <View style={styles.summaryMascotRow}>
-              <Text style={{ fontSize: 40 }}>{mascotData.emoji}</Text>
+              <Text style={{ fontSize: 40 }}>{activeMascot?.emoji || '🤖'}</Text>
               <View style={styles.summaryBubble}>
                 <Text style={styles.summaryBubbleText}>
                   {perfect
@@ -552,7 +479,7 @@ export default function QuizScreen() {
         {/* Mascot + Speech Bubble */}
         <MascotBubble
           message={mascotMsg}
-          emoji={mascotData.emoji}
+          emoji={activeMascot?.emoji || '🤖'}
           type={mascotMsgType}
         />
 
@@ -596,7 +523,7 @@ export default function QuizScreen() {
         visible={showResult}
         isCorrect={isCorrect === true}
         message={mascotMsg}
-        mascotEmoji={mascotData.emoji}
+        mascotEmoji={activeMascot?.emoji || '🤖'}
         xpGained={20}
         onNext={handleNext}
         onHome={handleHome}
@@ -709,18 +636,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', padding: 24,
   },
   popupBox: {
-    backgroundColor: '#fff', borderRadius: 32, padding: 28,
-    alignItems: 'center', width: '100%', maxWidth: 380,
+    backgroundColor: '#fff', borderRadius: 32, padding: 24,
+    alignItems: 'center', width: '100%', maxWidth: 360,
     shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.3, shadowRadius: 30, elevation: 20,
+    shadowOpacity: 0.4, shadowRadius: 30, elevation: 20,
   },
   popupTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#1E293B', marginTop: 8 },
   popupMascotRow: {
     flexDirection: 'row', alignItems: 'center',
-    gap: 12, marginTop: 16, width: '100%',
+    gap: 12, marginTop: 20, width: '100%',
   },
-  popupBubble: { flex: 1, borderRadius: 16, padding: 12 },
-  popupBubbleText: { fontSize: 13, fontFamily: 'Nunito_700Bold' },
+  resultMascotBg: { 
+    width: 80, height: 80, borderRadius: 40, 
+    backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6,
+  },
+  popupBubble: { flex: 1, borderRadius: 20, padding: 14, minHeight: 60, justifyContent: 'center' },
+  popupBubbleText: { fontSize: 14, fontFamily: 'Nunito_700Bold', lineHeight: 20 },
   xpBannerRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 8,

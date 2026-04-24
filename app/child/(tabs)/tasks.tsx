@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '@/context/AppContext';
 import { router } from 'expo-router';
+import { MascotCompanion } from '@/components/MascotCompanion';
 
 export default function ChildTasksScreen() {
   const insets = useSafeAreaInsets();
@@ -48,7 +49,7 @@ export default function ChildTasksScreen() {
                 <Text style={styles.taskDesc}>{task.descricao}</Text>
                 <View style={styles.badgeRow}>
                   <View style={styles.rewardBadge}>
-                    <Text style={styles.rewardText}>💰 {task.recompensa} Kz</Text>
+                    <Text style={styles.rewardText}>💰 {Number(task.recompensa || 0).toFixed(2)} Kz</Text>
                   </View>
                   <Text style={styles.statusLabelPendente}>
                     {task.status === 'pendente' ? 'Para fazer' : 'Pendente'}
@@ -84,7 +85,7 @@ export default function ChildTasksScreen() {
                 <Text style={styles.taskDesc}>{task.descricao}</Text>
                 <View style={styles.badgeRow}>
                   <View style={styles.rewardBadge}>
-                    <Text style={styles.rewardText}>💰 {task.recompensa} Kz</Text>
+                    <Text style={styles.rewardText}>💰 {Number(task.recompensa || 0).toFixed(2)} Kz</Text>
                   </View>
                   <Text style={styles.statusLabelRejeitada}>Rejeitada - reenviar prova</Text>
                 </View>
@@ -118,7 +119,7 @@ export default function ChildTasksScreen() {
                 <Text style={styles.taskDesc}>{task.descricao}</Text>
                 <View style={styles.badgeRow}>
                   <View style={[styles.rewardBadge, { backgroundColor: '#FFE082' }]}>
-                    <Text style={styles.rewardText}>💰 {task.recompensa} Kz</Text>
+                    <Text style={styles.rewardText}>💰 {Number(task.recompensa || 0).toFixed(2)} Kz</Text>
                   </View>
                   <Text style={styles.statusLabelAguardando}>Aguardando Aprovação</Text>
                 </View>
@@ -144,12 +145,14 @@ export default function ChildTasksScreen() {
             </View>
             <Text style={styles.completedTitle}>{task.titulo}</Text>
             <View style={styles.concluidaBadge}>
-               <Text style={styles.concluidaText}>✅ +{task.recompensa} Kz</Text>
+               <Text style={styles.concluidaText}>✅ +{Number(task.recompensa || 0).toFixed(2)} Kz</Text>
             </View>
           </View>
         ))}
 
       </ScrollView>
+
+      <MascotCompanion position="bottom-right" />
     </View>
   );
 }
