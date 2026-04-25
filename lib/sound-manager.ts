@@ -1,11 +1,11 @@
 import { Audio } from 'expo-av';
 
 const SOUNDS = {
-  click: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-  correct: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
-  wrong: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3',
-  success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
-  bg_music: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+  click: 'https://cdn.pixabay.com/audio/2025/06/01/audio_d2ccbb367a.mp3',
+  correct: 'https://cdn.pixabay.com/audio/2025/10/21/audio_65cfef2766.mp3',
+  wrong: 'https://cdn.pixabay.com/audio/2022/11/21/audio_136661e554.mp3',
+  success: 'https://cdn.pixabay.com/audio/2025/11/24/audio_a78d073adb.mp3',
+  bg_music: 'https://cdn.pixabay.com/audio/2026/04/01/audio_7efa637601.mp3',
 };
 
 class SoundManager {
@@ -15,26 +15,37 @@ class SoundManager {
 
   async loadAll() {
     try {
-      // Just pre-loading common ones
-      // In a real app, use local assets: require('@/assets/sounds/correct.mp3')
+      // Pre-load all SFX to avoid latency when playing
+      const items = Object.entries(SOUNDS).filter(([k]) => k !== 'bg_music');
+      for (const [name, url] of items) {
+        if (this.sounds.has(name)) continue;
+        const { sound } = await Audio.Sound.createAsync({ uri: url }, { shouldPlay: false });
+        this.sounds.set(name, sound);
+      }
+      console.log('All sounds preloaded successfully');
     } catch (e) {
-      console.error('Error loading sounds:', e);
+      console.warn('Error preloading sounds:', e);
     }
   }
 
   async play(soundName: keyof typeof SOUNDS) {
     if (this.isMuted) return;
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: SOUNDS[soundName] },
-        { shouldPlay: true }
-      );
-      // Automatically unload after playing to save memory
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-        }
-      });
+      const preloaded = this.sounds.get(soundName);
+      if (preloaded) {
+        await preloaded.replayAsync();
+      } else {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: SOUNDS[soundName] },
+          { shouldPlay: true }
+        );
+        // If it wasn't preloaded, we temporary load/unload
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            sound.unloadAsync();
+          }
+        });
+      }
     } catch (e) {
       console.warn(`Could not play sound ${soundName}:`, e);
     }
@@ -44,7 +55,7 @@ class SoundManager {
     if (this.isMuted || this.bgMusic) return;
     try {
       const { sound } = await Audio.Sound.createAsync(
-        { uri: SOUNDS.bg_music }, // Use the stable URL from constants
+        { uri: SOUNDS.bg_music },
         { shouldPlay: true, isLooping: true, volume: 0.1 }
       );
       this.bgMusic = sound;

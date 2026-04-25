@@ -15,6 +15,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     soundManager.setMute(isMuted);
+    if (!isMuted) {
+      soundManager.loadAll();
+    }
   }, [isMuted]);
 
   const playSound = (name: 'click' | 'correct' | 'wrong' | 'success') => {
