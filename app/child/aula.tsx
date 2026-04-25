@@ -9,6 +9,7 @@ import { useApp } from '@/context/AppContext';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
+import { useSound } from '@/lib/sound-context';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +17,7 @@ export default function AulaScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const { conteudoEducativo, marcarConteudoCompleto } = useApp();
+  const { playSound } = useSound();
   
   const [isVideoFinished, setIsVideoFinished] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,7 @@ export default function AulaScreen() {
   const onStateChange = useCallback((state: string) => {
     if (state === 'ended') {
       setIsVideoFinished(true);
+      playSound('success');
       setShowSuccess(true);
       if (conteudo) marcarConteudoCompleto(conteudo.id);
     }

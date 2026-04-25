@@ -10,12 +10,14 @@ import Colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
+import { useSound } from '@/lib/sound-context';
 
 
 export default function SubmitTaskScreen() {
   const insets = useSafeAreaInsets();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { tarefas, enviarFotoTarefa } = useApp();
+  const { playSound } = useSound();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -62,6 +64,7 @@ export default function SubmitTaskScreen() {
     setIsSubmitting(true);
     try {
       await enviarFotoTarefa(taskIdStr, photoUri);
+      playSound('success');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowSuccess(true);
     } catch (e) {

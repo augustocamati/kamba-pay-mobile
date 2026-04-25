@@ -10,6 +10,7 @@ import Animated, { FadeInDown, ZoomIn, BounceIn } from 'react-native-reanimated'
 import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import { useMascot, Mascot } from '@/lib/mascot-context';
+import { useSound } from '@/lib/sound-context';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;
@@ -18,6 +19,7 @@ export default function ShopScreen() {
   const insets = useSafeAreaInsets();
   const { crianca, refreshData } = useApp();
   const { mascotes, activeMascot, loading, setActiveMascot, unlockMascot, fetchMascotes } = useMascot();
+  const { playSound } = useSound();
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const [purchaseModal, setPurchaseModal] = useState<Mascot | null>(null);
@@ -44,6 +46,7 @@ export default function ShopScreen() {
     try {
       setBuying(true);
       await unlockMascot(purchaseModal.id);
+      playSound('success');
       await refreshData();
       setPurchaseModal(null);
       setSuccessModal(purchaseModal);

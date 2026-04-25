@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChildOnboarding from '@/components/ChildOnboarding';
 import SpotlightTour, { TourStep } from '@/components/SpotlightTour';
 import { MascotCompanion } from '@/components/MascotCompanion';
+import { useSound } from '@/lib/sound-context';
 
 const { width, height } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -97,6 +98,7 @@ export default function ChildDashboard() {
   const insets = useSafeAreaInsets();
   const { user, logout, isDemo } = useAuth();
   const { crianca } = useApp();
+  const { playSound } = useSound();
   const [stars, setStars] = useState<{ id: number; x: number; y: number; delay: number; size: number; color: string }[]>([]);
   const starKey = useRef(0);
   const sparkleRef = useRef<View>(null);
@@ -220,6 +222,7 @@ export default function ChildDashboard() {
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const handleSparkle = () => {
+    playSound('correct');
     const COLORS = ['#FFD700', '#FF8C00', '#FF6B6B', '#A78BFA', '#34D399', '#60A5FA', '#F9A8D4', '#FCD34D', '#86EFAC'];
     const COUNT = 28;
     const newStars = Array.from({ length: COUNT }).map((_, i) => ({
@@ -266,7 +269,7 @@ export default function ChildDashboard() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity
               style={s.logoutBtn}
-              onPress={async () => { await logout(); router.replace('/'); }}
+              onPress={async () => { playSound('click'); await logout(); router.replace('/'); }}
             >
               <Ionicons name="log-out-outline" size={22} color="#FF6B00" />
             </TouchableOpacity>
@@ -283,7 +286,7 @@ export default function ChildDashboard() {
                 <View ref={menuAprenderRef} collapsable={false}>
                   <Pressable
                     style={({ pressed }) => [s.tile, s.tileOrange, pressed && s.tilePressed]}
-                    onPress={() => router.push('/child/(tabs)/school' as any)}
+                    onPress={() => { playSound('click'); router.push('/child/(tabs)/school' as any); }}
                   >
                     <View style={s.tileIconBox}>
                       <MaterialCommunityIcons name="school-outline" size={30} color="#fff" />
@@ -295,7 +298,7 @@ export default function ChildDashboard() {
                 <View ref={menuTarefasRef} collapsable={false}>
                   <Pressable
                     style={({ pressed }) => [s.tile, s.tileBlue, pressed && s.tilePressed]}
-                    onPress={() => router.push('/child/(tabs)/tasks' as any)}
+                    onPress={() => { playSound('click'); router.push('/child/(tabs)/tasks' as any); }}
                   >
                     <View style={s.tileIconBox}>
                       <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
@@ -317,7 +320,7 @@ export default function ChildDashboard() {
                 <View ref={menuMissoesRef} collapsable={false}>
                   <Pressable
                     style={({ pressed }) => [s.tile, s.tileTeal, pressed && s.tilePressed]}
-                    onPress={() => router.push('/child/(tabs)/missions' as any)}
+                    onPress={() => { playSound('click'); router.push('/child/(tabs)/missions' as any); }}
                   >
                     <View style={s.tileIconBox}>
                       <MaterialCommunityIcons name="flag-checkered" size={30} color="#fff" />
@@ -329,7 +332,7 @@ export default function ChildDashboard() {
                 <View ref={menuAjudarRef} collapsable={false}>
                   <Pressable
                     style={({ pressed }) => [s.tile, s.tileYellow, pressed && s.tilePressed]}
-                    onPress={() => router.push('/child/(tabs)/help' as any)}
+                    onPress={() => { playSound('click'); router.push('/child/(tabs)/help' as any); }}
                   >
                     <View style={s.tileIconBox}>
                       <Ionicons name="heart-outline" size={30} color="#fff" />
@@ -343,7 +346,7 @@ export default function ChildDashboard() {
               <View style={[s.gridRow, { justifyContent: 'center' }]}>
                 <Pressable
                   style={({ pressed }) => [s.tile, s.tilePurple, pressed && s.tilePressed, { width: TILE_W * 2 + TILE_GAP }]}
-                  onPress={() => router.push('/child/shop' as any)}
+                  onPress={() => { playSound('click'); router.push('/child/shop' as any); }}
                 >
                   <View style={s.tileIconBox}>
                     <Ionicons name="storefront-outline" size={30} color="#fff" />

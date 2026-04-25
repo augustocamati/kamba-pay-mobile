@@ -12,6 +12,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import { educationalService } from '@/lib/api';
 import { useMascot } from '@/lib/mascot-context';
+import { useSound } from '@/lib/sound-context';
 import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
@@ -249,11 +250,12 @@ function ResultPopup({
 // ── Main Quiz Screen ─────────────────────────────────────────────────────────
 export default function QuizScreen() {
   const insets = useSafeAreaInsets();
-  const { id_missao, id: contentId, mode } = useLocalSearchParams();
-  const { adicionarXP, refreshData, marcarConteudoCompleto } = useApp();
+  const { id: contentId, id_missao } = useLocalSearchParams();
+  const { adicionarXP, marcarConteudoCompleto, refreshData } = useApp();
   const { activeMascot, getRandomMessage } = useMascot();
+  const { playSound, toggleBgMusic } = useSound();
 
-  const isGeneralMode = mode === 'geral';
+  const isGeneralMode = !id_missao;
 
   // Quiz list (general mode uses static bank, specific mode loads from API)
   const [quizList, setQuizList] = useState<QuizItem[]>([]);
@@ -271,6 +273,12 @@ export default function QuizScreen() {
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [totalXP, setTotalXP] = useState(0);
+
+  // Load bg music
+  useEffect(() => {
+    toggleBgMusic(true);
+    return () => toggleBgMusic(false);
+  }, []);
 
   const mascotData = activeMascot;
 
@@ -333,7 +341,8 @@ export default function QuizScreen() {
     setIsCorrect(correct);
     if (correct) setScore(prev => prev + 1);
 
-    // Haptic feedback
+    // Sound & Haptic feedback
+    playSound(correct ? 'correct' : 'wrong');
     playHapticFeedback(correct ? 'correct' : 'wrong');
 
     // Mascot message
@@ -346,6 +355,7 @@ export default function QuizScreen() {
   };
 
   const handleNext = () => {
+    playSound('click');
     setShowResult(false);
     if (isLastQuestion) {
       setIsFinished(true);
@@ -359,6 +369,7 @@ export default function QuizScreen() {
   };
 
   const handleHome = () => {
+    playSound('click');
     setShowResult(false);
     refreshData();
     router.replace('/child/(tabs)');

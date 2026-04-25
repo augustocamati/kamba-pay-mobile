@@ -6,10 +6,12 @@ import { useApp } from '@/context/AppContext';
 import { router } from 'expo-router';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
+import { useSound } from '@/lib/sound-context';
 
 export default function ChildHelpScreen() {
   const insets = useSafeAreaInsets();
   const { campanhas, crianca, realizarDoacao, isLoading } = useApp();
+  const { playSound } = useSound();
   const [donating, setDonating] = useState<string | null>(null);
   const [selectedCampanha, setSelectedCampanha] = useState<{ id: string; titulo: string } | null>(null);
   const [valorDoacao, setValorDoacao] = useState('');
@@ -37,6 +39,7 @@ export default function ChildHelpScreen() {
     setDonating(selectedCampanha.id);
     try {
       await realizarDoacao(selectedCampanha.id, valor);
+      playSound('success');
       setLastValor(valor);
       setSelectedCampanha(null);
       setValorDoacao('');
