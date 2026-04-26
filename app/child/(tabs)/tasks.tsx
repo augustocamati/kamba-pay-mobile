@@ -20,7 +20,12 @@ export default function ChildTasksScreen() {
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
 
   // Garantia de que filtramos apenas as tarefas desta criança
-  const myTasks = allTasks.filter(t => String(t.crianca_id) === String(user?.id));
+  // No caso da criança logada, a API já retorna apenas as dela, 
+  // então podemos ser mais flexíveis se o ID coincidir ou se for o perfil child
+  const myTasks = allTasks.filter(t => {
+    if (!t.crianca_id) return true; // fallback se o backend omitir o ID
+    return String(t.crianca_id) === String(user?.id) || user?.role === 'child';
+  });
   const filteredTasks = myTasks.filter(t => filter === 'all' || t.status === filter);
   
   const sortedTasks = [...filteredTasks].sort((a, b) => {

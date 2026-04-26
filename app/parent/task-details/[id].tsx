@@ -5,6 +5,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/context/AppContext';
+import { API_HOST } from '@/lib/api';
 import Colors from '@/constants/colors';
 import { ModalMotivoRejeicao } from '@/components/ModalMotivoRejeicao';
 
@@ -61,7 +62,7 @@ export default function ParentTaskDetails() {
   };
 
   const status = statusMap[tarea.status as keyof typeof statusMap] || statusMap.pendente;
-  const fotoUrl = tarea.foto_url ? (tarea.foto_url.startsWith('http') ? tarea.foto_url : `http://192.168.0.103:3000${tarea.foto_url}`) : null;
+  const fotoUrl = tarea.foto_url ? (tarea.foto_url.startsWith('http') ? tarea.foto_url : `${API_HOST}${tarea.foto_url}`) : null;
 
   return (
     <View style={styles.container}>
