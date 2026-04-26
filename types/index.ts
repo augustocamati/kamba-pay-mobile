@@ -1,6 +1,6 @@
 // Tipos de dados completos do Kamba Kid Pay
 
-export type StatusTarefa = 'pendente' | 'aguardando_aprovacao' | 'concluida' | 'rejeitada';
+export type StatusTarefa = 'pendente' | 'aguardando_aprovacao' | 'aprovada' | 'rejeitada';
 export type TipoMissao = 'poupanca' | 'consumo' | 'solidariedade' | 'estudo' | 'saude' | 'autonomia' | 'comportamento';
 export type FaixaEtaria = '6-8' | '9-10' | '11-12';
 
@@ -68,6 +68,8 @@ export interface Tarefa {
   aprovado_em?: Date;
   icone: string;
   categoria: string;
+  motivo_rejeicao?: string;
+  data_limite?: Date;
 }
 
 export interface Missao {

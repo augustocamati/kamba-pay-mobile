@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Pressable, StyleSheet, FlatList, Alert, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,6 +18,12 @@ export default function ParentTasksScreen() {
     icone: 'bed',
     categoria: 'casa',
     crianca_id: '',
+    prazo_dias: '1',
+  });
+  const [rejeicaoModal, setRejeicaoModal] = useState<{ visible: boolean; taskId: string; motivo: string }>({
+    visible: false,
+    taskId: '',
+    motivo: ''
   });
 
   useEffect(() => {
@@ -30,7 +36,7 @@ export default function ParentTasksScreen() {
     switch (status) {
       case 'pendente': return { label: 'Pendente', color: '#F59E0B', icon: 'time-outline' as const };
       case 'aguardando_aprovacao': return { label: 'Enviada', color: '#3B82F6', icon: 'cloud-upload-outline' as const };
-      case 'concluida': return { label: 'Aprovada', color: '#22C55E', icon: 'checkmark-circle-outline' as const };
+      case 'aprovada': return { label: 'Aprovada', color: '#22C55E', icon: 'checkmark-circle-outline' as const };
       case 'rejeitada': return { label: 'Rejeitada', color: '#EF4444', icon: 'close-circle-outline' as const };
       default: return { label: status, color: '#999', icon: 'help-circle-outline' as const };
     }
@@ -53,7 +59,8 @@ export default function ParentTasksScreen() {
       crianca_id: formTarefa.crianca_id,
       icone: formTarefa.icone,
       categoria: formTarefa.categoria,
-    });
+      data_limite: formTarefa.prazo_dias ? new Date(Date.now() + parseInt(formTarefa.prazo_dias) * 24 * 60 * 60 * 1000) : undefined,
+    } as any);
 
     Alert.alert('Sucesso ✅', 'Tarefa criada com sucesso!');
     setFormTarefa({ 
@@ -62,7 +69,8 @@ export default function ParentTasksScreen() {
       recompensa: '', 
       icone: 'bed', 
       categoria: 'casa',
-      crianca_id: dependentes[0]?.id || ''
+      crianca_id: dependentes[0]?.id || '',
+      prazo_dias: '1'
     });
     setNovaTarefaModal(false);
   };
@@ -76,10 +84,15 @@ export default function ParentTasksScreen() {
     }
   };
 
-  const handleRejeitar = async (tarefaId: string) => {
+  const handleRejeitar = async () => {
+    if (!rejeicaoModal.motivo) {
+        Alert.alert('Aviso', 'Explique o motivo da rejeição para a criança entender.');
+        return;
+    }
     try {
-      await rejeitarTarefa(tarefaId);
-      Alert.alert('Atualizado', 'Tarefa rejeitada. A criança pode reenviar.');
+      await rejeitarTarefa(rejeicaoModal.taskId, rejeicaoModal.motivo);
+      Alert.alert('Atualizado', 'Tarefa rejeitada. A criança recebeu o motivo.');
+      setRejeicaoModal({ visible: false, taskId: '', motivo: '' });
     } catch {
       Alert.alert('Erro', 'Não foi possível rejeitar a tarefa.');
     }
@@ -136,7 +149,7 @@ export default function ParentTasksScreen() {
                         <Text style={styles.taskChild}>{criancaAtribuida?.nome || 'Filho'}</Text>
                       </View>
                       <View style={styles.approvalActions}>
-                        <Pressable style={styles.rejectBtn} onPress={() => handleRejeitar(item.id)}>
+                        <Pressable style={styles.rejectBtn} onPress={() => setRejeicaoModal({ visible: true, taskId: item.id, motivo: '' })}>
                           <Text style={styles.rejectBtnText}>Rejeitar</Text>
                         </Pressable>
                         <Pressable style={styles.approveBtn} onPress={() => handleAprovar(item.id)}>
@@ -186,6 +199,40 @@ export default function ParentTasksScreen() {
         setForm={setFormTarefa}
         dependentes={dependentes}
       />
+
+      {/* Rejection Reason Modal */}
+      <Modal visible={rejeicaoModal.visible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: '#1e293b', padding: 24, borderRadius: 20, width: '85%' }]}>
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800', marginBottom: 10 }}>Motivo da Rejeição</Text>
+            <Text style={{ color: '#94a3b8', fontSize: 14, marginBottom: 15 }}>Explique o que a criança precisa melhorar na tarefa.</Text>
+            
+            <TextInput
+              style={styles.rejectionInput}
+              placeholder="Ex: A foto está tremida, tire outra por favor."
+              placeholderTextColor="#64748b"
+              value={rejeicaoModal.motivo}
+              onChangeText={(t) => setRejeicaoModal(prev => ({ ...prev, motivo: t }))}
+              multiline
+            />
+            
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+              <TouchableOpacity 
+                onPress={() => setRejeicaoModal({ visible: false, taskId: '', motivo: '' })}
+                style={[styles.modalBtn, { backgroundColor: 'rgba(255,255,255,0.05)', flex: 1 }]}
+              >
+                <Text style={{ color: '#94a3b8', fontWeight: '700' }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleRejeitar}
+                style={[styles.modalBtn, { backgroundColor: '#ef4444', flex: 2 }]}
+              >
+                <Text style={{ color: '#fff', fontWeight: '800' }}>Enviar Rejeição</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -280,4 +327,18 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   approveBtnText: { color: '#86EFAC', fontSize: 12, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  rejectionInput: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    color: '#fff',
+    padding: 12,
+    height: 100,
+    textAlignVertical: 'top',
+    fontSize: 14,
+  },
+  modalBtn: { paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
 });

@@ -15,7 +15,15 @@ interface NovaTarefaModalProps {
   visible: boolean;
   onClose: () => void;
   onCriar: () => void;
-  form: { titulo: string; descricao: string; recompensa: string; icone: string; categoria: string; crianca_id: string };
+  form: { 
+    titulo: string; 
+    descricao: string; 
+    recompensa: string; 
+    icone: string; 
+    categoria: string; 
+    crianca_id: string;
+    prazo_dias?: string;
+  };
   setForm: (f: any) => void;
   dependentes: any[];
 }
@@ -148,6 +156,16 @@ export function NovaTarefaModal({ visible, onClose, onCriar, form, setForm, depe
                 </TouchableOpacity>
               ))}
             </View>
+            {/* Prazo */}
+            <Text style={styles.fieldLabel}>Prazo para conclusão (Dias)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Ex: 3"
+              placeholderTextColor="#94a3b8"
+              value={form.prazo_dias}
+              onChangeText={(t) => setForm({ ...form, prazo_dias: t })}
+              keyboardType="numeric"
+            />
 
             {/* Botão */}
             <TouchableOpacity 

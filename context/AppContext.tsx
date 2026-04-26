@@ -26,7 +26,7 @@ interface AppContextType {
   criarTarefa: (tarefa: Omit<Tarefa, 'id' | 'criado_em'>) => Promise<void>;
   criarMissao: (missao: Omit<Missao, 'id' | 'progresso_atual' | 'ativa'>) => Promise<void>;
   aprovarTarefa: (tarefaId: string) => void;
-  rejeitarTarefa: (tarefaId: string) => void;
+  rejeitarTarefa: (tarefaId: string, motivo: string) => Promise<void>;
   adicionarSaldo: (valor: number, pote: 'gastar' | 'poupar' | 'ajudar') => void;
   atualizarDadosCrianca: (nome: string, idade: number) => void;
   selecionarCrianca: (criancaId: string) => void;
@@ -86,6 +86,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     criado_em: t.criado_em ? new Date(t.criado_em) : new Date(),
     concluido_em: t.concluido_em ? new Date(t.concluido_em) : undefined,
     aprovado_em: t.aprovado_em ? new Date(t.aprovado_em) : undefined,
+    motivo_rejeicao: t.motivo_rejeicao,
+    data_limite: t.data_limite ? new Date(t.data_limite) : undefined,
   });
 
   const mapMissao = (m: any): Missao => ({
@@ -449,7 +451,7 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
     if (isDemo) {
       const tarefa = tarefas.find(t => t.id === tarefaId);
       setTarefas(prev => prev.map(t =>
-        t.id === tarefaId ? { ...t, status: 'concluida', aprovado_em: new Date() } : t
+        t.id === tarefaId ? { ...t, status: 'aprovada', aprovado_em: new Date() } : t
       ));
       if (tarefa) atualizarSaldo('gastar', tarefa.recompensa * 0.6);
       return;
@@ -457,7 +459,7 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
     try {
       const res = await taskService.approveTask(tarefaId);
       setTarefas(prev => prev.map(t =>
-        t.id === tarefaId ? { ...t, status: 'concluida', aprovado_em: new Date() } : t
+        t.id === tarefaId ? { ...t, status: 'aprovada', aprovado_em: new Date() } : t
       ));
       if (res?.recompensa_creditada?.detalhes) {
         const { gastar, poupar, ajudar } = res.recompensa_creditada.detalhes;
@@ -470,17 +472,17 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
   };
 
   // Rejeitar tarefa — demo ou API real
-  const rejeitarTarefa = async (tarefaId: string) => {
+  const rejeitarTarefa = async (tarefaId: string, motivo: string) => {
     if (isDemo) {
       setTarefas(prev => prev.map(t =>
-        t.id === tarefaId ? { ...t, status: 'rejeitada', foto_url: undefined } : t
+        t.id === tarefaId ? { ...t, status: 'rejeitada', motivo_rejeicao: motivo, foto_url: undefined } : t
       ));
       return;
     }
     try {
-      await taskService.rejectTask(tarefaId, 'Rejeitada pelo Responsável');
+      await taskService.rejectTask(tarefaId, motivo);
       setTarefas(prev => prev.map(t =>
-        t.id === tarefaId ? { ...t, status: 'rejeitada', foto_url: undefined } : t
+        t.id === tarefaId ? { ...t, status: 'rejeitada', motivo_rejeicao: motivo, foto_url: undefined } : t
       ));
     } catch(e) { console.error('Erro ao rejeitar tarefa:', e); }
   };

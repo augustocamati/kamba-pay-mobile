@@ -88,24 +88,36 @@ export default function SubmitTaskScreen() {
         <Pressable onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={Colors.child.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Enviar Tarefa</Text>
+        <Text style={styles.headerTitle}>{task.status === 'rejeitada' ? 'Refazer Tarefa' : 'Enviar Tarefa'}</Text>
         <View style={{ width: 26 }} />
       </View>
 
       <View style={styles.content}>
         <View style={styles.taskInfo}>
-          <View style={styles.taskIconWrap}>
-            <MaterialCommunityIcons name="clipboard-check-outline" size={28} color="#8B5CF6" />
+          <View style={[styles.taskIconWrap, task.status === 'rejeitada' && { backgroundColor: 'rgba(239,68,68,0.1)' }]}>
+            <MaterialCommunityIcons 
+              name={task.status === 'rejeitada' ? "refresh" : "clipboard-check-outline"} 
+              size={28} 
+              color={task.status === 'rejeitada' ? "#EF4444" : "#8B5CF6"} 
+            />
           </View>
           <Text style={styles.taskTitle}>{task.titulo}</Text>
-          {task.descricao ? <Text style={styles.taskDesc}>{task.descricao}</Text> : null}
+          {task.status === 'rejeitada' && task.motivo_rejeicao ? (
+            <View style={styles.rejectionBanner}>
+               <Text style={styles.rejectionReason}>Motivo: {task.motivo_rejeicao}</Text>
+            </View>
+          ) : (
+            task.descricao ? <Text style={styles.taskDesc}>{task.descricao}</Text> : null
+          )}
           <View style={styles.rewardBadge}>
             <MaterialCommunityIcons name="cash" size={18} color="#FF8C00" />
             <Text style={styles.rewardText}>{task.recompensa.toLocaleString()} Kz</Text>
           </View>
         </View>
 
-        <Text style={styles.proofLabel}>Envie a prova da tarefa feita</Text>
+        <Text style={styles.proofLabel}>
+          {task.status === 'rejeitada' ? 'Envia uma nova prova corrigida' : 'Envie a prova da tarefa feita'}
+        </Text>
 
         {photoUri ? (
           <Pressable style={styles.photoPreview} onPress={pickImage}>
@@ -129,12 +141,19 @@ export default function SubmitTaskScreen() {
         )}
 
         <Pressable
-          style={({ pressed }) => [styles.submitBtn, pressed && styles.btnPressed, (!photoUri || isSubmitting) && styles.disabled]}
+          style={({ pressed }) => [
+            styles.submitBtn, 
+            pressed && styles.btnPressed, 
+            (!photoUri || isSubmitting) && styles.disabled,
+            task.status === 'rejeitada' && { backgroundColor: '#7C3AED' }
+          ]}
           onPress={handleSubmit}
           disabled={!photoUri || isSubmitting}
         >
-          <Ionicons name="send" size={20} color="#FFFFFF" />
-          <Text style={styles.submitBtnText}>{isSubmitting ? 'Enviando...' : 'Enviar para Aprovacao'}</Text>
+          <Ionicons name={task.status === 'rejeitada' ? "refresh" : "send"} size={20} color="#FFFFFF" />
+          <Text style={styles.submitBtnText}>
+            {isSubmitting ? 'Enviando...' : (task.status === 'rejeitada' ? 'Reenviar para Revisão' : 'Enviar para Aprovacao')}
+          </Text>
         </Pressable>
       </View>
 
@@ -197,4 +216,20 @@ const styles = StyleSheet.create({
   submitBtnText: { fontSize: 17, fontFamily: 'Nunito_700Bold', color: '#FFFFFF' },
   btnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.5 },
+  rejectionBanner: {
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#EF4444',
+    width: '100%',
+    marginTop: 4,
+  },
+  rejectionReason: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontFamily: 'Nunito_600SemiBold',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
 });
