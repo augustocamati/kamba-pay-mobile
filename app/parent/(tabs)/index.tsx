@@ -16,7 +16,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/lib/auth-context';
-import { useApp } from '../../../context/AppContext';
+import { useApp } from '@/context/AppContext';
+import { API_HOST } from '@/lib/api';
 import { NovaTarefaModal } from '../../../components/NovaTarefaModal';
 import { NovaMissaoModal } from '../../../components/NovaMissaoModal';
 import { AdicionarDependente } from '../../../components/AdicionarDependente';
@@ -405,7 +406,12 @@ export default function ParentDashboard() {
 
           {tarefasAguardando.length > 0 ? (
             tarefasAguardando.map((tarefa) => (
-              <View key={tarefa.id} style={styles.tarefaItem}>
+              <TouchableOpacity 
+                key={tarefa.id} 
+                style={styles.tarefaItem}
+                onPress={() => router.push(`/parent/task-details/${tarefa.id}`)}
+                activeOpacity={0.7}
+              >
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <Text style={{ fontSize: 24 }}>{getTaskEmoji(tarefa.icone)}</Text>
@@ -418,7 +424,7 @@ export default function ParentDashboard() {
                   </View>
 
                   {tarefa.foto_url ? (
-                    <Image source={{ uri: tarefa.foto_url }} style={styles.tarefaImage} resizeMode="cover" />
+                    <Image source={{ uri: tarefa.foto_url.startsWith('http') ? tarefa.foto_url : `${API_HOST}${tarefa.foto_url}` }} style={styles.tarefaImage} resizeMode="cover" />
                   ) : null}
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -432,7 +438,7 @@ export default function ParentDashboard() {
                 <View style={{ justifyContent: 'center', marginLeft: 12 }}>
                   <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.2)" />
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
           ) : (
             <View style={{ alignItems: 'center', paddingVertical: 32 }}>
