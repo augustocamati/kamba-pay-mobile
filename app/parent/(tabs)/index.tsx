@@ -137,13 +137,13 @@ export default function ParentDashboard() {
   };
 
   const handleRejeitar = (tarefaId: string) => {
-    rejeitarTarefa(tarefaId);
-    Alert.alert('Tarefa rejeitada', 'A criança poderá tentar novamente.');
+    // Agora a tela principal apenas leva para a gestão ou pede o motivo
+    Alert.alert('Revisão', 'Vá para a aba de Tarefas para analisar e rejeitar com um motivo específico.');
   };
 
 
   const tarefasAguardando = tarefas.filter((t) => t.status === 'aguardando_aprovacao');
-  const tarefasConcluidasCount = tarefas.filter((t) => t.status === 'concluida').length;
+  const tarefasConcluidasCount = tarefas.filter((t) => t.status === 'aprovada').length;
   const taxaPoupanca =
     crianca.potes.total > 0
       ? Math.round((crianca.potes.saldo_poupar / crianca.potes.total) * 100)
@@ -429,21 +429,8 @@ export default function ParentDashboard() {
                   </View>
                 </View>
 
-                <View style={{ gap: 8, marginLeft: 12 }}>
-                  <TouchableOpacity
-                    onPress={() => handleAprovar(tarefa.id)}
-                    style={[styles.approvalBtn, { backgroundColor: '#22c55e' }]}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="checkmark-circle" size={22} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleRejeitar(tarefa.id)}
-                    style={[styles.approvalBtn, { backgroundColor: '#ef4444' }]}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="close-circle" size={22} color="#fff" />
-                  </TouchableOpacity>
+                <View style={{ justifyContent: 'center', marginLeft: 12 }}>
+                  <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.2)" />
                 </View>
               </View>
             ))

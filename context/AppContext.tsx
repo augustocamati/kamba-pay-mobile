@@ -205,10 +205,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       } else {
         // Criança
-        const [dashRes, campaignsRes, contentRes] = await Promise.all([
+        const [dashRes, campaignsRes, contentRes, tasksRes] = await Promise.all([
           childService.getDashboard(),
           campaignService.getCampaigns(true).catch(() => ({ campanhas: [] })),
           educationalService.getContent().catch(() => ({ conteudos: [] })),
+          childService.getTasks().catch(() => ({ tarefas: [] })),
         ]);
 
         if (dashRes.crianca) {
@@ -226,8 +227,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           });
         }
 
-        if (dashRes.tarefas_do_dia) {
-          
+        if (tasksRes.tarefas) {
+          setTarefas(tasksRes.tarefas.map(mapTarefa));
+        } else if (dashRes.tarefas_do_dia) {
           setTarefas(dashRes.tarefas_do_dia.map(mapTarefa));
         }
 
@@ -318,6 +320,11 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
       }
     );
 
+    setTarefas(prev => prev.map(t => 
+      t.id === tarefaId 
+        ? { ...t, status: 'aguardando_aprovacao', foto_url: res.data?.tarefa?.foto_url || fotoUrl } 
+        : t
+    ));
     return res.data;
 
   } catch (e) {

@@ -19,7 +19,7 @@ export default function ChildTasksScreen() {
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
   const webBottomInset = Platform.OS === 'web' ? 34 : 0;
 
-  const myTasks = allTasks.filter(t => t.crianca_id === user?.id);
+  const myTasks = allTasks.filter(t => String(t.crianca_id) === String(user?.id));
   const filteredTasks = myTasks.filter(t => filter === 'all' || t.status === filter);
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     const order: Record<string, number> = { pendente: 0, rejeitada: 1, aguardando_aprovacao: 2, aprovada: 3 };
@@ -54,7 +54,7 @@ export default function ChildTasksScreen() {
         <Pressable onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={Colors.child.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>Minhas Tarefas</Text>
+        <Text style={styles.headerTitle}>Minhas Tarefasssssssss</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -94,10 +94,8 @@ export default function ChildTasksScreen() {
                 item.status === 'rejeitada' && styles.cardRejected
               ]}
               onPress={() => {
-                if (canSubmit) {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push({ pathname: '/child/submit-task', params: { taskId: item.id } });
-                }
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push({ pathname: '/child/task-details/[id]', params: { id: item.id } });
               }}
               disabled={!canSubmit}
             >

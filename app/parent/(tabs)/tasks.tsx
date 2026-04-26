@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, Alert, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../../../context/AppContext';
 import { NovaTarefaModal } from '../../../components/NovaTarefaModal';
@@ -143,7 +144,11 @@ export default function ParentTasksScreen() {
                 {pendentesAprovacao.map((item) => {
                   const criancaAtribuida = dependentes.find(d => d.id === item.crianca_id);
                   return (
-                    <View key={`approval-${item.id}`} style={styles.approvalCard}>
+                    <TouchableOpacity 
+                      key={`approval-${item.id}`} 
+                      style={styles.approvalCard}
+                      onPress={() => router.push(`/parent/task-details/${item.id}`)}
+                    >
                       <View style={{ flex: 1 }}>
                         <Text style={styles.taskTitle}>{item.titulo}</Text>
                         <Text style={styles.taskChild}>{criancaAtribuida?.nome || 'Filho'}</Text>
@@ -156,7 +161,7 @@ export default function ParentTasksScreen() {
                           <Text style={styles.approveBtnText}>Aprovar</Text>
                         </Pressable>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -174,7 +179,10 @@ export default function ParentTasksScreen() {
           const statusInfo = getStatusInfo(item.status);
           const criancaAtribuida = dependentes.find(d => d.id === item.crianca_id);
           return (
-            <View style={styles.taskCard}>
+            <TouchableOpacity 
+              style={styles.taskCard}
+              onPress={() => router.push(`/parent/task-details/${item.id}`)}
+            >
               <View style={styles.taskLeft}>
                 <Text style={styles.taskTitle}>{item.titulo}</Text>
                 <Text style={styles.taskChild}>{criancaAtribuida?.nome || 'Filho'}</Text>
@@ -186,7 +194,7 @@ export default function ParentTasksScreen() {
                   <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.label}</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           );
         }}
       />

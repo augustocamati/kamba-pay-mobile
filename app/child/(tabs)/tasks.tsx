@@ -1,156 +1,147 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, Pressable, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, FlatList, Platform, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
-import { router } from 'expo-router';
+import Colors from '@/constants/colors';
+import * as Haptics from 'expo-haptics';
 import { MascotCompanion } from '@/components/MascotCompanion';
+
+type FilterType = 'all' | 'pendente' | 'aguardando_aprovacao' | 'aprovada' | 'rejeitada';
 
 export default function ChildTasksScreen() {
   const insets = useSafeAreaInsets();
-  const { tarefas } = useApp();
-  console.log(tarefas);
-  const webTop = Platform.OS === 'web' ? 67 : 0;
+  const { user } = useAuth();
+  const { tarefas: allTasks } = useApp();
+  const [filter, setFilter] = useState<FilterType>('all');
+  
+  const webTopInset = Platform.OS === 'web' ? 67 : 0;
 
-  const paraFazer = tarefas.filter(t => t.status === 'pendente');
-  const rejeitadas = tarefas.filter(t => t.status === 'rejeitada');
-  const aguardando = tarefas.filter(t => t.status === 'aguardando_aprovacao');
-  const concluidas = tarefas.filter(t => t.status === 'concluida');
+  // Garantia de que filtramos apenas as tarefas desta criança
+  const myTasks = allTasks.filter(t => String(t.crianca_id) === String(user?.id));
+  const filteredTasks = myTasks.filter(t => filter === 'all' || t.status === filter);
+  
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    const order: Record<string, number> = { pendente: 0, rejeitada: 1, aguardando_aprovacao: 2, aprovada: 3 };
+    return (order[a.status] || 0) - (order[b.status] || 0);
+  });
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'pendente': return { label: 'Para Fazer', color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)', icon: 'time-outline' };
+      case 'aguardando_aprovacao': return { label: 'Em Revisão', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', icon: 'eye-outline' };
+      case 'aprovada': return { label: 'Concluída!', color: '#22C55E', bg: 'rgba(34,197,94,0.1)', icon: 'checkmark-done-circle-outline' };
+      case 'rejeitada': return { label: 'Refazer', color: '#EF4444', bg: 'rgba(239,68,68,0.1)', icon: 'refresh-outline' };
+      default: return { label: status, color: '#999', bg: '#f0f0f0', icon: 'help-circle-outline' };
+    }
+  };
+
+  const FilterBtn = ({ type, label }: { type: FilterType, label: string }) => (
+    <Pressable
+      style={[styles.filterBtn, filter === type && styles.filterBtnActive]}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setFilter(type);
+      }}
+    >
+      <Text style={[styles.filterBtnText, filter === type && styles.filterBtnTextActive]}>{label}</Text>
+    </Pressable>
+  );
 
   return (
-    <View style={styles.container}>
-      {/* Back button */}
-      <View style={[styles.topBar, { paddingTop: (insets.top || webTop) + 8 }]}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#FF6B00" />
+    <View style={[styles.container, { paddingTop: (insets.top || webTopInset) + 12 }]}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#FF6F00" />
         </Pressable>
-        <Text style={styles.topBarTitle}>Minhas Tarefas 📋</Text>
+        <Text style={styles.headerTitle}>Minhas Tarefas 📋</Text>
         <View style={{ width: 40 }} />
       </View>
-      <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.subtitle}>Complete e ganhe recompensas!</Text>
 
-        {/* Para Fazer */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Para Fazer 🎯</Text>
-        </View>
+      {/* Filters */}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          <FilterBtn type="all" label="Todas" />
+          <FilterBtn type="pendente" label="Para Fazer" />
+          <FilterBtn type="rejeitada" label="Refazer" />
+          <FilterBtn type="aguardando_aprovacao" label="Em Revisão" />
+          <FilterBtn type="aprovada" label="Concluídas" />
+        </ScrollView>
+      </View>
 
-        {paraFazer.map(task => (
-          <View key={task.id} style={styles.taskCard}>
-            <View style={styles.taskHeader}>
-              <View style={styles.taskIconBg}>
-                <MaterialCommunityIcons name={task.icone as any || 'clipboard-text'} size={24} color="#FF9900" />
-              </View>
-              <View style={styles.taskInfo}>
-                <Text style={styles.taskTitle}>{task.titulo}</Text>
-                <Text style={styles.taskDesc}>{task.descricao}</Text>
-                <View style={styles.badgeRow}>
-                  <View style={styles.rewardBadge}>
-                    <Text style={styles.rewardText}>💰 {Number(task.recompensa || 0).toFixed(2)} Kz</Text>
+      <FlatList
+        data={sortedTasks}
+        keyExtractor={item => String(item.id)}
+        contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="clipboard-text-outline" size={64} color="#CBD5E1" />
+            <Text style={styles.emptyTitle}>Sem tarefas</Text>
+            <Text style={styles.emptyText}>Não encontramos tarefas com este filtro.</Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          const statusInfo = getStatusInfo(item.status);
+          const deadline = item.data_limite ? new Date(item.data_limite) : null;
+          const isOverdue = deadline && deadline < new Date() && item.status !== 'aprovada';
+
+          return (
+            <Pressable
+              style={({ pressed }) => [
+                styles.taskCard, 
+                pressed && styles.cardPressed,
+                item.status === 'rejeitada' && styles.cardRejected
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push({ pathname: '/child/task-details/[id]', params: { id: item.id } });
+              }}
+            >
+              <View style={styles.cardHeader}>
+                <View style={[styles.categoryIcon, { backgroundColor: statusInfo.bg }]}>
+                  <MaterialCommunityIcons name={item.icone as any || 'clipboard-check'} size={24} color={statusInfo.color} />
+                </View>
+                
+                <View style={styles.cardInfo}>
+                  <Text style={styles.taskTitle} numberOfLines={1}>{item.titulo}</Text>
+                  
+                  <View style={styles.statusRow}>
+                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
+                      <Ionicons name={statusInfo.icon as any} size={12} color={statusInfo.color} />
+                      <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.label}</Text>
+                    </View>
+                    
+                    {deadline && (
+                      <View style={styles.deadlineBadge}>
+                        <Ionicons name="time-outline" size={12} color={isOverdue ? '#EF4444' : '#64748B'} />
+                        <Text style={[styles.deadlineText, isOverdue && { color: '#EF4444', fontWeight: '800' }]}>
+                          {isOverdue ? 'Atrasada!' : `Até ${deadline.toLocaleDateString()}`}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                  <Text style={styles.statusLabelPendente}>
-                    {task.status === 'pendente' ? 'Para fazer' : 'Pendente'}
+                </View>
+
+                <View style={styles.rewardContainer}>
+                  <Text style={styles.rewardValue}>{item.recompensa.toLocaleString()}</Text>
+                  <Text style={styles.rewardCurrency}>Kz</Text>
+                </View>
+              </View>
+
+              {item.status === 'rejeitada' && item.motivo_rejeicao && (
+                <View style={styles.rejectionBanner}>
+                  <Ionicons name="alert-circle" size={14} color="#EF4444" />
+                  <Text style={styles.rejectionText} numberOfLines={1}>
+                    Corrigir: {item.motivo_rejeicao}
                   </Text>
                 </View>
-              </View>
-            </View>
-            <Pressable 
-              style={styles.sendButton}
-              onPress={() => router.push({ pathname: '/child/submit-task', params: { taskId: task.id } })}
-            >
-              <Ionicons name="camera" size={20} color="#fff" />
-              <Text style={styles.sendButtonText}>Enviar Foto da Tarefa</Text>
+              )}
             </Pressable>
-          </View>
-        ))}
-
-        {/* Rejeitadas (reenviar) */}
-        {rejeitadas.length > 0 && (
-          <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-            <Text style={styles.sectionTitle}>Para Refazer 🔁</Text>
-          </View>
-        )}
-
-        {rejeitadas.map(task => (
-          <View key={task.id} style={styles.rejectedCard}>
-            <View style={styles.taskHeader}>
-              <View style={[styles.taskIconBg, { backgroundColor: '#FEE2E2' }]}>
-                <MaterialCommunityIcons name={task.icone as any || 'close-circle-outline'} size={24} color="#DC2626" />
-              </View>
-              <View style={styles.taskInfo}>
-                <Text style={styles.taskTitle}>{task.titulo}</Text>
-                <Text style={styles.taskDesc}>{task.descricao}</Text>
-                <View style={styles.badgeRow}>
-                  <View style={styles.rewardBadge}>
-                    <Text style={styles.rewardText}>💰 {Number(task.recompensa || 0).toFixed(2)} Kz</Text>
-                  </View>
-                  <Text style={styles.statusLabelRejeitada}>Rejeitada - reenviar prova</Text>
-                </View>
-              </View>
-            </View>
-            <Pressable
-              style={[styles.sendButton, { backgroundColor: '#DC2626' }]}
-              onPress={() => router.push({ pathname: '/child/submit-task', params: { taskId: task.id } })}
-            >
-              <Ionicons name="camera" size={20} color="#fff" />
-              <Text style={styles.sendButtonText}>Reenviar Foto da Tarefa</Text>
-            </Pressable>
-          </View>
-        ))}
-
-        {/* Aguardando Aprovação */}
-        {aguardando.length > 0 && (
-          <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-            <Text style={styles.sectionTitle}>Aguardando Aprovação ⌛</Text>
-          </View>
-        )}
-
-        {aguardando.map(task => (
-          <View key={task.id} style={styles.awaitingCard}>
-            <View style={styles.taskHeader}>
-              <View style={[styles.taskIconBg, { backgroundColor: '#E1F5FE' }]}>
-                <MaterialCommunityIcons name={task.icone as any || 'pencil'} size={24} color="#3498DB" />
-              </View>
-              <View style={styles.taskInfo}>
-                <Text style={styles.taskTitle}>{task.titulo}</Text>
-                <Text style={styles.taskDesc}>{task.descricao}</Text>
-                <View style={styles.badgeRow}>
-                  <View style={[styles.rewardBadge, { backgroundColor: '#FFE082' }]}>
-                    <Text style={styles.rewardText}>💰 {Number(task.recompensa || 0).toFixed(2)} Kz</Text>
-                  </View>
-                  <Text style={styles.statusLabelAguardando}>Aguardando Aprovação</Text>
-                </View>
-              </View>
-            </View>
-            {task.foto_url && (
-              <Image source={{ uri: task.foto_url }} style={styles.proofImage} />
-            )}
-          </View>
-        ))}
-
-        {/* Concluídas */}
-        {concluidas.length > 0 && (
-          <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-            <Text style={styles.sectionTitle}>Concluídas 🎉</Text>
-          </View>
-        )}
-
-        {concluidas.map(task => (
-          <View key={task.id} style={styles.completedItem}>
-            <View style={styles.completedIconCard}>
-              <MaterialCommunityIcons name="magnify" size={24} color="#000" />
-            </View>
-            <Text style={styles.completedTitle}>{task.titulo}</Text>
-            <View style={styles.concluidaBadge}>
-               <Text style={styles.concluidaText}>✅ +{Number(task.recompensa || 0).toFixed(2)} Kz</Text>
-            </View>
-          </View>
-        ))}
-
-      </ScrollView>
+          );
+        }}
+      />
 
       <MascotCompanion position="bottom-right" />
     </View>
@@ -159,83 +150,37 @@ export default function ChildTasksScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFCE8' },
-  topBar: {
+  header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingBottom: 12,
-    backgroundColor: '#FFFCE8',
+    paddingHorizontal: 20, paddingBottom: 12,
   },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center',
-  },
-  topBarTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
-  scrollContent: { paddingHorizontal: 20 },
-  subtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', marginTop: 4, marginBottom: 24 },
-  sectionHeader: { marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B' },
-  taskCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FFE0B2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  taskHeader: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  taskIconBg: { width: 54, height: 54, borderRadius: 16, backgroundColor: '#FFF3E0', justifyContent: 'center', alignItems: 'center' },
-  taskInfo: { flex: 1 },
-  taskTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
-  taskDesc: { fontSize: 13, color: '#64748B', marginTop: 2, lineHeight: 18 },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 },
-  rewardBadge: { backgroundColor: '#FFEE58', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  rewardText: { fontSize: 12, fontWeight: '800', color: '#000' },
-  statusLabelPendente: { fontSize: 12, fontWeight: '700', color: '#F44336' },
-  statusLabelAguardando: { fontSize: 12, fontWeight: '700', color: '#2196F3' },
-  statusLabelRejeitada: { fontSize: 12, fontWeight: '700', color: '#DC2626' },
-  sendButton: {
-    backgroundColor: '#FF6F00',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 16,
-    gap: 8,
-  },
-  sendButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  awaitingCard: {
-    backgroundColor: '#E3F2FD',
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#BBDEFB',
-  },
-  rejectedCard: {
-    backgroundColor: '#FEF2F2',
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  proofImage: { width: '100%', height: 160, borderRadius: 16, marginTop: 4 },
-  completedItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F9F1',
-    padding: 12,
-    borderRadius: 20,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#C8E6C9',
-  },
-  completedIconCard: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#E8F5E9', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  completedTitle: { flex: 1, fontSize: 15, fontWeight: '700', color: '#2E7D32' },
-  concluidaBadge: { backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, borderWidth: 1, borderColor: '#A5D6A7' },
-  concluidaText: { fontSize: 12, fontWeight: '800', color: '#2E7D32' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
+  filterContainer: { marginBottom: 16 },
+  filterScroll: { paddingHorizontal: 20, gap: 10 },
+  filterBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E2E8F0' },
+  filterBtnActive: { backgroundColor: '#FF6F00', borderColor: '#FF6F00' },
+  filterBtnText: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#64748B' },
+  filterBtnTextActive: { color: '#fff' },
+  list: { paddingHorizontal: 20, gap: 12 },
+  taskCard: { backgroundColor: '#fff', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#FFE0B2', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
+  cardPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
+  cardRejected: { borderColor: '#FECACA', backgroundColor: '#FEF2F2' },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  categoryIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  cardInfo: { flex: 1, gap: 4 },
+  taskTitle: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#1E293B' },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  statusText: { fontSize: 11, fontFamily: 'Nunito_700Bold' },
+  deadlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  deadlineText: { fontSize: 11, color: '#64748B', fontFamily: 'Nunito_600SemiBold' },
+  rewardContainer: { alignItems: 'flex-end' },
+  rewardValue: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#FF9900' },
+  rewardCurrency: { fontSize: 10, color: '#FF9900', fontFamily: 'Nunito_700Bold', marginTop: -2 },
+  rejectionBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239,68,68,0.1)', padding: 8, borderRadius: 10, marginTop: 10 },
+  rejectionText: { flex: 1, fontSize: 12, color: '#DC2626', fontFamily: 'Nunito_600SemiBold', fontStyle: 'italic' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
+  emptyTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#64748B', marginTop: 16 },
+  emptyText: { fontSize: 14, color: '#94A3B8', fontFamily: 'Nunito_400Regular', textAlign: 'center', marginTop: 4 },
 });

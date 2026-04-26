@@ -123,6 +123,7 @@ export const campaignService = {
 
 export const childService = {
   getDashboard: () => api.get('/child/dashboard').then(res => res.data),
+  getTasks: (status?: string) => api.get('/child/tasks', { params: { status } }).then(res => res.data),
 };
 
 export const educationalService = {
