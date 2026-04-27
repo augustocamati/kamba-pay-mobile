@@ -26,6 +26,7 @@ export default function SubmitTaskScreen() {
   const taskIdStr = Array.isArray(taskId) ? taskId[0] : String(taskId || '');
   const task = tarefas.find(t => String(t.id) === taskIdStr);
 
+  /*
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -38,6 +39,7 @@ export default function SubmitTaskScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
+  */
 
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -120,7 +122,8 @@ export default function SubmitTaskScreen() {
         </Text>
 
         {photoUri ? (
-          <Pressable style={styles.photoPreview} onPress={pickImage}>
+          <Pressable style={styles.photoPreview} onPress={takePhoto}>
+
             <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
             <View style={styles.changePhotoOverlay}>
               <Ionicons name="camera" size={18} color="#FFFFFF" />
@@ -133,10 +136,10 @@ export default function SubmitTaskScreen() {
               <Ionicons name="camera" size={28} color="#FF8C00" />
               <Text style={styles.photoBtnText}>Tirar Foto</Text>
             </Pressable>
-            <Pressable style={({ pressed }) => [styles.photoBtn, pressed && styles.btnPressed]} onPress={pickImage}>
+            {/* <Pressable style={({ pressed }) => [styles.photoBtn, pressed && styles.btnPressed]} onPress={pickImage}>
               <Ionicons name="images" size={28} color="#8B5CF6" />
               <Text style={styles.photoBtnText}>Galeria</Text>
-            </Pressable>
+            </Pressable> */}
           </View>
         )}
 

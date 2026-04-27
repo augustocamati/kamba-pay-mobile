@@ -252,9 +252,7 @@ export default function AdminUsers() {
           <Text style={styles.pageTitle}>Gestão de Usuários</Text>
           <Text style={styles.pageSub}>{filtered.length} de {users.length} usuários</Text>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setAddModal(true)} activeOpacity={0.85}>
-          <Text style={styles.addBtnText}>+ Adicionar</Text>
-        </TouchableOpacity>
+        <View />
       </View>
 
       {/* Stats bar */}

@@ -181,12 +181,7 @@ export default function AdminTasks() {
           <Text style={styles.pageTitle}>Gestão de Tarefas</Text>
           <Text style={styles.pageSub}>Total: {tasks.length} tarefas cadastradas</Text>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Plus size={16} color="#fff" />
-            <Text style={styles.addBtnText}>Adicionar</Text>
-          </View>
-        </TouchableOpacity>
+        <View />
       </View>
 
       {isLoading ? (
