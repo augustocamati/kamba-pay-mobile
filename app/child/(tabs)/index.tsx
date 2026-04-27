@@ -97,7 +97,8 @@ const jar = StyleSheet.create({
 export default function ChildDashboard() {
   const insets = useSafeAreaInsets();
   const { user, logout, isDemo } = useAuth();
-  const { crianca } = useApp();
+  const { crianca, tarefas } = useApp();
+  const pendingCount = tarefas.filter(t => t.status === 'pendente' || t.status === 'rejeitada').length;
   const { playSound } = useSound();
   const [stars, setStars] = useState<{ id: number; x: number; y: number; delay: number; size: number; color: string }[]>([]);
   const starKey = useRef(0);
@@ -304,6 +305,11 @@ export default function ChildDashboard() {
                       <MaterialCommunityIcons name="clipboard-list-outline" size={30} color="#fff" />
                     </View>
                     <Text style={s.tileLabel}>Tarefas</Text>
+                    {pendingCount > 0 && (
+                      <View style={s.badge}>
+                        <Text style={s.badgeText}>{pendingCount}</Text>
+                      </View>
+                    )}
                   </Pressable>
                 </View>
               </View>
@@ -439,6 +445,12 @@ const s = StyleSheet.create({
   tilePressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   tileIconBox: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
   tileLabel: { fontSize: 13, fontFamily: 'Fredoka_700Bold', color: '#FFFFFF' },
+  badge: {
+    position: 'absolute', top: -5, right: -5,
+    backgroundColor: '#EF4444', borderRadius: 12, minWidth: 24, height: 24,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF',
+  },
+  badgeText: { color: '#FFFFFF', fontSize: 11, fontFamily: 'Fredoka_700Bold' },
 
   // Sparkle
   sparkleWrapper: {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, Platform, ScrollView, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,7 +14,8 @@ type FilterType = 'all' | 'pendente' | 'aguardando_aprovacao' | 'aprovada' | 're
 export default function ChildTasksScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { tarefas: allTasks } = useApp();
+  const { tarefas: allTasks, refreshData, isLoading } = useApp();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
   
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
@@ -80,6 +81,18 @@ export default function ChildTasksScreen() {
         data={sortedTasks}
         keyExtractor={item => String(item.id)}
         contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing || isLoading}
+            onRefresh={async () => {
+              setIsRefreshing(true);
+              await refreshData();
+              setIsRefreshing(false);
+            }}
+            tintColor="#FF6F00"
+            colors={["#FF6F00"]}
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="clipboard-text-outline" size={64} color="#CBD5E1" />

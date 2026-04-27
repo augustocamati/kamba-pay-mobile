@@ -321,10 +321,14 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
     );
 
     setTarefas(prev => prev.map(t => 
-      t.id === tarefaId 
+      String(t.id) === String(tarefaId) 
         ? { ...t, status: 'aguardando_aprovacao', foto_url: res.data?.tarefa?.foto_url || fotoUrl } 
         : t
     ));
+    
+    // Opcional: recarregar tudo do servidor para garantir sincronia
+    setTimeout(() => carregarDadosAPI(), 1000);
+
     return res.data;
 
   } catch (e) {
