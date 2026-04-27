@@ -109,6 +109,6 @@ const styles = StyleSheet.create({
   bubbleLeft: { marginLeft: 4 },
   bubbleText: {
     fontSize: 12, color: '#5B21B6',
-    fontFamily: 'Nunito_600SemiBold', lineHeight: 16,
+    fontFamily: 'Fredoka_600SemiBold', lineHeight: 16,
   },
 });

@@ -399,7 +399,7 @@ export default function QuizScreen() {
             Não foi possível carregar este quiz.
           </Text>
           <Pressable onPress={() => router.back()} style={styles.errorBackBtn}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Voltar</Text>
+            <Text style={{ color: '#fff', fontFamily: 'Fredoka_700Bold' }}>Voltar</Text>
           </Pressable>
         </View>
       </LinearGradient>
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_800ExtraBold' },
+  headerTitle: { color: '#fff', fontSize: 16, fontFamily: 'Fredoka_700Bold' },
   progressBar: {
     height: 6, backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 3, marginTop: 6, overflow: 'hidden',
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12,
   },
-  questionCounterText: { color: '#E9D5FF', fontSize: 13, fontFamily: 'Nunito_700Bold' },
+  questionCounterText: { color: '#E9D5FF', fontSize: 13, fontFamily: 'Fredoka_700Bold' },
 
   content: { flex: 1, paddingHorizontal: 20, paddingBottom: 20 },
 
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, position: 'relative',
     minHeight: 50, justifyContent: 'center',
   },
-  speechText: { fontSize: 13, fontFamily: 'Nunito_700Bold', lineHeight: 18 },
+  speechText: { fontSize: 13, fontFamily: 'Fredoka_700Bold', lineHeight: 18 },
   bubbleTail: {
     position: 'absolute', left: -10, bottom: 14,
     width: 0, height: 0,
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   questionText: {
-    fontSize: 20, fontFamily: 'Nunito_800ExtraBold', color: '#fff',
+    fontSize: 20, fontFamily: 'Fredoka_700Bold', color: '#fff',
     textAlign: 'center', lineHeight: 28,
   },
 
@@ -617,14 +617,14 @@ const styles = StyleSheet.create({
     marginBottom: 16, padding: 16,
   },
   dropZonePlaceholder: { alignItems: 'center', gap: 8 },
-  dropZoneText: { color: '#A78BFA', fontSize: 14, fontFamily: 'Nunito_600SemiBold' },
+  dropZoneText: { color: '#A78BFA', fontSize: 14, fontFamily: 'Fredoka_600SemiBold' },
   droppedChip: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  droppedChipText: { fontSize: 17, fontFamily: 'Nunito_700Bold' },
+  droppedChipText: { fontSize: 17, fontFamily: 'Fredoka_700Bold' },
 
   // Options
   optionsArea: { marginTop: 'auto' as any },
   optionsLabel: {
-    color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'Nunito_600SemiBold',
+    color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'Fredoka_600SemiBold',
     textAlign: 'center', marginBottom: 12,
   },
   chipsRow: { 
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
   },
   dragChipDropped: { opacity: 0.6 },
-  dragChipText: { fontSize: 14, fontFamily: 'Nunito_700Bold', flex: 1 },
+  dragChipText: { fontSize: 14, fontFamily: 'Fredoka_700Bold', flex: 1 },
 
   // Error
   errorBackBtn: {
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
     shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.4, shadowRadius: 30, elevation: 20,
   },
-  popupTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#1E293B', marginTop: 8 },
+  popupTitle: { fontSize: 28, fontFamily: 'Fredoka_700Bold', color: '#1E293B', marginTop: 8 },
   popupMascotRow: {
     flexDirection: 'row', alignItems: 'center',
     gap: 12, marginTop: 20, width: '100%',
@@ -675,22 +675,22 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6,
   },
   popupBubble: { flex: 1, borderRadius: 20, padding: 14, minHeight: 60, justifyContent: 'center' },
-  popupBubbleText: { fontSize: 14, fontFamily: 'Nunito_700Bold', lineHeight: 20 },
+  popupBubbleText: { fontSize: 14, fontFamily: 'Fredoka_700Bold', lineHeight: 20 },
   xpBannerRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 12, marginTop: 12,
   },
-  xpBannerText: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#D97706' },
+  xpBannerText: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#D97706' },
   popupActions: { width: '100%', gap: 10, marginTop: 20 },
   nextBtn: { borderRadius: 16, overflow: 'hidden' },
   nextGradient: { paddingVertical: 16, alignItems: 'center' },
-  nextBtnText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_800ExtraBold' },
+  nextBtnText: { color: '#fff', fontSize: 16, fontFamily: 'Fredoka_700Bold' },
   homeBtn: {
     paddingVertical: 14, borderRadius: 16,
     backgroundColor: '#F1F5F9', alignItems: 'center',
   },
-  homeBtnText: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#64748B' },
+  homeBtnText: { fontSize: 14, fontFamily: 'Fredoka_700Bold', color: '#64748B' },
 
   // Final Summary
   summaryBox: {
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', width: '100%',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
-  summaryTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#fff', marginTop: 8, marginBottom: 16 },
+  summaryTitle: { fontSize: 28, fontFamily: 'Fredoka_700Bold', color: '#fff', marginTop: 8, marginBottom: 16 },
   summaryMascotRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', marginBottom: 20,
   },
@@ -706,17 +706,17 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16, padding: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  summaryBubbleText: { color: '#E9D5FF', fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  summaryBubbleText: { color: '#E9D5FF', fontSize: 13, fontFamily: 'Fredoka_600SemiBold' },
   scoreCard: {
     width: '100%', backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 20, padding: 20, marginBottom: 24,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
   scoreRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  scoreLabel: { fontSize: 16, color: '#C4B5FD', fontFamily: 'Nunito_600SemiBold' },
-  scoreValue: { fontSize: 20, color: '#fff', fontFamily: 'Nunito_800ExtraBold' },
+  scoreLabel: { fontSize: 16, color: '#C4B5FD', fontFamily: 'Fredoka_600SemiBold' },
+  scoreValue: { fontSize: 20, color: '#fff', fontFamily: 'Fredoka_700Bold' },
   scoreDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 4 },
   summaryHomeBtn: { width: '100%', borderRadius: 20, overflow: 'hidden' },
   summaryHomeBtnGradient: { paddingVertical: 18, alignItems: 'center' },
-  summaryHomeBtnText: { color: '#fff', fontSize: 18, fontFamily: 'Nunito_800ExtraBold' },
+  summaryHomeBtnText: { color: '#fff', fontSize: 18, fontFamily: 'Fredoka_700Bold' },
 });

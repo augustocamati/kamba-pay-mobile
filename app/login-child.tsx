@@ -9,6 +9,7 @@ import {
   Platform,
   Dimensions,
   Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +27,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 
 const { width, height } = Dimensions.get('window');
 
@@ -209,7 +211,7 @@ const sb = StyleSheet.create({
   },
   text: {
     fontSize: 15,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'Fredoka_700Bold',
     color: '#1A1A2E',
     textAlign: 'center',
   },
@@ -291,7 +293,7 @@ const np = StyleSheet.create({
   keyBlue: { backgroundColor: '#5B9BD5' },
   keyDel: { backgroundColor: '#E87722' },
   empty: { width: 80, height: 70 },
-  keyText: { fontSize: 26, fontFamily: 'Nunito_700Bold', color: '#FFFFFF' },
+  keyText: { fontSize: 26, fontFamily: 'Fredoka_700Bold', color: '#FFFFFF' },
   pressed: { opacity: 0.75, transform: [{ scale: 0.94 }] },
 });
 
@@ -384,52 +386,60 @@ export default function LoginChildScreen() {
       : `Olá ${childName.trim()}! Entra o teu PIN de 4 dígitos`;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top || webTopInset, paddingBottom: insets.bottom || webBottomInset }]}>
-      {/* Back button */}
-      <Pressable style={styles.backBtn} onPress={() => step === 'pin' ? setStep('name') : router.back()}>
-        <Ionicons name="arrow-back" size={22} color="#E87722" />
-      </Pressable>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <View style={[styles.container, { paddingTop: insets.top || webTopInset, paddingBottom: insets.bottom || webBottomInset }]}>
+        {/* Back button */}
+        <Pressable style={styles.backBtn} onPress={() => step === 'pin' ? setStep('name') : router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#E87722" />
+        </Pressable>
 
-      {/* Mascot area */}
-      <View style={styles.mascotArea}>
-        <SpeechBubble text={bubbleText} />
-        <View style={{ height: 12 }} />
-        <BearMascot happy={step === 'pin'} />
+        {/* Mascot area */}
+        <View style={styles.mascotArea}>
+          <SpeechBubble text={bubbleText} />
+          <View style={{ height: 12 }} />
+          <View style={styles.logoCircle}>
+            <Image source={require('@/assets/images/icone kkp1.png')} style={{ width: 80, height: 80 }} contentFit="contain" />
+          </View>
+        </View>
+
+        {/* Step content */}
+        {step === 'name' ? (
+          <Animated.View entering={FadeInUp.duration(400)} style={styles.formArea}>
+            <Animated.View style={shakeStyle}>
+              <TextInput
+                style={styles.nameInput}
+                placeholder="O teu username..."
+                placeholderTextColor="#C0A880"
+                value={childName}
+                onChangeText={setChildName}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="username"
+                returnKeyType="done"
+                onSubmitEditing={handleNameContinue}
+              />
+            </Animated.View>
+            <Pressable
+              style={({ pressed }) => [styles.continueBtn, pressed && styles.pressed]}
+              onPress={handleNameContinue}
+            >
+              <Text style={styles.continueBtnText}>Continuar</Text>
+            </Pressable>
+          </Animated.View>
+        ) : (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.pinArea}>
+            <Animated.View style={shakeStyle}>
+              <PinDots pin={pin} />
+            </Animated.View>
+            <NumPad onPress={handlePinDigit} onDelete={handlePinDelete} />
+          </Animated.View>
+        )}
       </View>
-
-      {/* Step content */}
-      {step === 'name' ? (
-        <Animated.View entering={FadeInUp.duration(400)} style={styles.formArea}>
-          <Animated.View style={shakeStyle}>
-            <TextInput
-              style={styles.nameInput}
-              placeholder="O teu username..."
-              placeholderTextColor="#C0A880"
-              value={childName}
-              onChangeText={setChildName}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="username"
-              returnKeyType="done"
-              onSubmitEditing={handleNameContinue}
-            />
-          </Animated.View>
-          <Pressable
-            style={({ pressed }) => [styles.continueBtn, pressed && styles.pressed]}
-            onPress={handleNameContinue}
-          >
-            <Text style={styles.continueBtnText}>Continuar</Text>
-          </Pressable>
-        </Animated.View>
-      ) : (
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.pinArea}>
-          <Animated.View style={shakeStyle}>
-            <PinDots pin={pin} />
-          </Animated.View>
-          <NumPad onPress={handlePinDigit} onDelete={handlePinDelete} />
-        </Animated.View>
-      )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -455,6 +465,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
+  logoCircle: {
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+    borderWidth: 2, borderColor: '#FFE4C4'
+  },
   formArea: {
     width: '100%',
     paddingHorizontal: 32,
@@ -470,7 +488,7 @@ const styles = StyleSheet.create({
     borderColor: '#E87722',
     paddingHorizontal: 24,
     fontSize: 17,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     color: '#1A1A2E',
     backgroundColor: '#FFFFFF',
     textAlign: 'center',
@@ -494,7 +512,7 @@ const styles = StyleSheet.create({
   },
   continueBtnText: {
     fontSize: 18,
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },

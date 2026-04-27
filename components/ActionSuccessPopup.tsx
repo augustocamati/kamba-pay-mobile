@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     color: '#1E1B4B',
     textAlign: 'center',
     marginBottom: 8,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   desc: {
     fontSize: 15,
     color: '#4B5563',
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   xpText: {
     fontSize: 16,
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     color: '#D97706',
   },
   btn: {

@@ -115,7 +115,7 @@ export default function AulaScreen() {
                 <Ionicons name="alert-circle" size={48} color="#94A3B8" />
                 <Text style={styles.errorText}>Vídeo indisponível no momento.</Text>
                 <Pressable onPress={handleSkip} style={{ marginTop: 10 }}>
-                    <Text style={{ color: '#fb923c', fontWeight: 'bold' }}>Simular Conclusão (Debug)</Text>
+                    <Text style={{ color: '#fb923c', fontFamily: 'Fredoka_700Bold' }}>Simular Conclusão (Debug)</Text>
                 </Pressable>
             </View>
           )}
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   },
   topFixed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 22, fontWeight: '900', color: '#0f172a' },
+  headerTitle: { fontSize: 22, fontFamily: 'Fredoka_700Bold', color: '#0f172a' },
   headerSubtitle: { fontSize: 14, color: '#64748b', lineHeight: 20 },
   content: { padding: 20, flex: 1 },
   videoWrapper: { position: 'relative', width: '100%', marginBottom: 20 },
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center' },
   errorVideo: { width: '100%', height: 220, borderRadius: 24, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed', borderWidth: 2, borderColor: '#cbd5e1' },
-  errorText: { color: '#64748b', marginTop: 10, fontWeight: '600' },
+  errorText: { color: '#64748b', marginTop: 10, fontFamily: 'Fredoka_600SemiBold' },
   finishedBadge: {
     position: 'absolute', top: -10, right: -10,
     backgroundColor: '#22c55e', paddingHorizontal: 12, paddingVertical: 6,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     shadowColor: '#22c55e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
     zIndex: 10,
   },
-  finishedBadgeText: { color: '#fff', fontSize: 11, fontWeight: '900' },
+  finishedBadgeText: { color: '#fff', fontSize: 11, fontFamily: 'Fredoka_700Bold' },
   lessonInfo: {
     backgroundColor: '#fff',
     padding: 20,
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  lessonTitle: { fontSize: 20, fontWeight: '900', color: '#1e293b', flex: 1 },
+  lessonTitle: { fontSize: 20, fontFamily: 'Fredoka_700Bold', color: '#1e293b', flex: 1 },
   xpBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  xpBadgeText: { color: '#d97706', fontSize: 12, fontWeight: '800' },
+  xpBadgeText: { color: '#d97706', fontSize: 12, fontFamily: 'Fredoka_700Bold' },
   lessonDesc: { fontSize: 15, color: '#475569', lineHeight: 24 },
   footer: {
     paddingHorizontal: 24,
@@ -242,5 +242,5 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   quizGradient: { paddingVertical: 18, alignItems: 'center' },
-  quizButtonText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  quizButtonText: { color: '#fff', fontSize: 18, fontFamily: 'Fredoka_700Bold' },
 });

@@ -45,7 +45,7 @@ const INITIAL_USERS: AdminUser[] = [
   { id: 'u-8', originalId: '8', nome: 'Teresa João', email: 'teresa.joao@email.com', telefone: '+244 946 222 111', tipo: 'pai', provincia: 'Huíla', municipio: 'Matala', saldo: 37500, status: 'ativo', dataCadastro: '15/03/2024' },
 ];
 
-type TipoFilter = 'Todos' | 'Pai' | 'Criança';
+type TipoFilter = 'Todos' | 'Responsável' | 'Criança';
 type StatusFilter = 'Todos' | 'Ativo' | 'Inativo';
 type SortBy = 'nome' | 'saldo' | 'data';
 
@@ -130,7 +130,7 @@ export default function AdminUsers() {
     let list = users.filter(u => {
       const q = search.toLowerCase();
       const matchSearch = !q || u.nome.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.telefone.includes(q);
-      const matchTipo = tipoFilter === 'Todos' || (tipoFilter === 'Pai' && u.tipo === 'pai') || (tipoFilter === 'Criança' && u.tipo === 'crianca');
+      const matchTipo = tipoFilter === 'Todos' || (tipoFilter === 'Responsável' && u.tipo === 'pai') || (tipoFilter === 'Criança' && u.tipo === 'crianca');
       const matchStatus = statusFilter === 'Todos' || (statusFilter === 'Ativo' && u.status === 'ativo') || (statusFilter === 'Inativo' && u.status === 'inativo');
       const matchProv = provinciaFilter === 'Todas' || u.provincia === provinciaFilter;
       return matchSearch && matchTipo && matchStatus && matchProv;
@@ -258,7 +258,7 @@ export default function AdminUsers() {
       {/* Stats bar */}
       <View style={styles.statsBar}>
         <StatChip Icon={Users} label="Total" value={stats.total} color="#8FA1C7" />
-        <StatChip Icon={UserPlus} label="Pais" value={stats.pais} color="#F59E0B" />
+        <StatChip Icon={UserPlus} label="Responsáveis" value={stats.pais} color="#F59E0B" />
         <StatChip Icon={GraduationCap} label="Crianças" value={stats.criancas} color="#3B82F6" />
         <StatChip Icon={CheckCircle2} label="Ativos" value={stats.ativos} color="#22C55E" />
       </View>
@@ -405,9 +405,9 @@ export default function AdminUsers() {
 
             <ScrollView style={styles.filterSheetBody}>
               <FilterSection label="Tipo de Utilizador">
-                {(['Todos', 'Pai', 'Criança'] as TipoFilter[]).map(t => (
+                {(['Todos', 'Responsável', 'Criança'] as TipoFilter[]).map(t => (
                   <FilterOption key={t} label={t} active={tipoFilter === t} onPress={() => setTipoFilter(t)}
-                    Icon={t === 'Todos' ? Users : t === 'Pai' ? UserPlus : GraduationCap} />
+                    Icon={t === 'Todos' ? Users : t === 'Responsável' ? UserPlus : GraduationCap} />
                 ))}
               </FilterSection>
 
@@ -533,7 +533,7 @@ export default function AdminUsers() {
                 <FormField label="Município" value={editUser.municipio} onChange={v => setEditUser(p => p ? { ...p, municipio: v } : p)} />
 
                 <SegmentField label="Tipo (Bloqueado)"
-                  options={[{ label: 'Pai', value: 'pai' }, { label: 'Criança', value: 'crianca' }]}
+                  options={[{ label: 'Responsável', value: 'pai' }, { label: 'Criança', value: 'crianca' }]}
                   value={editUser.tipo} onChange={() => {}} disabled />
               </ScrollView>
             )}
@@ -567,7 +567,7 @@ export default function AdminUsers() {
               <FormField label="Saldo Inicial (Kz)" value={String(newUser.saldo || 0)} onChange={v => setNewUser(p => ({ ...p, saldo: Number(v) || 0 }))} keyboardType="numeric" />
               <FormField label="Município" value={newUser.municipio || ''} onChange={v => setNewUser(p => ({ ...p, municipio: v }))} />
               <SegmentField label="Tipo"
-                options={[{ label: 'Pai', value: 'pai' }, { label: 'Criança', value: 'crianca' }]}
+                options={[{ label: 'Responsável', value: 'pai' }, { label: 'Criança', value: 'crianca' }]}
                 value={newUser.tipo || 'pai'} onChange={v => setNewUser(p => ({ ...p, tipo: v as any }))} />
             </ScrollView>
             <View style={styles.modalFooter}>
@@ -603,7 +603,7 @@ function TypeBadge({ tipo }: { tipo: string }) {
   return (
     <View style={[styles.typeBadge, tipo === 'pai' ? styles.typePai : styles.typeCrianca]}>
       <Text style={[styles.typeBadgeText, tipo === 'pai' ? { color: '#F59E0B' } : { color: '#3B82F6' }]}>
-        {tipo === 'pai' ? 'Pai' : 'Criança'}
+        {tipo === 'pai' ? 'Responsável' : 'Criança'}
       </Text>
     </View>
   );

@@ -10,6 +10,12 @@ import { AuthProvider } from "@/lib/auth-context";
 import { AppProvider } from "@/context/AppContext";
 import { MascotProvider } from "@/lib/mascot-context";
 import { useFonts, Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from "@expo-google-fonts/nunito";
+import { 
+  Fredoka_400Regular, 
+  Fredoka_500Medium, 
+  Fredoka_600SemiBold, 
+  Fredoka_700Bold 
+} from "@expo-google-fonts/fredoka";
 import { StatusBar } from "expo-status-bar";
 import { DemoBanner } from "@/components/DemoBanner";
 
@@ -50,6 +56,10 @@ export default function RootLayout() {
     Nunito_600SemiBold,
     Nunito_700Bold,
     Nunito_800ExtraBold,
+    Fredoka_400Regular,
+    Fredoka_500Medium,
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
   });
 
   useEffect(() => {

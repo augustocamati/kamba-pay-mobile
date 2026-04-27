@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -70,7 +71,7 @@ export default function AdminLoginScreen() {
           {/* Logo */}
           <Animated.View entering={FadeInDown.duration(600)} style={styles.logoSection}>
             <View style={styles.logoWrap}>
-              <Text style={styles.logoEmoji}>🐱</Text>
+              <Image source={require('@/assets/images/icone kkp1.png')} style={{ width: 60, height: 60 }} />
             </View>
             <Text style={styles.brandName}>Kamba Kid Pay</Text>
             <View style={styles.adminTag}>
@@ -144,13 +145,6 @@ export default function AdminLoginScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Hint */}
-            <View style={styles.hintBox}>
-              <Text style={styles.hintText}>💡 Demo: </Text>
-              <Text style={styles.hintCodeUser}>admin</Text>
-              <Text style={styles.hintText}> / </Text>
-              <Text style={styles.hintCodePass}>admin123</Text>
-            </View>
           </Animated.View>
 
           {/* Back link */}
@@ -241,15 +235,6 @@ const styles = StyleSheet.create({
   },
   loginBtnDisabled: { opacity: 0.7 },
   loginBtnText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#fff' },
-
-  hintBox: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 10, padding: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
-  },
-  hintText: { fontSize: 12, color: '#4A5F8A', fontFamily: 'Nunito_400Regular' },
-  hintCodeUser: { fontSize: 12, color: '#FF8C00', fontFamily: 'Nunito_700Bold' },
-  hintCodePass: { fontSize: 12, color: '#22C55E', fontFamily: 'Nunito_700Bold' },
 
   backBtn: { alignItems: 'center', paddingVertical: 12 },
   backBtnText: { fontSize: 14, color: '#4A5F8A', fontFamily: 'Nunito_600SemiBold' },

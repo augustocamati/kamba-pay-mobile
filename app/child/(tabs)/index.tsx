@@ -89,8 +89,8 @@ const jar = StyleSheet.create({
     backgroundColor: '#F0EAE0', alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: '#DDD4C4',
   },
-  label: { fontSize: 11, fontFamily: 'Nunito_700Bold', marginTop: 5 },
-  value: { fontSize: 11, fontFamily: 'Nunito_600SemiBold', color: '#6B7280' },
+  label: { fontSize: 11, fontFamily: 'Fredoka_700Bold', marginTop: 5 },
+  value: { fontSize: 11, fontFamily: 'Fredoka_600SemiBold', color: '#6B7280' },
 });
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
@@ -413,14 +413,14 @@ const s = StyleSheet.create({
 
   // Header
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  greeting: { fontSize: 22, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
+  greeting: { fontSize: 22, fontFamily: 'Fredoka_700Bold', color: '#1A1A2E' },
   xpPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#FFF3E0', paddingHorizontal: 10, paddingVertical: 3,
     borderRadius: 10, marginTop: 4, alignSelf: 'flex-start',
     borderWidth: 1, borderColor: '#FFE0B2',
   },
-  xpText: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
+  xpText: { fontSize: 12, fontFamily: 'Fredoka_700Bold', color: '#FF8C00' },
   logoutBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center' },
 
   // Grid
@@ -438,7 +438,7 @@ const s = StyleSheet.create({
   tilePurple: { backgroundColor: '#7C3AED' },
   tilePressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   tileIconBox: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
-  tileLabel: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#FFFFFF' },
+  tileLabel: { fontSize: 13, fontFamily: 'Fredoka_700Bold', color: '#FFFFFF' },
 
   // Sparkle
   sparkleWrapper: {
@@ -456,9 +456,9 @@ const s = StyleSheet.create({
   sparklePrs: { transform: [{ scale: 0.9 }] },
 
   // Section
-  sectionTitle: { fontSize: 17, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E', marginBottom: 12 },
+  sectionTitle: { fontSize: 17, fontFamily: 'Fredoka_700Bold', color: '#1A1A2E', marginBottom: 12 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  seeAll: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: ORANGE },
+  seeAll: { fontSize: 13, fontFamily: 'Fredoka_600SemiBold', color: ORANGE },
 
   // Potes
   potesRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28 },
@@ -471,16 +471,16 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: '#FFE0B2',
   },
   taskIconBg: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#FFF3E0', alignItems: 'center', justifyContent: 'center' },
-  taskTitle: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#1A1A2E' },
-  taskDesc: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: '#9CA3AF', marginTop: 2 },
+  taskTitle: { fontSize: 14, fontFamily: 'Fredoka_700Bold', color: '#1A1A2E' },
+  taskDesc: { fontSize: 12, fontFamily: 'Fredoka_400Regular', color: '#9CA3AF', marginTop: 2 },
   rewardBadge: { backgroundColor: '#FFF3E0', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
-  rewardText: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
+  rewardText: { fontSize: 12, fontFamily: 'Fredoka_700Bold', color: '#FF8C00' },
 
   emptyCard: {
     backgroundColor: '#F0FDF4', borderRadius: 16, padding: 18, alignItems: 'center',
     borderWidth: 1, borderColor: '#BBF7D0', marginBottom: 10,
   },
-  emptyText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: '#15803D' },
+  emptyText: { fontSize: 14, fontFamily: 'Fredoka_600SemiBold', color: '#15803D' },
 
   // Missions
   missionCard: {
@@ -488,9 +488,9 @@ const s = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
   },
   missionTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  missionTitle: { fontSize: 15, fontFamily: 'Nunito_700Bold', color: '#FFFFFF', flex: 1 },
+  missionTitle: { fontSize: 15, fontFamily: 'Fredoka_700Bold', color: '#FFFFFF', flex: 1 },
   progressTrack: { height: 10, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
   progressFill: { height: '100%', backgroundColor: '#FFFFFF', borderRadius: 5 },
-  missionSub: { fontSize: 12, fontFamily: 'Nunito_600SemiBold', color: 'rgba(255,255,255,0.85)' },
-  missionPct: { fontSize: 14, fontFamily: 'Nunito_800ExtraBold', color: '#FFFFFF' },
+  missionSub: { fontSize: 12, fontFamily: 'Fredoka_600SemiBold', color: 'rgba(255,255,255,0.85)' },
+  missionPct: { fontSize: 14, fontFamily: 'Fredoka_700Bold', color: '#FFFFFF' },
 });

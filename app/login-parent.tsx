@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, Pressable, StyleSheet,
   Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,7 +57,7 @@ export default function LoginParentScreen() {
             </Pressable>
             <View style={styles.headerContent}>
               <View style={styles.iconCircle}>
-                <FontAwesome5 name="user-tie" size={36} color="#FF8C00" />
+                <Image source={require('@/assets/images/icone kkp1.png')} style={{ width: 65, height: 65 }} />
               </View>
               <Text style={styles.welcomeTitle}>Área do Responsável</Text>
               <Text style={styles.welcomeSub}>Bem-vindo de volta!</Text>
@@ -64,14 +65,6 @@ export default function LoginParentScreen() {
           </LinearGradient>
 
           <View style={styles.formSection}>
-            {/* Demo hint */}
-            <View style={styles.hintCard}>
-              <MaterialCommunityIcons name="lightbulb-on-outline" size={18} color="#FF8C00" />
-              <Text style={styles.hintText}>
-                Teste: <Text style={styles.hintBold}>pai@teste.com</Text> (qualquer senha)
-              </Text>
-            </View>
-
             <View style={styles.formCard}>
               <Text style={styles.formTitle}>Entrar</Text>
 
@@ -150,13 +143,6 @@ const styles = StyleSheet.create({
   welcomeTitle: { fontSize: 26, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E', textAlign: 'center' },
   welcomeSub: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: 'rgba(0,0,0,0.5)', textAlign: 'center', marginTop: 4 },
   formSection: { padding: 20, gap: 16 },
-  hintCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FFF5EB', borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: '#FFE4C4',
-  },
-  hintText: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: '#6B7280', flex: 1 },
-  hintBold: { fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
   formCard: {
     backgroundColor: '#FFFFFF', borderRadius: 18, padding: 22,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,

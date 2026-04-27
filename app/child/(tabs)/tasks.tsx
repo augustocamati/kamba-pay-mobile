@@ -121,7 +121,7 @@ export default function ChildTasksScreen() {
                     {deadline && (
                       <View style={styles.deadlineBadge}>
                         <Ionicons name="time-outline" size={12} color={isOverdue ? '#EF4444' : '#64748B'} />
-                        <Text style={[styles.deadlineText, isOverdue && { color: '#EF4444', fontWeight: '800' }]}>
+                        <Text style={[styles.deadlineText, isOverdue && { color: '#EF4444', fontFamily: 'Fredoka_700Bold' }]}>
                           {isOverdue ? 'Atrasada!' : `Até ${deadline.toLocaleDateString()}`}
                         </Text>
                       </View>
@@ -160,12 +160,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 12,
   },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF5E8', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
+  headerTitle: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#1A1A2E' },
   filterContainer: { marginBottom: 16 },
   filterScroll: { paddingHorizontal: 20, gap: 10 },
   filterBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E2E8F0' },
   filterBtnActive: { backgroundColor: '#FF6F00', borderColor: '#FF6F00' },
-  filterBtnText: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#64748B' },
+  filterBtnText: { fontSize: 13, fontFamily: 'Fredoka_700Bold', color: '#64748B' },
   filterBtnTextActive: { color: '#fff' },
   list: { paddingHorizontal: 20, gap: 12 },
   taskCard: { backgroundColor: '#fff', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#FFE0B2', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
@@ -174,18 +174,18 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   categoryIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   cardInfo: { flex: 1, gap: 4 },
-  taskTitle: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#1E293B' },
+  taskTitle: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#1E293B' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  statusText: { fontSize: 11, fontFamily: 'Nunito_700Bold' },
+  statusText: { fontSize: 11, fontFamily: 'Fredoka_700Bold' },
   deadlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  deadlineText: { fontSize: 11, color: '#64748B', fontFamily: 'Nunito_600SemiBold' },
+  deadlineText: { fontSize: 11, color: '#64748B', fontFamily: 'Fredoka_600SemiBold' },
   rewardContainer: { alignItems: 'flex-end' },
-  rewardValue: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#FF9900' },
-  rewardCurrency: { fontSize: 10, color: '#FF9900', fontFamily: 'Nunito_700Bold', marginTop: -2 },
+  rewardValue: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#FF9900' },
+  rewardCurrency: { fontSize: 10, color: '#FF9900', fontFamily: 'Fredoka_700Bold', marginTop: -2 },
   rejectionBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239,68,68,0.1)', padding: 8, borderRadius: 10, marginTop: 10 },
-  rejectionText: { flex: 1, fontSize: 12, color: '#DC2626', fontFamily: 'Nunito_600SemiBold', fontStyle: 'italic' },
+  rejectionText: { flex: 1, fontSize: 12, color: '#DC2626', fontFamily: 'Fredoka_600SemiBold', fontStyle: 'italic' },
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
-  emptyTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#64748B', marginTop: 16 },
-  emptyText: { fontSize: 14, color: '#94A3B8', fontFamily: 'Nunito_400Regular', textAlign: 'center', marginTop: 4 },
+  emptyTitle: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#64748B', marginTop: 16 },
+  emptyText: { fontSize: 14, color: '#94A3B8', fontFamily: 'Fredoka_400Regular', textAlign: 'center', marginTop: 4 },
 });

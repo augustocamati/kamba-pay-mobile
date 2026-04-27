@@ -108,13 +108,13 @@ const styles = StyleSheet.create({
     elevation: 15,
   },
   title: {
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 22,
     color: '#1A1A2E',
     marginBottom: 8,
   },
   text: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     fontSize: 16,
     color: '#4B5563',
     lineHeight: 24,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   counter: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 14,
     color: '#9CA3AF',
   },
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   prevText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 15,
     color: '#6B7280',
   },
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   nextText: {
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 15,
     color: '#FFFFFF',
   },

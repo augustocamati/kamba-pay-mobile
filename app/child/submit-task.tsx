@@ -79,7 +79,7 @@ export default function SubmitTaskScreen() {
   if (!task) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ fontFamily: 'Nunito_400Regular', color: Colors.child.textSecondary }}>Tarefa nao encontrada</Text>
+        <Text style={{ fontFamily: 'Fredoka_400Regular', color: Colors.child.textSecondary }}>Tarefa nao encontrada</Text>
       </View>
     );
   }
@@ -183,27 +183,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Colors.child.border,
   },
-  headerTitle: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: Colors.child.text },
+  headerTitle: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: Colors.child.text },
   content: { flex: 1, padding: 24, gap: 20 },
   taskInfo: { alignItems: 'center', gap: 8 },
   taskIconWrap: {
     width: 60, height: 60, borderRadius: 20,
     backgroundColor: 'rgba(139,92,246,0.1)', justifyContent: 'center', alignItems: 'center',
   },
-  taskTitle: { fontSize: 20, fontFamily: 'Nunito_700Bold', color: Colors.child.text, textAlign: 'center' },
-  taskDesc: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.child.textSecondary, textAlign: 'center' },
+  taskTitle: { fontSize: 20, fontFamily: 'Fredoka_700Bold', color: Colors.child.text, textAlign: 'center' },
+  taskDesc: { fontSize: 14, fontFamily: 'Fredoka_400Regular', color: Colors.child.textSecondary, textAlign: 'center' },
   rewardBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(255,140,0,0.1)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
   },
-  rewardText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
-  proofLabel: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.child.text, textAlign: 'center' },
+  rewardText: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#FF8C00' },
+  proofLabel: { fontSize: 15, fontFamily: 'Fredoka_600SemiBold', color: Colors.child.text, textAlign: 'center' },
   photoActions: { flexDirection: 'row', gap: 14 },
   photoBtn: {
     flex: 1, backgroundColor: '#FFFFFF', borderRadius: 18, paddingVertical: 28,
     alignItems: 'center', gap: 8, borderWidth: 2, borderColor: Colors.child.border, borderStyle: 'dashed',
   },
-  photoBtnText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: Colors.child.text },
+  photoBtnText: { fontSize: 14, fontFamily: 'Fredoka_600SemiBold', color: Colors.child.text },
   photoPreview: { borderRadius: 18, overflow: 'hidden', height: 220 },
   photo: { width: '100%', height: '100%' },
   changePhotoOverlay: {
@@ -211,12 +211,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     padding: 12, backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  changePhotoText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: '#FFFFFF' },
+  changePhotoText: { fontSize: 13, fontFamily: 'Fredoka_600SemiBold', color: '#FFFFFF' },
   submitBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     backgroundColor: '#22C55E', borderRadius: 16, paddingVertical: 18, marginTop: 'auto',
   },
-  submitBtnText: { fontSize: 17, fontFamily: 'Nunito_700Bold', color: '#FFFFFF' },
+  submitBtnText: { fontSize: 17, fontFamily: 'Fredoka_700Bold', color: '#FFFFFF' },
   btnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.5 },
   rejectionBanner: {
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   rejectionReason: {
     color: '#B91C1C',
     fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     fontStyle: 'italic',
     textAlign: 'center',
   },

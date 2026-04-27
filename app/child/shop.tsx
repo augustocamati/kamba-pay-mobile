@@ -87,7 +87,7 @@ export default function ShopScreen() {
         <Text style={styles.subtitle}>Usa o teu XP para desbloquear novos amigos!</Text>
 
         <View style={styles.balanceInfoBox}>
-           <Text style={styles.balanceInfoText}>Pote Gastar: <Text style={{ fontFamily: 'Nunito_800ExtraBold' }}>{saldoGastar} Kz</Text></Text>
+           <Text style={styles.balanceInfoText}>Pote Gastar: <Text style={{ fontFamily: 'Fredoka_700Bold' }}>{saldoGastar} Kz</Text></Text>
         </View>
 
         {/* Active companion banner */}
@@ -252,7 +252,7 @@ export default function ShopScreen() {
             </View>
             <Text style={styles.successTitle}>Novo Amigo! 🎉</Text>
             <Text style={styles.successDesc}>
-              O <Text style={{ fontFamily: 'Nunito_800ExtraBold', color: '#7C3AED' }}>{successModal?.nome}</Text> agora faz parte da tua equipa!
+              O <Text style={{ fontFamily: 'Fredoka_700Bold', color: '#7C3AED' }}>{successModal?.nome}</Text> agora faz parte da tua equipa!
             </Text>
             <Pressable style={{ width: '100%', marginTop: 8 }} onPress={() => setSuccessModal(null)}>
               <LinearGradient
@@ -282,23 +282,23 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center',
   },
-  topBarTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#3B0764' },
+  topBarTitle: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#3B0764' },
   coinBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#FFFBEB', paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 20, borderWidth: 1, borderColor: '#FEF3C7',
   },
-  coinText: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: '#D97706' },
+  coinText: { fontSize: 13, fontFamily: 'Fredoka_700Bold', color: '#D97706' },
   scroll: { paddingHorizontal: 16, paddingTop: 16 },
   subtitle: {
     fontSize: 14, color: '#6B7280', textAlign: 'center',
-    fontFamily: 'Nunito_600SemiBold', marginBottom: 12, paddingHorizontal: 10,
+    fontFamily: 'Fredoka_600SemiBold', marginBottom: 12, paddingHorizontal: 10,
   },
   balanceInfoBox: {
     backgroundColor: '#F1F5F9', paddingVertical: 8, paddingHorizontal: 16,
     borderRadius: 12, marginBottom: 24, alignSelf: 'center',
   },
-  balanceInfoText: { fontSize: 12, color: '#64748B', fontFamily: 'Nunito_600SemiBold' },
+  balanceInfoText: { fontSize: 12, color: '#64748B', fontFamily: 'Fredoka_600SemiBold' },
 
   activeBanner: {
     flexDirection: 'row', alignItems: 'center',
@@ -313,17 +313,17 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   activeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  activeName: { fontSize: 19, fontFamily: 'Nunito_800ExtraBold', color: '#1E1B4B' },
+  activeName: { fontSize: 19, fontFamily: 'Fredoka_700Bold', color: '#1E1B4B' },
   activeBadge: {
     backgroundColor: '#7C3AED', paddingHorizontal: 10, paddingVertical: 3,
     borderRadius: 12,
   },
-  activeBadgeText: { fontSize: 10, fontFamily: 'Nunito_800ExtraBold', color: '#fff', textTransform: 'uppercase' },
-  activeDesc: { fontSize: 13, color: '#4B5563', fontFamily: 'Nunito_600SemiBold', marginBottom: 4, lineHeight: 18 },
-  activeTag: { fontSize: 12, color: '#7C3AED', fontFamily: 'Nunito_800ExtraBold' },
+  activeBadgeText: { fontSize: 10, fontFamily: 'Fredoka_700Bold', color: '#fff', textTransform: 'uppercase' },
+  activeDesc: { fontSize: 13, color: '#4B5563', fontFamily: 'Fredoka_600SemiBold', marginBottom: 4, lineHeight: 18 },
+  activeTag: { fontSize: 12, color: '#7C3AED', fontFamily: 'Fredoka_700Bold' },
 
   sectionTitle: {
-    fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#111827', marginBottom: 16,
+    fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#111827', marginBottom: 16,
   },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
@@ -349,9 +349,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(31, 41, 55, 0.4)',
     borderRadius: 18, alignItems: 'center', justifyContent: 'center',
   },
-  cardName: { fontSize: 15, fontFamily: 'Nunito_800ExtraBold', color: '#111827', textAlign: 'center' },
+  cardName: { fontSize: 15, fontFamily: 'Fredoka_700Bold', color: '#111827', textAlign: 'center' },
   cardDesc: {
-    fontSize: 11, color: '#6B7280', fontFamily: 'Nunito_600SemiBold',
+    fontSize: 11, color: '#6B7280', fontFamily: 'Fredoka_600SemiBold',
     textAlign: 'center', marginTop: 2, marginBottom: 10,
   },
   actionBtn: {
@@ -359,23 +359,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6', alignItems: 'center',
   },
   actionBtnActive: { backgroundColor: '#EDE9FE' },
-  actionBtnText: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#4B5563' },
+  actionBtnText: { fontSize: 13, fontFamily: 'Fredoka_700Bold', color: '#4B5563' },
   actionBtnTextActive: { color: '#7C3AED' },
   buyBtn: { width: '100%', paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
-  buyBtnText: { fontSize: 13, fontFamily: 'Nunito_800ExtraBold', color: '#fff' },
+  buyBtnText: { fontSize: 13, fontFamily: 'Fredoka_700Bold', color: '#fff' },
 
   emptyContainer: {
     padding: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff',
     borderRadius: 24, borderWidth: 1, borderColor: '#F1F5F9', borderStyle: 'dashed',
   },
   emptyText: {
-    fontSize: 15, color: '#94A3B8', fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15, color: '#94A3B8', fontFamily: 'Fredoka_600SemiBold',
     marginTop: 12, marginBottom: 20, textAlign: 'center',
   },
   retryBtn: {
     paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3E8FF',
   },
-  retryText: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#7C3AED' },
+  retryText: { fontSize: 14, fontFamily: 'Fredoka_700Bold', color: '#7C3AED' },
 
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(17, 24, 39, 0.75)',
@@ -394,24 +394,24 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)',
   },
   successBox: { backgroundColor: '#FDFCFD' },
-  modalTitle: { fontSize: 24, fontFamily: 'Nunito_800ExtraBold', color: '#111827', marginBottom: 10, textAlign: 'center' },
-  modalDesc: { fontSize: 15, color: '#4B5563', fontFamily: 'Nunito_600SemiBold', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+  modalTitle: { fontSize: 24, fontFamily: 'Fredoka_700Bold', color: '#111827', marginBottom: 10, textAlign: 'center' },
+  modalDesc: { fontSize: 15, color: '#4B5563', fontFamily: 'Fredoka_600SemiBold', textAlign: 'center', marginBottom: 24, lineHeight: 22 },
   
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  priceLabel: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#6B7280' },
+  priceLabel: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#6B7280' },
   priceTag: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFBEB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: '#FEF3C7' },
-  priceValue: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#D97706' },
+  priceValue: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#D97706' },
   
   poorMsg: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: '#FEF2F2', paddingHorizontal: 16, paddingVertical: 10,
     borderRadius: 12, marginBottom: 20,
   },
-  poorText: { fontSize: 13, color: '#DC2626', fontFamily: 'Nunito_700Bold' },
+  poorText: { fontSize: 13, color: '#DC2626', fontFamily: 'Fredoka_700Bold' },
   
   modalActions: { flexDirection: 'row', gap: 12, width: '100%', marginTop: 8 },
   cancelBtn: { flex: 1, height: 56, borderRadius: 20, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#6B7280' },
+  cancelBtnText: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#6B7280' },
   confirmBtn: { flex: 1.5, height: 56, borderRadius: 20, overflow: 'hidden', shadowColor: '#F59E0B', shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   confirmBtnDisabled: { opacity: 0.7 },
   confirmGradient: { height: 56, alignItems: 'center', justifyContent: 'center' },
@@ -425,8 +425,8 @@ const styles = StyleSheet.create({
     marginBottom: 20, borderWidth: 4, borderColor: '#fff',
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10,
   },
-  successTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#1E1B4B', marginTop: 12, marginBottom: 8 },
-  successDesc: { fontSize: 16, color: '#4B5563', fontFamily: 'Nunito_600SemiBold', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
+  successTitle: { fontSize: 28, fontFamily: 'Fredoka_700Bold', color: '#1E1B4B', marginTop: 12, marginBottom: 8 },
+  successDesc: { fontSize: 16, color: '#4B5563', fontFamily: 'Fredoka_600SemiBold', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
   successBtn: { height: 60, borderRadius: 20, width: '100%', alignItems: 'center', justifyContent: 'center', shadowColor: '#7C3AED', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
   successBtnText: { fontSize: 18, fontFamily: 'Nunito_900Black', color: '#fff' },
 });

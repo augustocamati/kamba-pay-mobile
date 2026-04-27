@@ -67,7 +67,7 @@ export default function ChildSchoolScreen() {
         ) : conteudoEducativo.length === 0 ? (
           <View style={{ alignItems: 'center', paddingVertical: 60 }}>
             <Text style={{ fontSize: 48 }}>📚</Text>
-            <Text style={{ color: '#64748B', fontSize: 16, fontWeight: '700', marginTop: 12 }}>
+            <Text style={{ color: '#64748B', fontSize: 16, fontFamily: 'Fredoka_700Bold', marginTop: 12 }}>
               Escola Kamba Kid
             </Text>
             <Text style={{ color: '#94A3B8', fontSize: 14, marginTop: 6, textAlign: 'center' }}>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: '#EDE9FE', alignItems: 'center', justifyContent: 'center',
   },
-  topBarTitle: { fontSize: 18, fontFamily: 'Nunito_800ExtraBold', color: '#1A1A2E' },
+  topBarTitle: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#1A1A2E' },
   scrollContent: { paddingHorizontal: 20 },
   subtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', marginTop: 4, marginBottom: 20 },
 
@@ -173,15 +173,15 @@ const styles = StyleSheet.create({
   },
   mascotInfo: { flex: 1, marginLeft: 14 },
   mascotNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  mascotName: { fontSize: 16, fontFamily: 'Nunito_800ExtraBold', color: '#3B0764' },
+  mascotName: { fontSize: 16, fontFamily: 'Fredoka_700Bold', color: '#3B0764' },
   mascotTypeBadge: { backgroundColor: '#7C3AED', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  mascotTypeText: { fontSize: 9, fontFamily: 'Nunito_700Bold', color: '#fff' },
+  mascotTypeText: { fontSize: 9, fontFamily: 'Fredoka_700Bold', color: '#fff' },
   speechBubble: {
     backgroundColor: '#EDE9FE', borderRadius: 12, padding: 10, marginBottom: 8,
   },
-  speechText: { fontSize: 12, fontFamily: 'Nunito_600SemiBold', color: '#5B21B6', lineHeight: 17 },
+  speechText: { fontSize: 12, fontFamily: 'Fredoka_600SemiBold', color: '#5B21B6', lineHeight: 17 },
   changeCompanionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  changeCompanionText: { fontSize: 11, color: '#7C3AED', fontFamily: 'Nunito_600SemiBold' },
+  changeCompanionText: { fontSize: 11, color: '#7C3AED', fontFamily: 'Fredoka_600SemiBold' },
 
   // General Quiz Banner
   quizTestCard: { borderRadius: 20, overflow: 'hidden', marginBottom: 20 },
@@ -191,8 +191,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  quizTestTitle: { fontSize: 15, fontFamily: 'Nunito_800ExtraBold', color: '#fff' },
-  quizTestSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', fontFamily: 'Nunito_600SemiBold', marginTop: 2 },
+  quizTestTitle: { fontSize: 15, fontFamily: 'Fredoka_700Bold', color: '#fff' },
+  quizTestSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', fontFamily: 'Fredoka_600SemiBold', marginTop: 2 },
   quizTestArrow: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -204,11 +204,11 @@ const styles = StyleSheet.create({
   featuredImage: { width: '100%', height: '100%', opacity: 0.7 },
   featuredOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 15 },
   playIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FF6F00', justifyContent: 'center', alignItems: 'center' },
-  featuredTitle: { color: '#fff', fontSize: 20, fontWeight: '800' },
-  featuredDesc: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600', marginTop: 2 },
+  featuredTitle: { color: '#fff', fontSize: 20, fontFamily: 'Fredoka_700Bold' },
+  featuredDesc: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontFamily: 'Fredoka_600SemiBold', marginTop: 2 },
 
   sectionHeader: { marginBottom: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B' },
+  sectionTitle: { fontSize: 18, fontFamily: 'Fredoka_700Bold', color: '#1E293B' },
   contentItem: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
     borderRadius: 20, padding: 12, marginBottom: 12,
@@ -217,10 +217,10 @@ const styles = StyleSheet.create({
   itemThumb: { width: 70, height: 70, borderRadius: 12 },
   itemInfo: { flex: 1, marginLeft: 16 },
   typeBadge: { alignSelf: 'flex-start', backgroundColor: '#E2E8F0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginBottom: 4 },
-  typeText: { fontSize: 9, fontWeight: '800', color: '#64748B' },
-  itemTitle: { fontSize: 15, fontWeight: '800', color: '#1E293B' },
+  typeText: { fontSize: 9, fontFamily: 'Fredoka_700Bold', color: '#64748B' },
+  itemTitle: { fontSize: 15, fontFamily: 'Fredoka_700Bold', color: '#1E293B' },
   itemMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  itemDuration: { fontSize: 12, color: '#94A3B8', fontWeight: '600' },
+  itemDuration: { fontSize: 12, color: '#94A3B8', fontFamily: 'Fredoka_600SemiBold' },
   completeBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, marginLeft: 8 },
-  completeText: { fontSize: 12, fontWeight: '700', color: '#45D37B' },
+  completeText: { fontSize: 12, fontFamily: 'Fredoka_700Bold', color: '#45D37B' },
 });

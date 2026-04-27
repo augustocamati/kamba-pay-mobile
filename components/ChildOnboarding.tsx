@@ -184,13 +184,13 @@ const card = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.4)',
   },
   badgeText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 13,
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   title: {
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 26,
     color: '#FFFFFF',
     textAlign: 'center',
@@ -198,7 +198,7 @@ const card = StyleSheet.create({
     lineHeight: 32,
   },
   description: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     fontSize: 16,
     color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   // Adjust top for safe area — we set it in JSX via absolute positioning + insets
   skipText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     fontSize: 14,
     color: 'rgba(255,255,255,0.85)',
   },
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nextText: {
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 16,
     color: '#FF8C00',
   },
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   stepCounter: {
     textAlign: 'center',
     marginTop: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Fredoka_600SemiBold',
     fontSize: 12,
     color: 'rgba(255,255,255,0.65)',
   },

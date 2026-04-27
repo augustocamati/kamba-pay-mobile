@@ -98,8 +98,8 @@ export function WelcomeScreen({ onLogin, onCriarContaResponsavel }: WelcomeScree
               }}
               className="mb-8"
             >
-              <div className="inline-block bg-white rounded-full p-8 shadow-2xl">
-                <div className="text-7xl">🦁</div>
+              <div className="inline-block bg-white rounded-full p-4 shadow-2xl">
+                <img src={require('@/assets/images/logo2.png')} alt="Logo Kamba Kid Pay" className="w-24 h-24 object-contain" />
               </div>
             </motion.div>
 

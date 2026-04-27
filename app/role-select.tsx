@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { Image } from 'expo-image';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +44,7 @@ export default function RoleSelectScreen() {
         {/* Header */}
         <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.header}>
           <View style={styles.logoCircle}>
-            <MaterialCommunityIcons name="cat" size={48} color="#FF8C00" />
+            <Image source={require('@/assets/images/icone kkp1.png')} style={{ width: 70, height: 70 }} />
           </View>
           <Text style={styles.title}>Quem és tu?</Text>
           <Text style={styles.subtitle}>Escolhe o teu perfil para entrar</Text>

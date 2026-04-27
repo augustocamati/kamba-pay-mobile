@@ -220,7 +220,7 @@ export default function AdminDashboard() {
             {/* KPI Cards */}
             <Animated.View entering={FadeInUp.delay(100).duration(500)} style={styles.kpiGrid}>
               <KpiCard
-                Icon={Users} label="Pais Registados" value={String(resumo.total_responsaveis)}
+                Icon={Users} label="Responsáveis Registados" value={String(resumo.total_responsaveis)}
                 change="Total" color="#3B82F6" colorSoft="rgba(59,130,246,0.15)"
               />
               <KpiCard

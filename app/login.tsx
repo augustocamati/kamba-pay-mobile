@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,7 +51,7 @@ export default function LoginScreen() {
             </Pressable>
             <View style={styles.headerContent}>
               <View style={styles.smallLogo}>
-                <MaterialCommunityIcons name="cat" size={40} color="#FF8C00" />
+                <Image source={require('@/assets/images/logo2.png')} style={{ width: 55, height: 55 }} />
               </View>
               <Text style={styles.welcomeTitle}>Bem-vindo de volta!</Text>
               <Text style={styles.welcomeSub}>Entre na sua conta Kamba</Text>
