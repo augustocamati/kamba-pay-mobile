@@ -8,7 +8,8 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { 
   Users, UserPlus, GraduationCap, CheckCircle2, Search, Filter, X, 
   MapPin, Calendar, Eye, Pencil, Lock, Unlock, Trash2, XCircle,
-  ArrowUpDown, DollarSign, RefreshCw, Check, Save, Plus
+  ArrowUpDown, DollarSign, RefreshCw, Check, Save, Plus,
+  PiggyBank, ShoppingCart, Heart
 } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/lib/api';
@@ -47,7 +48,7 @@ const INITIAL_USERS: AdminUser[] = [
 
 type TipoFilter = 'Todos' | 'Responsável' | 'Criança';
 type StatusFilter = 'Todos' | 'Ativo' | 'Inativo';
-type SortBy = 'nome' | 'saldo' | 'data';
+type SortBy = 'nome' | 'saldo' | 'data' | 'poupam' | 'gastam' | 'doam';
 
 const AVATAR_COLORS = ['#3B82F6','#F59E0B','#22C55E','#8B5CF6','#EF4444','#0EA5E9','#EC4899'];
 const avatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -138,6 +139,9 @@ export default function AdminUsers() {
     if (sortBy === 'nome') list.sort((a, b) => a.nome.localeCompare(b.nome));
     else if (sortBy === 'saldo') list.sort((a, b) => b.saldo - a.saldo);
     else if (sortBy === 'data') list.sort((a, b) => b.dataCadastro.localeCompare(a.dataCadastro));
+    else if (sortBy === 'poupam') list.sort((a, b) => (b.saldo_poupar || 0) - (a.saldo_poupar || 0));
+    else if (sortBy === 'gastam') list.sort((a, b) => (b.saldo_gastar || 0) - (a.saldo_gastar || 0));
+    else if (sortBy === 'doam') list.sort((a, b) => (b.saldo_ajudar || 0) - (a.saldo_ajudar || 0));
     return list;
   }, [users, search, tipoFilter, statusFilter, provinciaFilter, sortBy]);
 
@@ -344,8 +348,16 @@ export default function AdminUsers() {
                     <Text style={styles.locText}>{u.provincia}{u.municipio ? `, ${u.municipio}` : ''}</Text>
                   </View>
                   <View style={styles.saldoWrap}>
-                    <Text style={styles.saldoLabel}>Saldo</Text>
-                    <Text style={styles.saldoValue}>Kz {u.saldo.toLocaleString()}</Text>
+                    <Text style={styles.saldoLabel}>
+                      {sortBy === 'poupam' ? 'Saldo Poupar' : 
+                       sortBy === 'gastam' ? 'Saldo Gastar' : 
+                       sortBy === 'doam' ? 'Saldo Doar' : 'Saldo Total'}
+                    </Text>
+                    <Text style={styles.saldoValue}>
+                      Kz {(sortBy === 'poupam' ? u.saldo_poupar : 
+                           sortBy === 'gastam' ? u.saldo_gastar : 
+                           sortBy === 'doam' ? u.saldo_ajudar : u.saldo)?.toLocaleString()}
+                    </Text>
                   </View>
                 </View>
 
@@ -430,11 +442,14 @@ export default function AdminUsers() {
                 </View>
               </FilterSection>
 
-              <FilterSection label="Ordenar por">
+               <FilterSection label="Ordenar por">
                 {[
                   { key: 'nome', label: 'Nome A-Z', Icon: ArrowUpDown }, 
                   { key: 'saldo', label: 'Maior Saldo', Icon: DollarSign }, 
-                  { key: 'data', label: 'Mais Recente', Icon: Calendar }
+                  { key: 'data', label: 'Mais Recente', Icon: Calendar },
+                  { key: 'poupam', label: '+ Poupam', Icon: PiggyBank },
+                  { key: 'gastam', label: '+ Gastam', Icon: ShoppingCart },
+                  { key: 'doam', label: '+ Doam', Icon: Heart }
                 ].map(s => (
                   <FilterOption key={s.key} label={s.label} active={sortBy === s.key} onPress={() => setSortBy(s.key as SortBy)} Icon={s.Icon} />
                 ))}
