@@ -10,10 +10,12 @@ import {
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Video, ResizeMode } from 'expo-av';
 import { useAuth } from '@/lib/auth-context';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -391,54 +393,69 @@ export default function LoginChildScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <View style={[styles.container, { paddingTop: insets.top || webTopInset, paddingBottom: insets.bottom || webBottomInset }]}>
-        {/* Back button */}
-        <Pressable style={styles.backBtn} onPress={() => step === 'pin' ? setStep('name') : router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#E87722" />
-        </Pressable>
-
-        {/* Mascot area */}
-        <View style={styles.mascotArea}>
-          <SpeechBubble text={bubbleText} />
-          <View style={{ height: 12 }} />
-          <View style={styles.logoCircle}>
-            <Image source={require('@/assets/images/icone kkp1.png')} style={{ width: 80, height: 80 }} contentFit="contain" />
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[styles.container, { paddingTop: insets.top || webTopInset, paddingBottom: insets.bottom || webBottomInset }]}>
+          {/* Back button */}
+          <Pressable style={styles.backBtn} onPress={() => step === 'pin' ? setStep('name') : router.back()}>
+            <Ionicons name="arrow-back" size={22} color="#E87722" />
+          </Pressable>
+  
+          {/* Mascot area */}
+          <View style={styles.mascotArea}>
+            <SpeechBubble text={bubbleText} />
+            <View style={{ height: 12 }} />
+            <View style={styles.mascotStrip}>
+              <View style={styles.videoContainer}>
+                <Video
+                  source={require('@/assets/videos/personagem2.mp4')}
+                  style={styles.mascotVideo}
+                  resizeMode={ResizeMode.CONTAIN}
+                  shouldPlay
+                  isLooping
+                  isMuted
+                />
+              </View>
+            </View>
           </View>
+  
+          {/* Step content */}
+          {step === 'name' ? (
+            <Animated.View entering={FadeInUp.duration(400)} style={styles.formArea}>
+              <Animated.View style={shakeStyle}>
+                <TextInput
+                  style={styles.nameInput}
+                  placeholder="O teu username..."
+                  placeholderTextColor="#C0A880"
+                  value={childName}
+                  onChangeText={setChildName}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="username"
+                  returnKeyType="done"
+                  onSubmitEditing={handleNameContinue}
+                />
+              </Animated.View>
+              <Pressable
+                style={({ pressed }) => [styles.continueBtn, pressed && styles.pressed]}
+                onPress={handleNameContinue}
+              >
+                <Text style={styles.continueBtnText}>Continuar</Text>
+              </Pressable>
+            </Animated.View>
+          ) : (
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.pinArea}>
+              <Animated.View style={shakeStyle}>
+                <PinDots pin={pin} />
+              </Animated.View>
+              <NumPad onPress={handlePinDigit} onDelete={handlePinDelete} />
+            </Animated.View>
+          )}
         </View>
-
-        {/* Step content */}
-        {step === 'name' ? (
-          <Animated.View entering={FadeInUp.duration(400)} style={styles.formArea}>
-            <Animated.View style={shakeStyle}>
-              <TextInput
-                style={styles.nameInput}
-                placeholder="O teu username..."
-                placeholderTextColor="#C0A880"
-                value={childName}
-                onChangeText={setChildName}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="username"
-                returnKeyType="done"
-                onSubmitEditing={handleNameContinue}
-              />
-            </Animated.View>
-            <Pressable
-              style={({ pressed }) => [styles.continueBtn, pressed && styles.pressed]}
-              onPress={handleNameContinue}
-            >
-              <Text style={styles.continueBtnText}>Continuar</Text>
-            </Pressable>
-          </Animated.View>
-        ) : (
-          <Animated.View entering={FadeInDown.duration(400)} style={styles.pinArea}>
-            <Animated.View style={shakeStyle}>
-              <PinDots pin={pin} />
-            </Animated.View>
-            <NumPad onPress={handlePinDigit} onDelete={handlePinDelete} />
-          </Animated.View>
-        )}
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -465,13 +482,25 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  logoCircle: {
-    width: 100, height: 100, borderRadius: 50,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-    borderWidth: 2, borderColor: '#FFE4C4'
+  mascotStrip: {
+    width: '100%',
+    backgroundColor: '#cecece22', 
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  videoContainer: {
+    width: 280,
+    height: 280,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mascotVideo: {
+    width: '100%',
+    height: '100%',
   },
   formArea: {
     width: '100%',
@@ -491,7 +520,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Fredoka_600SemiBold',
     color: '#1A1A2E',
     backgroundColor: '#FFFFFF',
-    textAlign: 'center',
+    textAlign: 'left',
     shadowColor: '#E87722',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
