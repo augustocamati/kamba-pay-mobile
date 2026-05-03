@@ -114,6 +114,7 @@ export default function ChildDashboard() {
   const menuTarefasRef = useRef<View>(null);
   const menuMissoesRef = useRef<View>(null);
   const menuAjudarRef = useRef<View>(null);
+  const menuLojaRef = useRef<View>(null);
   const poteGeralRef = useRef<View>(null);
   const potePouparRef = useRef<View>(null);
   const poteGastarRef = useRef<View>(null);
@@ -126,6 +127,7 @@ export default function ChildDashboard() {
     { name: 'menuTarefas', title: 'Aba das Tarefas', text: 'Os teus pais enviam-te tarefas aqui. Cumpra-as para ganhares o teu dinheiro.' },
     { name: 'menuMissoes', title: 'Aba de Missões', text: 'Usa as Missões para juntares dinheiro para algo que queres muito!' },
     { name: 'menuAjudar', title: 'Causas para Ajudar', text: 'Aqui encontras causas para as quais podes doar e ajudar o mundo.' },
+    { name: 'menuLoja', title: 'Loja de Mascotes', text: 'Aqui podes usar os teus pontos para personalizares a tua mascote.' },
     { name: 'poteGeral', title: 'Saldo Geral', text: 'Este Pote mostra a soma de todo o teu dinheiro.' },
     { name: 'potePoupar', title: 'Poupar', text: 'Tudo o que ganhas nas tarefas de Poupança vem parar a este Pote para o futuro.' },
     { name: 'poteGastar', title: 'Gastar', text: 'Uau! O teu dinheiro para usares livremente no teu dia-a-dia está aqui.' },
@@ -170,6 +172,7 @@ export default function ChildDashboard() {
     await measureRef('menuTarefas', menuTarefasRef);
     await measureRef('menuMissoes', menuMissoesRef);
     await measureRef('menuAjudar', menuAjudarRef);
+    await measureRef('menuLoja', menuLojaRef);
     await measureRef('poteGeral', poteGeralRef);
     await measureRef('potePoupar', potePouparRef);
     await measureRef('poteGastar', poteGastarRef);
@@ -350,15 +353,17 @@ export default function ChildDashboard() {
 
               {/* Row 3 - New Loja Tile */}
               <View style={[s.gridRow, { justifyContent: 'center' }]}>
-                <Pressable
-                  style={({ pressed }) => [s.tile, s.tilePurple, pressed && s.tilePressed, { width: TILE_W * 2 + TILE_GAP }]}
-                  onPress={() => { playSound('click'); router.push('/child/shop' as any); }}
-                >
-                  <View style={s.tileIconBox}>
-                    <Ionicons name="storefront-outline" size={30} color="#fff" />
-                  </View>
-                  <Text style={s.tileLabel}>Loja de Mascotes</Text>
-                </Pressable>
+                <View ref={menuLojaRef} collapsable={false}>
+                  <Pressable
+                    style={({ pressed }) => [s.tile, s.tilePurple, pressed && s.tilePressed, { width: TILE_W * 2 + TILE_GAP }]}
+                    onPress={() => { playSound('click'); router.push('/child/shop' as any); }}
+                  >
+                    <View style={s.tileIconBox}>
+                      <Ionicons name="storefront-outline" size={30} color="#fff" />
+                    </View>
+                    <Text style={s.tileLabel}>Loja de Mascotes</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
           </Animated.View>

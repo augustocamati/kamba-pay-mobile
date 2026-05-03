@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, FlatList, Alert, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { View, Text, Pressable, StyleSheet, FlatList, Alert, TouchableOpacity, Modal, TextInput, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -210,36 +211,83 @@ export default function ParentTasksScreen() {
 
       {/* Rejection Reason Modal */}
       <Modal visible={rejeicaoModal.visible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: '#1e293b', padding: 24, borderRadius: 20, width: '85%' }]}>
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800', marginBottom: 10 }}>Motivo da Rejeição</Text>
-            <Text style={{ color: '#94a3b8', fontSize: 14, marginBottom: 15 }}>Explique o que a criança precisa melhorar na tarefa.</Text>
-            
-            <TextInput
-              style={styles.rejectionInput}
-              placeholder="Ex: A foto está tremida, tire outra por favor."
-              placeholderTextColor="#64748b"
-              value={rejeicaoModal.motivo}
-              onChangeText={(t) => setRejeicaoModal(prev => ({ ...prev, motivo: t }))}
-              multiline
-            />
-            
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-              <TouchableOpacity 
-                onPress={() => setRejeicaoModal({ visible: false, taskId: '', motivo: '' })}
-                style={[styles.modalBtn, { backgroundColor: 'rgba(255,255,255,0.05)', flex: 1 }]}
-              >
-                <Text style={{ color: '#94a3b8', fontWeight: '700' }}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={handleRejeitar}
-                style={[styles.modalBtn, { backgroundColor: '#ef4444', flex: 2 }]}
-              >
-                <Text style={{ color: '#fff', fontWeight: '800' }}>Enviar Rejeição</Text>
-              </TouchableOpacity>
+        {Platform.OS === 'ios' ? (
+          <BlurView intensity={40} tint="dark" style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: '#1e293b', padding: 24, borderRadius: 24, width: '90%', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(239,68,68,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="alert-circle" size={24} color="#ef4444" />
+                </View>
+                <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>Motivo da Rejeição</Text>
+              </View>
+              <Text style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20, lineHeight: 20 }}>
+                Explique de forma clara o que a criança precisa melhorar para que a tarefa seja aprovada.
+              </Text>
+              
+              <TextInput
+                style={styles.rejectionInput}
+                placeholder="Ex: A foto está tremida, tire outra por favor."
+                placeholderTextColor="#64748b"
+                value={rejeicaoModal.motivo}
+                onChangeText={(t) => setRejeicaoModal(prev => ({ ...prev, motivo: t }))}
+                multiline
+              />
+              
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+                <TouchableOpacity 
+                  onPress={() => setRejeicaoModal({ visible: false, taskId: '', motivo: '' })}
+                  style={[styles.modalBtn, { backgroundColor: 'rgba(255,255,255,0.05)', flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }]}
+                >
+                  <Text style={{ color: '#e2e8f0', fontWeight: '700' }}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={handleRejeitar}
+                  style={[styles.modalBtn, { backgroundColor: '#ef4444', flex: 1, shadowColor: '#ef4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }]}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '800' }}>Enviar Rejeição</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        ) : (
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+             <View style={[styles.modalContent, { backgroundColor: '#1e293b', padding: 24, borderRadius: 24, width: '90%', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(239,68,68,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="alert-circle" size={24} color="#ef4444" />
+                </View>
+                <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>Motivo da Rejeição</Text>
+              </View>
+              <Text style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20, lineHeight: 20 }}>
+                Explique de forma clara o que a criança precisa melhorar para que a tarefa seja aprovada.
+              </Text>
+              
+              <TextInput
+                style={styles.rejectionInput}
+                placeholder="Ex: A foto está tremida, tire outra por favor."
+                placeholderTextColor="#64748b"
+                value={rejeicaoModal.motivo}
+                onChangeText={(t) => setRejeicaoModal(prev => ({ ...prev, motivo: t }))}
+                multiline
+              />
+              
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+                <TouchableOpacity 
+                  onPress={() => setRejeicaoModal({ visible: false, taskId: '', motivo: '' })}
+                  style={[styles.modalBtn, { backgroundColor: 'rgba(255,255,255,0.05)', flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }]}
+                >
+                  <Text style={{ color: '#e2e8f0', fontWeight: '700' }}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={handleRejeitar}
+                  style={[styles.modalBtn, { backgroundColor: '#ef4444', flex: 1, shadowColor: '#ef4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }]}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '800' }}>Enviar Rejeição</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        )}
       </Modal>
     </View>
   );

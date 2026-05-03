@@ -32,6 +32,7 @@ interface AppContextType {
   selecionarCrianca: (criancaId: string) => void;
   criarCampanha: (campanha: Omit<Campanha, 'id' | 'criado_em' | 'valor_arrecadado'>) => void;
   concluirAula: () => void;
+  updateMissionProgress: (missionId: string, valor: number) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -585,6 +586,43 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
     setAulaVistaHoje(true);
   };
 
+  const updateMissionProgress = async (missionId: string, valor: number) => {
+    if (isDemo) {
+      setMissoes(prev => prev.map(m =>
+        m.id === missionId ? { ...m, progresso_atual: m.progresso_atual + valor } : m
+      ));
+      return;
+    }
+    try {
+      const missao = missoes.find(m => m.id === missionId);
+      if (!missao) return;
+      const novo_progresso = missao.progresso_atual + valor;
+      await missionService.updateProgress(missionId, novo_progresso);
+      
+      // Update local state and check if completed
+      let isCompleted = false;
+      setMissoes(prev => prev.map(m => {
+        if (m.id === missionId) {
+          const nextProgresso = m.progresso_atual + valor;
+          if (nextProgresso >= m.objetivo_valor) {
+            isCompleted = true;
+          }
+          return { ...m, progresso_atual: nextProgresso };
+        }
+        return m;
+      }));
+
+      if (isCompleted && missao.recompensa > 0) {
+        adicionarXP(missao.recompensa);
+      }
+      
+      setTimeout(() => carregarDadosAPI(), 1000);
+    } catch(e) {
+      console.error('Erro ao atualizar progresso da missão:', e);
+      throw e;
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       crianca,
@@ -613,6 +651,7 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
       criarCampanha,
       adicionarXP,
       concluirAula,
+      updateMissionProgress,
       refreshData: carregarDadosAPI
     }}>
       {children}

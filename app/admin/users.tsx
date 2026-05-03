@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { 
   Users, UserPlus, GraduationCap, CheckCircle2, Search, Filter, X, 
   MapPin, Calendar, Eye, Pencil, Lock, Unlock, Trash2, XCircle,
@@ -405,7 +406,7 @@ export default function AdminUsers() {
 
       {/* FILTER SHEET */}
       <Modal visible={filterOpen} transparent animationType="slide" onRequestClose={() => setFilterOpen(false)}>
-        <View style={styles.overlay}>
+        <BlurOverlay onRequestClose={() => setFilterOpen(false)}>
           <View style={styles.filterSheet}>
             <View style={styles.filterSheetHandle} />
             <View style={styles.filterSheetHeader}>
@@ -468,12 +469,12 @@ export default function AdminUsers() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </BlurOverlay>
       </Modal>
 
       {/* View Modal */}
       <Modal visible={!!viewUser} transparent animationType="slide" onRequestClose={() => setViewUser(null)}>
-        <View style={styles.overlay}>
+        <BlurOverlay onRequestClose={() => setViewUser(null)}>
           <View style={styles.detailSheet}>
             <View style={styles.detailSheetHandle} />
             {viewUser && (
@@ -507,12 +508,12 @@ export default function AdminUsers() {
               </>
             )}
           </View>
-        </View>
+        </BlurOverlay>
       </Modal>
 
       {/* Edit Modal */}
       <Modal visible={!!editUser} transparent animationType="slide" onRequestClose={() => setEditUser(null)}>
-        <View style={styles.overlay}>
+        <BlurOverlay onRequestClose={() => setEditUser(null)}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Editar Usuário</Text>
@@ -564,12 +565,12 @@ export default function AdminUsers() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </BlurOverlay>
       </Modal>
 
       {/* Add Modal */}
       <Modal visible={addModal} transparent animationType="slide" onRequestClose={() => setAddModal(false)}>
-        <View style={styles.overlay}>
+        <BlurOverlay onRequestClose={() => setAddModal(false)}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Adicionar Usuário</Text>
@@ -597,11 +598,28 @@ export default function AdminUsers() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </BlurOverlay>
       </Modal>
     </View>
   );
 }
+
+const BlurOverlay = ({ children, onRequestClose }: { children: React.ReactNode; onRequestClose?: () => void }) => {
+  if (Platform.OS === 'ios') {
+    return (
+      <BlurView intensity={40} tint="dark" style={styles.overlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onRequestClose} />
+        {children}
+      </BlurView>
+    );
+  }
+  return (
+    <View style={styles.overlay}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onRequestClose} />
+      {children}
+    </View>
+  );
+};
 
 /* ── Sub-components ── */
 function StatChip({ Icon, label, value, color }: { Icon: any; label: string; value: number; color: string }) {

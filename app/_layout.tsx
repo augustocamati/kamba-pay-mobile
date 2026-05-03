@@ -18,8 +18,11 @@ import {
 } from "@expo-google-fonts/fredoka";
 import { StatusBar } from "expo-status-bar";
 import { DemoBanner } from "@/components/DemoBanner";
+import { setupGlobalAlerts } from "@/lib/alert";
+import { GlobalAlert } from "@/components/GlobalAlert";
 
 SplashScreen.preventAutoHideAsync();
+setupGlobalAlerts();
 
 function RootLayoutNav() {
   return (
@@ -73,13 +76,14 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <KeyboardProvider>
             <AuthProvider>
               <AppProvider>
                 <MascotProvider>
                   <StatusBar style="light" />
                   <RootLayoutNav />
+                  <GlobalAlert />
                 </MascotProvider>
               </AppProvider>
             </AuthProvider>

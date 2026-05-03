@@ -7,8 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../lib/api';
+import * as ImagePicker from 'expo-image-picker';
 import { 
-  BrainCircuit, Pencil, Trash2, Puzzle, X, PlusCircle, Coins, Landmark, BookOpen, Target, CheckCircle2 
+  BrainCircuit, Pencil, Trash2, Puzzle, X, PlusCircle, Coins, Landmark, BookOpen, Target, CheckCircle2, Image as ImageIcon, Video 
 } from 'lucide-react-native';
 
 export interface AdminQuiz {
@@ -19,6 +20,7 @@ export interface AdminQuiz {
   dificuldade: 'Fácil' | 'Média' | 'Difícil';
   pontosRecompensa: number;
   pergunta: string;
+  midia_url?: string | null;
   opcoes: { id?: string; texto: string; correta: boolean }[];
   explicacao: string;
   vezesCompletado: number;
@@ -44,13 +46,15 @@ type FormState = {
   dificuldade: 'Fácil' | 'Média' | 'Difícil';
   pontosRecompensa: string;
   pergunta: string;
+  midiaUri: string | null;
+  midiaType: 'image' | 'video' | null;
   opcoes: { texto: string; correta: boolean }[];
   explicacao: string;
 };
 
 const blankForm = (): FormState => ({
   titulo: '', descricao: '', categoria: 'Poupar', dificuldade: 'Fácil',
-  pontosRecompensa: '50', pergunta: '',
+  pontosRecompensa: '50', pergunta: '', midiaUri: null, midiaType: null,
   opcoes: [{ texto: '', correta: false }, { texto: '', correta: false }],
   explicacao: '',
 });
@@ -101,6 +105,7 @@ export default function AdminQuizzes() {
 
   const openEdit = (q: AdminQuiz) => {
     setEditId(q.id);
+    const apiHost = 'http://192.168.0.103:3000'; // fallback
     setForm({
       titulo: q.titulo, 
       descricao: q.descricao, 
@@ -108,10 +113,33 @@ export default function AdminQuizzes() {
       dificuldade: q.dificuldade, 
       pontosRecompensa: String(q.pontosRecompensa),
       pergunta: q.pergunta,
+      midiaUri: q.midia_url ? `${apiHost}${q.midia_url}` : null,
+      midiaType: q.midia_url?.includes('.mp4') ? 'video' : (q.midia_url ? 'image' : null),
       opcoes: q.opcoes.map(o => ({ texto: o.texto, correta: o.correta })),
       explicacao: q.explicacao,
     });
     setModal(true);
+  };
+
+  const pickMedia = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      return Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria.');
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setForm(p => ({ 
+        ...p, 
+        midiaUri: result.assets[0].uri,
+        midiaType: result.assets[0].type === 'video' ? 'video' : 'image'
+      }));
+    }
   };
 
   const setOpcaoTexto = (i: number, txt: string) =>
@@ -140,11 +168,32 @@ export default function AdminQuizzes() {
       return Alert.alert('Aviso', 'Selecione pelo menos uma opção como correta.');
     }
     
-    const payload = {
-      ...form,
+    let payload: any = {
+      titulo: form.titulo,
+      descricao: form.descricao,
+      categoria: form.categoria,
+      dificuldade: form.dificuldade,
+      pergunta: form.pergunta,
+      explicacao: form.explicacao,
       pontosRecompensa: Number(form.pontosRecompensa) || 50,
-      opcoes: form.opcoes.filter(o => o.texto),
     };
+
+    if (form.midiaUri) {
+      const formData = new FormData();
+      formData.append('midia', {
+        uri: form.midiaUri,
+        name: `quiz_${Date.now()}.${form.midiaType === 'video' ? 'mp4' : 'jpg'}`,
+        type: form.midiaType === 'video' ? 'video/mp4' : 'image/jpeg',
+      } as any);
+
+      Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+      // opcoes need to be JSON stringified for FormData
+      formData.append('opcoes', JSON.stringify(form.opcoes.filter(o => o.texto)));
+      
+      payload = formData;
+    } else {
+      payload.opcoes = form.opcoes.filter(o => o.texto);
+    }
 
     if (editId) {
       updateMutation.mutate({ id: editId, data: payload });
@@ -339,6 +388,26 @@ export default function AdminQuizzes() {
                   value={form.pergunta}
                   onChangeText={v => setForm(p => ({ ...p, pergunta: v }))}
                 />
+              </Field>
+
+              {/* Mídia Opcional */}
+              <Field label="Mídia (Opcional)">
+                <TouchableOpacity style={styles.mediaUploadBtn} onPress={pickMedia}>
+                  {form.midiaUri ? (
+                    <View style={styles.mediaPreview}>
+                      {form.midiaType === 'video' ? <Video size={24} color="#FF8C00" /> : <ImageIcon size={24} color="#FF8C00" />}
+                      <Text style={styles.mediaPreviewText}>Mídia Selecionada</Text>
+                      <TouchableOpacity onPress={() => setForm(p => ({ ...p, midiaUri: null, midiaType: null }))}>
+                        <X size={18} color="#EF4444" style={{ marginLeft: 10 }} />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.mediaPlaceholder}>
+                      <ImageIcon size={20} color="#4A5F8A" />
+                      <Text style={styles.mediaPlaceholderText}>Anexar Imagem ou Vídeo</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
               </Field>
 
               {/* Opções de Resposta */}
@@ -583,4 +652,13 @@ const styles = StyleSheet.create({
   btnSaveText: { color: '#fff', fontFamily: 'Nunito_700Bold', fontSize: 14 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', marginTop: 12 },
+  
+  mediaUploadBtn: {
+    backgroundColor: S.sidebar, borderRadius: 10, borderWidth: 1, borderColor: S.border,
+    overflow: 'hidden', padding: 12
+  },
+  mediaPlaceholder: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 8 },
+  mediaPlaceholderText: { color: S.muted, fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  mediaPreview: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,140,0,0.1)', padding: 10, borderRadius: 8 },
+  mediaPreviewText: { color: S.orange, fontFamily: 'Nunito_700Bold', fontSize: 13, flex: 1, marginLeft: 8 },
 });

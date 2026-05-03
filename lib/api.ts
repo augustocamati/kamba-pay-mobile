@@ -68,7 +68,7 @@ export const parentService = {
   getChildStats: (childId: string, params?: { periodo?: string, data?: string }) => api.get(`/parent/children/${childId}/stats`, { params }).then(res => res.data),
   addChild: (data: { nome: string, idade: number, username: string, pin: string, distribuicao_potes?: any, provincia?: string, municipio?: string }) => 
     api.post('/parent/children', data).then(res => res.data),
-  updateChild: (childId: string, data: { nome?: string, idade?: number }) => api.patch(`/parent/children/${childId}`, data).then(res => res.data),
+  updateChild: (childId: string, data: { nome?: string, idade?: number, senha?: string, saldo_gastar?: number, saldo_poupar?: number, saldo_ajudar?: number }) => api.patch(`/parent/children/${childId}`, data).then(res => res.data),
   updatePotesConfig: (childId: string, data: { gastar_pct: number, poupar_pct: number, ajudar_pct: number }) => api.patch(`/parent/children/${childId}/potes-config`, data).then(res => res.data),
   getChildren: () => api.get('/parent/children').then(res => res.data),
   addBalance: (childId: string, valor: number, pote: string, descricao: string) => 
@@ -195,8 +195,18 @@ export const adminService = {
 
   // Quizzes
   getQuizzes: () => api.get('/admin/quizzes').then(res => res.data),
-  createQuiz: (data: any) => api.post('/admin/quizzes', data).then(res => res.data),
-  updateQuiz: (id: string, data: any) => api.put(`/admin/quizzes/${id}`, data).then(res => res.data),
+  createQuiz: (data: any) => {
+    const isFormData = data instanceof FormData;
+    return api.post('/admin/quizzes', data, {
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    }).then(res => res.data);
+  },
+  updateQuiz: (id: string, data: any) => {
+    const isFormData = data instanceof FormData;
+    return api.put(`/admin/quizzes/${id}`, data, {
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    }).then(res => res.data);
+  },
   deleteQuiz: (id: string) => api.delete(`/admin/quizzes/${id}`).then(res => res.data),
 
   // Vídeos (Conteúdo)

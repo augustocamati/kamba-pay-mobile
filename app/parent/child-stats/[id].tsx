@@ -1,29 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking, TextInput, Modal, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { parentService } from '../../../lib/api';
 import { useApp } from '../../../context/AppContext';
+import { BlurView } from 'expo-blur';
 
 export default function ChildStatsScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
-  const { dependentes } = useApp();
+  const { dependentes, refreshData } = useApp();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editForm, setEditForm] = useState({
+    nome: '',
+    idade: '',
+    senha: '',
+    saldo_gastar: '',
+    saldo_poupar: '',
+    saldo_ajudar: ''
+  });
+
   const child = dependentes.find(c => c.id === id) || stats?.crianca;
 
-  useEffect(() => {
+  const loadStats = () => {
     if (!id) return;
     setLoading(true);
     parentService.getChildStats(id as string)
       .then(data => setStats(data))
       .catch(e => console.error('Erro ao buscar stats:', e))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadStats();
   }, [id]);
+
+  const potes = stats?.crianca?.potes || child?.potes || { saldo_gastar: 0, saldo_poupar: 0, saldo_ajudar: 0, total: 0 };
+  const nome = stats?.crianca?.nome || child?.nome || '?';
+  const nivel = stats?.crianca?.nivel || child?.nivel || 1;
+  const idade = stats?.crianca?.idade || child?.idade || '';
+
+  const openEditModal = () => {
+    setEditForm({
+      nome: nome,
+      idade: String(idade),
+      senha: '',
+      saldo_gastar: String(potes.saldo_gastar || 0),
+      saldo_poupar: String(potes.saldo_poupar || 0),
+      saldo_ajudar: String(potes.saldo_ajudar || 0),
+    });
+    setIsEditModalVisible(true);
+  };
+
+  const handleSave = async () => {
+    setIsSubmitting(true);
+    try {
+      const data: any = {};
+      if (editForm.nome) data.nome = editForm.nome;
+      if (editForm.idade) data.idade = parseInt(editForm.idade);
+      if (editForm.senha && editForm.senha.length >= 4) data.senha = editForm.senha;
+      if (editForm.saldo_gastar) data.saldo_gastar = parseFloat(editForm.saldo_gastar);
+      if (editForm.saldo_poupar) data.saldo_poupar = parseFloat(editForm.saldo_poupar);
+      if (editForm.saldo_ajudar) data.saldo_ajudar = parseFloat(editForm.saldo_ajudar);
+
+      await parentService.updateChild(id as string, data);
+      await refreshData();
+      loadStats();
+      setIsEditModalVisible(false);
+      Alert.alert('Sucesso', 'Informações atualizadas com sucesso!');
+    } catch (e: any) {
+      console.error(e);
+      Alert.alert('Erro', e.response?.data?.mensagem || 'Falha ao atualizar informações da criança.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleExportarWhatsApp = () => {
     const tarefasConcluidas = stats?.tarefas_concluidas_mes || 0;
@@ -64,15 +121,11 @@ export default function ChildStatsScreen() {
     );
   }
 
-  const potes = stats?.crianca?.potes || child?.potes || { saldo_gastar: 0, saldo_poupar: 0, saldo_ajudar: 0, total: 0 };
-  const nome = stats?.crianca?.nome || child?.nome || '?';
-  const nivel = stats?.crianca?.nivel || child?.nivel || 1;
   const totalSaldo = potes.total || 0;
   const tarefasMes = stats?.tarefas_concluidas_mes || 0;
   const missoesCompletas = stats?.missoes_completas || 0;
   const doacoes = stats?.doacoes_realizadas || 0;
   const historicoRecente: any[] = stats?.historico_recente || [];
-  const desempenhoSemanal: any[] = stats?.desempenho_semanal || [];
 
   return (
     <LinearGradient colors={['#0f172a', '#1e3a8a']} style={{ flex: 1 }}>
@@ -87,6 +140,9 @@ export default function ChildStatsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Profile Summary */}
         <View style={styles.profileCard}>
+          <TouchableOpacity onPress={openEditModal} style={styles.editProfileBtn}>
+            <Ionicons name="pencil" size={20} color="#fff" />
+          </TouchableOpacity>
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={50} color="#fff" />
           </View>
@@ -190,6 +246,165 @@ export default function ChildStatsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Edit Child Modal */}
+      <Modal visible={isEditModalVisible} transparent animationType="slide">
+        {Platform.OS === 'ios' ? (
+          <BlurView intensity={40} tint="dark" style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Editar Dependente</Text>
+                <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#94a3b8" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={styles.inputLabel}>Nome</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.nome}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, nome: t }))}
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Idade</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.idade}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, idade: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Nova Senha (PIN)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.senha}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, senha: t }))}
+                  placeholder="Deixe em branco para não alterar"
+                  keyboardType="numeric"
+                  secureTextEntry
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Saldo para Gastar (Kz)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.saldo_gastar}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, saldo_gastar: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Saldo para Poupar (Kz)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.saldo_poupar}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, saldo_poupar: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Saldo para Ajudar (Kz)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.saldo_ajudar}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, saldo_ajudar: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <TouchableOpacity 
+                  style={[styles.saveBtn, isSubmitting && { opacity: 0.7 }]} 
+                  onPress={handleSave}
+                  disabled={isSubmitting}
+                >
+                  <Text style={styles.saveBtnText}>{isSubmitting ? 'A Guardar...' : 'Guardar Alterações'}</Text>
+                </TouchableOpacity>
+                <View style={{ height: 40 }} />
+              </ScrollView>
+            </View>
+          </BlurView>
+        ) : (
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Editar Dependente</Text>
+                <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#94a3b8" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={styles.inputLabel}>Nome</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.nome}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, nome: t }))}
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Idade</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.idade}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, idade: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Nova Senha (PIN)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.senha}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, senha: t }))}
+                  placeholder="Deixe em branco para não alterar"
+                  keyboardType="numeric"
+                  secureTextEntry
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Saldo para Gastar (Kz)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.saldo_gastar}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, saldo_gastar: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Saldo para Poupar (Kz)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.saldo_poupar}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, saldo_poupar: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <Text style={styles.inputLabel}>Saldo para Ajudar (Kz)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.saldo_ajudar}
+                  onChangeText={(t) => setEditForm(p => ({ ...p, saldo_ajudar: t }))}
+                  keyboardType="numeric"
+                  placeholderTextColor="#64748b"
+                />
+
+                <TouchableOpacity 
+                  style={[styles.saveBtn, isSubmitting && { opacity: 0.7 }]} 
+                  onPress={handleSave}
+                  disabled={isSubmitting}
+                >
+                  <Text style={styles.saveBtnText}>{isSubmitting ? 'A Guardar...' : 'Guardar Alterações'}</Text>
+                </TouchableOpacity>
+                <View style={{ height: 40 }} />
+              </ScrollView>
+            </View>
+          </View>
+        )}
+      </Modal>
     </LinearGradient>
   );
 }
@@ -212,7 +427,8 @@ const styles = StyleSheet.create({
   backBtn: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 12 },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
   content: { padding: 20, paddingBottom: 40 },
-  profileCard: { alignItems: 'center', marginBottom: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 24 },
+  profileCard: { alignItems: 'center', marginBottom: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 24, position: 'relative' },
+  editProfileBtn: { position: 'absolute', top: 16, right: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 8, borderRadius: 12 },
   avatarContainer: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   childName: { fontSize: 24, fontWeight: '800', color: '#fff' },
   childLevel: { fontSize: 14, color: '#93c5fd', marginTop: 4 },
@@ -240,4 +456,29 @@ const styles = StyleSheet.create({
   errorContainer: { flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' },
   errorText: { color: '#fff', fontSize: 18, marginBottom: 10 },
   backLink: { color: '#3b82f6', fontSize: 16 },
+
+  // Modal Styles
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  modalContent: {
+    backgroundColor: '#1e293b',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '85%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)'
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#94a3b8', marginBottom: 8 },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12, padding: 14, color: '#fff', fontSize: 16,
+    marginBottom: 16
+  },
+  saveBtn: {
+    backgroundColor: '#fb923c', paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 10
+  },
+  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' }
 });
