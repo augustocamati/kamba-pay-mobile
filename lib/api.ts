@@ -105,6 +105,8 @@ export const missionService = {
   getMissionsParent: (params?: any) => api.get('/missions', { params }).then(res => res.data),
   updateProgress: (missionId: string, novo_progresso: number) => api.patch(`/missions/${missionId}/progress`, { novo_progresso }).then(res => res.data),
   getMissionsChild: (tipo?: string) => api.get('/child/missions', { params: { tipo } }).then(res => res.data),
+  updateMission: (missionId: string, data: any) => api.put(`/missions/${missionId}`, data).then(res => res.data),
+  deleteMission: (missionId: string) => api.delete(`/missions/${missionId}`).then(res => res.data),
 };
 
 // ============================================
