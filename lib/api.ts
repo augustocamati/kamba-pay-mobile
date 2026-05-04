@@ -205,16 +205,25 @@ export const adminService = {
   getVideos: () => api.get('/admin/videos').then(res => res.data),
   getVideosStats: () => api.get('/admin/videos/estatisticas').then(res => res.data),
   createVideo: (data: any) => {
-    const isFormData = data instanceof FormData;
-    return api.post('/admin/videos', data, {
-      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
-    }).then(res => res.data);
+    const isFormData = data && typeof data.append === 'function';
+    console.log("API SENDING VIDEO - isFormData:", isFormData);
+    
+    const config: any = {
+      headers: isFormData 
+        ? { 'Content-Type': 'multipart/form-data' } 
+        : { 'Content-Type': 'application/json' }
+    };
+
+    return api.post('/admin/videos', data, config).then(res => res.data);
   },
   updateVideo: (id: string, data: any) => {
-    const isFormData = data instanceof FormData;
-    return api.put(`/admin/videos/${id}`, data, {
-      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
-    }).then(res => res.data);
+    const isFormData = data && typeof data.append === 'function';
+    const config: any = {
+      headers: isFormData 
+        ? { 'Content-Type': 'multipart/form-data' } 
+        : { 'Content-Type': 'application/json' }
+    };
+    return api.put(`/admin/videos/${id}`, data, config).then(res => res.data);
   },
   deleteVideo: (id: string) => api.delete(`/admin/videos/${id}`).then(res => res.data),
 

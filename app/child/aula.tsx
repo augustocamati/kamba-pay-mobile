@@ -7,6 +7,7 @@ import Animated, { FadeInDown, SlideInDown } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import YoutubePlayer from 'react-native-youtube-iframe';
+import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
 import { useSound } from '@/lib/sound-context';
@@ -37,15 +38,13 @@ export default function AulaScreen() {
   // Extrair ID do vídeo do YouTube
   const getYoutubeId = (url: string) => {
     if (!url) return null;
-    console.log('[Aula] Extraindo ID de:', url);
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    const extractedId = (match && match[2].length === 11) ? match[2] : null;
-    console.log('[Aula] ID extraído:', extractedId);
-    return extractedId;
+    return (match && match[2].length === 11) ? match[2] : null;
   };
 
   const videoId = conteudo?.video_url ? getYoutubeId(conteudo.video_url) : null;
+  const isLocalVideo = conteudo?.video_url && (conteudo.video_url.includes('/uploads') || conteudo.video_url.includes('file://'));
 
   const onStateChange = useCallback((state: string) => {
     if (state === 'ended') {
@@ -56,8 +55,16 @@ export default function AulaScreen() {
     }
   }, [conteudo, marcarConteudoCompleto]);
 
+  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+    if (status.isLoaded && status.didJustFinish) {
+      setIsVideoFinished(true);
+      playSound('success');
+      setShowSuccess(true);
+      if (conteudo) marcarConteudoCompleto(conteudo.id);
+    }
+  };
+
   const handleSkip = () => {
-      // Para testes ou crianças que já sabem, permitir pular (opcional)
       setIsVideoFinished(true);
       setShowSuccess(true);
       if (conteudo) marcarConteudoCompleto(conteudo.id);
@@ -91,7 +98,6 @@ export default function AulaScreen() {
                         style={{ borderRadius: 24 }}
                         onLoad={() => {
                             setLoading(false);
-                            // Simular término do vídeo na web após algum tempo se o postMessage não funcionar
                             setTimeout(() => setIsVideoFinished(true), 5000);
                         }}
                     />
@@ -104,6 +110,27 @@ export default function AulaScreen() {
                         onReady={() => setLoading(false)}
                     />
                 )}
+                {loading && (
+                    <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="large" color="#fb923c" />
+                    </View>
+                )}
+            </View>
+          ) : isLocalVideo ? (
+            <View style={styles.videoCard}>
+               <Video
+                  source={{ uri: conteudo!.video_url }}
+                  rate={1.0}
+                  volume={1.0}
+                  isMuted={false}
+                  resizeMode={ResizeMode.CONTAIN}
+                  shouldPlay
+                  useNativeControls
+                  style={{ width: '100%', height: 220 }}
+                  onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+                  onLoad={() => setLoading(false)}
+                  onError={(err) => console.error("Erro Video Local:", err)}
+                />
                 {loading && (
                     <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" color="#fb923c" />
@@ -159,7 +186,6 @@ export default function AulaScreen() {
         </Animated.View>
       )}
 
-      {/* Floating mascot companion */}
       <MascotCompanion position="bottom-left" />
 
       <ActionSuccessPopup

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService } from '../../lib/api';
+import { adminService, API_HOST } from '../../lib/api';
 import * as ImagePicker from 'expo-image-picker';
 import { Play, Eye, Pencil, Trash2, X, UploadCloud, Image as ImageIcon, Clapperboard, BrainCircuit, Check, Video } from 'lucide-react-native';
 
@@ -120,8 +120,8 @@ export default function AdminVideos() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      allowsEditing: true,
-      quality: 0.8,
+      allowsEditing: false,
+      quality: 1,
     });
 
     if (!result.canceled) {
@@ -145,56 +145,50 @@ export default function AdminVideos() {
   };
 
   const save = () => {
-    if (!form.titulo || (!form.url && !form.localVideoUri)) {
-        return Alert.alert('Aviso', 'Título e URL (ou upload de vídeo) são obrigatórios.');
+    // Validação básica
+    if (!form.titulo || !form.descricao) {
+      return Alert.alert('Aviso', 'Título e descrição são obrigatórios.');
     }
+
+    // Se for novo, os ficheiros são obrigatórios
+    if (!editId && (!form.localVideoUri || !form.localThumbUri)) {
+      return Alert.alert('Aviso', 'Deve selecionar um vídeo e uma capa da galeria.');
+    }
+
+    const formData = new FormData();
     
-    let payload: any = {
-      titulo: form.titulo,
-      descricao: form.descricao,
-      tipo: 'video',
-      categoria: form.categoria,
-      duracao: form.duracao,
-      id_missao: form.id_missao
-    };
+    // Ficheiros (se houver novos)
+    if (form.localVideoUri) {
+      formData.append('video', {
+        uri: form.localVideoUri,
+        name: `video_${Date.now()}.mp4`,
+        type: 'video/mp4',
+      } as any);
+    }
 
-    if (form.localVideoUri || form.localThumbUri) {
-      const formData = new FormData();
-      
-      if (form.localVideoUri) {
-        formData.append('video', {
-          uri: form.localVideoUri,
-          name: `video_${Date.now()}.mp4`,
-          type: 'video/mp4',
-        } as any);
-      } else {
-        payload.url = form.url;
-      }
+    if (form.localThumbUri) {
+      formData.append('thumbnail', {
+        uri: form.localThumbUri,
+        name: `thumb_${Date.now()}.jpg`,
+        type: 'image/jpeg',
+      } as any);
+    }
 
-      if (form.localThumbUri) {
-        formData.append('thumbnail', {
-          uri: form.localThumbUri,
-          name: `thumb_${Date.now()}.jpg`,
-          type: 'image/jpeg',
-        } as any);
-      } else {
-        payload.thumbnail_url = form.thumbnail;
-      }
-
-      Object.keys(payload).forEach(key => {
-        if (payload[key] !== null) formData.append(key, String(payload[key]));
-      });
-      
-      payload = formData;
-    } else {
-      payload.url = form.url;
-      payload.thumbnail_url = form.thumbnail;
+    // Outros campos
+    formData.append('titulo', form.titulo);
+    formData.append('descricao', form.descricao);
+    formData.append('tipo', 'video');
+    formData.append('categoria', form.categoria);
+    formData.append('duracao', form.duracao);
+    
+    if (form.id_missao !== null) {
+      formData.append('id_missao', String(form.id_missao));
     }
 
     if (editId) {
-      updateMutation.mutate({ id: editId, data: payload });
+      updateMutation.mutate({ id: editId, data: formData });
     } else {
-      createMutation.mutate(payload);
+      createMutation.mutate(formData);
     }
   };
 
@@ -235,7 +229,15 @@ export default function AdminVideos() {
                 <View style={styles.videoCard}>
                   {/* Thumbnail with gradient overlay */}
                   <View style={styles.thumbWrap}>
-                    <Image source={{ uri: v.thumbnail || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&q=80' }} style={styles.thumb} resizeMode="cover" />
+                    <Image 
+                      source={{ 
+                        uri: (v.thumbnail && v.thumbnail.startsWith('/uploads')) 
+                          ? `${API_HOST}${v.thumbnail}` 
+                          : (v.thumbnail || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&q=80') 
+                      }} 
+                      style={styles.thumb} 
+                      resizeMode="cover" 
+                    />
                     <LinearGradient colors={['transparent', 'rgba(0,0,0,0.65)']} style={styles.thumbGrad} />
                     <View style={styles.playCircle}>
                       <Play size={24} color="#0B1222" style={{ marginLeft: 3 }} />
@@ -320,19 +322,14 @@ export default function AdminVideos() {
                   onChangeText={v => setForm(p => ({ ...p, descricao: v }))} />
               </Field>
 
-              {/* Video URL or Upload */}
-              <Field label="Vídeo (URL ou Upload) *">
+              {/* Video Upload */}
+              <Field label="Vídeo Local (Obrigatório) *">
                 <View style={{ gap: 10 }}>
-                  <TextInput style={styles.input}
-                    placeholder="URL do vídeo (YouTube, Vimeo, etc.)"
-                    placeholderTextColor="#4A5F8A" value={form.url}
-                    onChangeText={v => setForm(p => ({ ...p, url: v, localVideoUri: null }))} />
-                  
                   <TouchableOpacity style={styles.mediaUploadBtn} onPress={pickVideo}>
                     {form.localVideoUri ? (
                       <View style={styles.mediaPreview}>
                         <Video size={20} color="#FF8C00" />
-                        <Text style={styles.mediaPreviewText} numberOfLines={1}>Ficheiro Selecionado</Text>
+                        <Text style={styles.mediaPreviewText} numberOfLines={1}>Vídeo Selecionado</Text>
                         <TouchableOpacity onPress={() => setForm(p => ({ ...p, localVideoUri: null }))}>
                           <X size={16} color="#EF4444" />
                         </TouchableOpacity>
@@ -340,21 +337,16 @@ export default function AdminVideos() {
                     ) : (
                       <View style={styles.mediaPlaceholder}>
                         <UploadCloud size={18} color="#4A5F8A" />
-                        <Text style={styles.mediaPlaceholderText}>Fazer Upload de Vídeo</Text>
+                        <Text style={styles.mediaPlaceholderText}>Selecionar Vídeo da Galeria</Text>
                       </View>
                     )}
                   </TouchableOpacity>
                 </View>
               </Field>
 
-              {/* Thumbnail URL or Upload */}
-              <Field label="Thumbnail (URL ou Upload)">
+              {/* Thumbnail Upload */}
+              <Field label="Capa / Thumbnail (Obrigatória) *">
                 <View style={{ gap: 10 }}>
-                  <TextInput style={styles.input}
-                    placeholder="URL da imagem de capa..."
-                    placeholderTextColor="#4A5F8A" value={form.thumbnail}
-                    onChangeText={v => setForm(p => ({ ...p, thumbnail: v, localThumbUri: null }))} />
-                  
                   <TouchableOpacity style={styles.mediaUploadBtn} onPress={pickThumbnail}>
                     {form.localThumbUri ? (
                       <View style={styles.mediaPreview}>
@@ -367,7 +359,7 @@ export default function AdminVideos() {
                     ) : (
                       <View style={styles.mediaPlaceholder}>
                         <ImageIcon size={18} color="#4A5F8A" />
-                        <Text style={styles.mediaPlaceholderText}>Fazer Upload de Capa</Text>
+                        <Text style={styles.mediaPlaceholderText}>Selecionar Capa da Galeria</Text>
                       </View>
                     )}
                   </TouchableOpacity>

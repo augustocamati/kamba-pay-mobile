@@ -40,7 +40,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 import { 
   parentService, childService, taskService, missionService, campaignService,
-  educationalService, shopService, api 
+  educationalService, shopService, api, API_HOST 
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -74,22 +74,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [aulaVistaHoje, setAulaVistaHoje] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const mapTarefa = (t: any): Tarefa => ({
-    id: t.id,
-    titulo: t.titulo,
-    descricao: t.descricao || '',
-    recompensa: parseFloat(t.recompensa),
-    status: t.status,
-    crianca_id: t.crianca_id,
-    foto_url: t.foto_url,
-    icone: t.icone || 'bed',
-    categoria: t.categoria || 'casa',
-    criado_em: t.criado_em ? new Date(t.criado_em) : new Date(),
-    concluido_em: t.concluido_em ? new Date(t.concluido_em) : undefined,
-    aprovado_em: t.aprovado_em ? new Date(t.aprovado_em) : undefined,
-    motivo_rejeicao: t.motivo_rejeicao,
-    data_limite: t.data_limite ? new Date(t.data_limite) : undefined,
-  });
+  const mapTarefa = (t: any): Tarefa => {
+    let foto = t.foto_url;
+    if (foto && foto.startsWith('/uploads')) {
+      foto = `${API_HOST}${foto}`;
+    }
+    
+    return {
+      id: t.id,
+      titulo: t.titulo,
+      descricao: t.descricao || '',
+      recompensa: parseFloat(t.recompensa),
+      status: t.status,
+      crianca_id: t.crianca_id,
+      foto_url: foto,
+      icone: t.icone || 'bed',
+      categoria: t.categoria || 'casa',
+      criado_em: t.criado_em ? new Date(t.criado_em) : new Date(),
+      concluido_em: t.concluido_em ? new Date(t.concluido_em) : undefined,
+      aprovado_em: t.aprovado_em ? new Date(t.aprovado_em) : undefined,
+      motivo_rejeicao: t.motivo_rejeicao,
+      data_limite: t.data_limite ? new Date(t.data_limite) : undefined,
+    };
+  };
 
   const mapMissao = (m: any): Missao => ({
     id: m.id,
@@ -107,17 +114,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     crianca_id: m.crianca_id,
   });
 
-  const mapCampanha = (c: any): Campanha => ({
-    id: c.id,
-    titulo: c.titulo || c.nome,
-    descricao: c.descricao || '',
-    organizacao: c.organizacao || 'Kamba Kid Pay',
-    meta_valor: parseFloat(c.meta_valor || 10000),
-    valor_arrecadado: parseFloat(c.valor_arrecadado || 0),
-    ativa: c.ativa !== false,
-    imagem_url: c.imagem_url,
-    causa: c.causa || 'outro',
-  });
+  const mapCampanha = (c: any): Campanha => {
+    let img = c.imagem_url;
+    if (img && img.startsWith('/upload')) {
+      img = `${API_HOST}${img}`;
+    }
+
+    return {
+      id: c.id,
+      titulo: c.titulo || c.nome,
+      descricao: c.descricao || '',
+      organizacao: c.organizacao || 'Kamba Kid Pay',
+      meta_valor: parseFloat(c.meta_valor || 10000),
+      valor_arrecadado: parseFloat(c.valor_arrecadado || 0),
+      ativa: c.ativa !== false,
+      imagem_url: img,
+      causa: c.causa || 'outro',
+    };
+  };
 
   const mapHistorico = (h: any): HistoricoTransacao => ({
     id: h.id,
@@ -246,18 +260,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         if (contentRes.conteudos) {
-          setConteudoEducativo(contentRes.conteudos.map((c: any): ConteudoEducativo => ({
-            id: c.id,
-            titulo: c.titulo,
-            tipo: c.tipo,
-            thumbnail_url: c.thumbnail_url || `https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800`,
-            video_url: c.url,
-            duracao: c.duracao || '5',
-            descricao: c.descricao || '',
-            faixa_etaria: c.faixa_etaria || '0-100',
-            id_missao: c.id_missao,
-            completo: c.completo || false,
-          })));
+          setConteudoEducativo(contentRes.conteudos.map((c: any): ConteudoEducativo => {
+            let thumb = c.thumbnail_url || c.thumbnail;
+            if (thumb && thumb.startsWith('/uploads')) {
+              thumb = `${API_HOST}${thumb}`;
+            }
+
+            let video = c.url;
+            if (video && video.startsWith('/uploads')) {
+              video = `${API_HOST}${video}`;
+            }
+
+            return {
+              id: c.id,
+              titulo: c.titulo,
+              tipo: c.tipo,
+              thumbnail_url: thumb || `https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800`,
+              video_url: video,
+              duracao: c.duracao || '5',
+              descricao: c.descricao || '',
+              faixa_etaria: c.faixa_etaria || '0-100',
+              id_missao: c.id_missao,
+              completo: c.completo || false,
+            };
+          }));
         }
       }
     } catch (error) {
