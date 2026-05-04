@@ -6,6 +6,14 @@ const SOUNDS = {
   wrong: 'https://cdn.pixabay.com/audio/2022/11/21/audio_136661e554.mp3',
   success: 'https://cdn.pixabay.com/audio/2025/11/24/audio_a78d073adb.mp3',
   bg_music: 'https://cdn.pixabay.com/audio/2026/04/01/audio_7efa637601.mp3',
+  
+  // Onboarding local sounds
+  onboarding_1: require('../assets/sounds/olá futuro camp.wav'),
+  onboarding_2: require('../assets/sounds/tarefas.wav'),
+  onboarding_3: require('../assets/sounds/os teus 3 potes.wav'),
+  onboarding_4: require('../assets/sounds/cria missões.wav'),
+  onboarding_5: require('../assets/sounds/temos videoaulas.wav'),
+  onboarding_6: require('../assets/sounds/pronto para cmc.wav'),
 };
 
 class SoundManager {
@@ -15,11 +23,12 @@ class SoundManager {
 
   async loadAll() {
     try {
-      // Pre-load all SFX to avoid latency when playing
       const items = Object.entries(SOUNDS).filter(([k]) => k !== 'bg_music');
-      for (const [name, url] of items) {
+      for (const [name, source] of items) {
         if (this.sounds.has(name)) continue;
-        const { sound } = await Audio.Sound.createAsync({ uri: url }, { shouldPlay: false });
+        
+        const audioSource = typeof source === 'string' ? { uri: source } : source;
+        const { sound } = await Audio.Sound.createAsync(audioSource, { shouldPlay: false });
         this.sounds.set(name, sound);
       }
       console.log('All sounds preloaded successfully');
@@ -35,11 +44,12 @@ class SoundManager {
       if (preloaded) {
         await preloaded.replayAsync();
       } else {
+        const source = SOUNDS[soundName];
+        const audioSource = typeof source === 'string' ? { uri: source } : source;
         const { sound } = await Audio.Sound.createAsync(
-          { uri: SOUNDS[soundName] },
+          audioSource,
           { shouldPlay: true }
         );
-        // If it wasn't preloaded, we temporary load/unload
         sound.setOnPlaybackStatusUpdate((status) => {
           if (status.isLoaded && status.didJustFinish) {
             sound.unloadAsync();
@@ -50,6 +60,7 @@ class SoundManager {
       console.warn(`Could not play sound ${soundName}:`, e);
     }
   }
+
 
   async startBgMusic() {
     if (this.isMuted || this.bgMusic) return;

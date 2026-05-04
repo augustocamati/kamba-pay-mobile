@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { soundManager } from '../lib/sound-manager';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ interface Slide {
   iconLib?: 'ion' | 'mci';
   iconColor?: string;
   badge?: string;
+  audio?: string;
 }
 
 const SLIDES: Slide[] = [
@@ -42,6 +44,7 @@ const SLIDES: Slide[] = [
     description:
       'O teu espaço mágico para aprender sobre dinheiro, completar tarefas e ganhar recompensas!',
     badge: 'Olá, futuro campeão!',
+    audio: 'onboarding_1',
   },
   {
     id: '2',
@@ -54,6 +57,7 @@ const SLIDES: Slide[] = [
     icon: 'clipboard-list-outline',
     iconLib: 'mci',
     iconColor: '#FFFFFF',
+    audio: 'onboarding_2',
   },
   {
     id: '3',
@@ -66,6 +70,7 @@ const SLIDES: Slide[] = [
     icon: 'wallet-outline',
     iconLib: 'ion',
     iconColor: '#FFFFFF',
+    audio: 'onboarding_3',
   },
   {
     id: '4',
@@ -78,6 +83,7 @@ const SLIDES: Slide[] = [
     icon: 'flag-checkered',
     iconLib: 'mci',
     iconColor: '#FFFFFF',
+    audio: 'onboarding_4',
   },
   {
     id: '5',
@@ -90,6 +96,7 @@ const SLIDES: Slide[] = [
     icon: 'school-outline',
     iconLib: 'mci',
     iconColor: '#FFFFFF',
+    audio: 'onboarding_5',
   },
   {
     id: '6',
@@ -100,6 +107,7 @@ const SLIDES: Slide[] = [
     description:
       'A tua aventura financeira começa agora! Explora, aprende e cresce com o Kamba Pay.',
     badge: 'Vamos lá! 🎊',
+    audio: 'onboarding_6',
   },
 ];
 
@@ -217,6 +225,19 @@ export default function ChildOnboarding({ onFinish, childName }: ChildOnboarding
   const webTop = Platform.OS === 'web' ? 67 : 0;
   const scrollRef = useRef<ScrollView>(null);
   const [current, setCurrent] = useState(0);
+
+  // Load sounds on mount
+  React.useEffect(() => {
+    soundManager.loadAll();
+  }, []);
+
+  // Play sound when slide changes
+  React.useEffect(() => {
+    const slide = SLIDES[current];
+    if (slide.audio) {
+      soundManager.play(slide.audio as any);
+    }
+  }, [current]);
 
   // Floating star animation
   const starAnim = useRef(new Animated.Value(0)).current;
