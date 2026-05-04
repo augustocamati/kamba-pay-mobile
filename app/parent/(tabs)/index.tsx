@@ -225,7 +225,7 @@ export default function ParentDashboard() {
               </View>
             </View>
             <Text style={styles.summaryCardValue}>{Number(crianca.potes.total || 0).toFixed(2)} Kz</Text>
-            <Text style={[styles.summaryCardHint, { color: '#4ade80' }]}>Nível {crianca.nivel}</Text>
+          
           </View>
 
           {/* Tarefas Completas */}
@@ -321,7 +321,7 @@ export default function ParentDashboard() {
                    <Text style={styles.childCardName}>{dep.nome}</Text>
                    <Text style={styles.childCardBalance}>{Number(dep.potes.total || 0).toFixed(2)} Kz</Text>
                    <View style={styles.childCardLevel}>
-                      <Text style={styles.childLevelText}>Nível {dep.nivel}</Text>
+                      <Text style={styles.childLevelText}>{dep.idade} anos</Text>
                    </View>
                 </LinearGradient>
               </TouchableOpacity>

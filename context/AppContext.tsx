@@ -620,30 +620,12 @@ const enviarFotoTarefa = async (tarefaId: string, fotoUrl: string) => {
       return;
     }
     try {
-      const missao = missoes.find(m => m.id === missionId);
-      if (!missao) return;
-      const novo_progresso = missao.progresso_atual + valor;
-      await missionService.updateProgress(missionId, novo_progresso);
+      await missionService.updateProgress(missionId, valor);
       
-      // Update local state and check if completed
-      let isCompleted = false;
-      setMissoes(prev => prev.map(m => {
-        if (m.id === missionId) {
-          const nextProgresso = m.progresso_atual + valor;
-          if (nextProgresso >= m.objetivo_valor) {
-            isCompleted = true;
-          }
-          return { ...m, progresso_atual: nextProgresso };
-        }
-        return m;
-      }));
+      // Refresh all data using the existing role-aware function
+      setTimeout(() => carregarDadosAPI(), 500);
 
-      if (isCompleted && missao.recompensa > 0) {
-        adicionarXP(missao.recompensa);
-      }
-      
-      setTimeout(() => carregarDadosAPI(), 1000);
-    } catch(e) {
+    } catch (e) {
       console.error('Erro ao atualizar progresso da missão:', e);
       throw e;
     }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, Modal, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -7,6 +7,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth-context';
 import * as Haptics from 'expo-haptics';
+
+const PROVINCIAS = [
+  'Luanda', 'Bengo', 'Benguela', 'Bié', 'Cabinda', 'Cuando Cubango', 
+  'Cuanza Norte', 'Cuanza Sul', 'Cunene', 'Huambo', 'Huíla', 
+  'Lunda Norte', 'Lunda Sul', 'Malanje', 'Moxico', 'Namibe', 'Uíge', 'Zaire'
+];
+
+const MUNICIPIOS: Record<string, string[]> = {
+  'Luanda': ['Luanda', 'Belas', 'Cacuaco', 'Cazenga', 'Icolo e Bengo', 'Kilamba Kiaxi', 'Quissama', 'Talatona', 'Viana'],
+  'Benguela': ['Benguela', 'Baía Farta', 'Balombo', 'Bocoio', 'Caimbambo', 'Catumbela', 'Chongoroi', 'Ganda', 'Lobito', 'Mariano Machado'],
+  'Huíla': ['Lubango', 'Cacula', 'Caluquembe', 'Chibia', 'Chicomba', 'Chipindo', 'Cuvango', 'Humpata', 'Jamba', 'Matala', 'Quilengues', 'Quipungo'],
+  'Huambo': ['Huambo', 'Bailundo', 'Caála', 'Catchiungo', 'Ecunha', 'Londuimbale', 'Longonjo', 'Mungo', 'Tchicala-Tcholoanga', 'Tchindjenje', 'Ucuma'],
+  'Cabinda': ['Cabinda', 'Belize', 'Buco-Zau', 'Cacongo'],
+  // Fallback para as outras
+};
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
@@ -18,6 +33,10 @@ export default function RegisterScreen() {
   const [provincia, setProvincia] = useState('Luanda');
   const [municipio, setMunicipio] = useState('Belas');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [showProvinciaModal, setShowProvinciaModal] = useState(false);
+  const [showMunicipioModal, setShowMunicipioModal] = useState(false);
+
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
   const webBottomInset = Platform.OS === 'web' ? 34 : 0;
 
@@ -44,6 +63,48 @@ export default function RegisterScreen() {
       setIsSubmitting(false);
     }
   };
+
+  const getMunicipios = () => {
+    return MUNICIPIOS[provincia] || [provincia];
+  };
+
+  const renderPickerModal = (
+    visible: boolean, 
+    onClose: () => void, 
+    data: string[], 
+    onSelect: (val: string) => void, 
+    title: string
+  ) => (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{title}</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color="#64748B" />
+            </Pressable>
+          </View>
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <Pressable 
+                style={styles.pickerItem} 
+                onPress={() => {
+                  onSelect(item);
+                  onClose();
+                }}
+              >
+                <Text style={styles.pickerItemText}>{item}</Text>
+                <Ionicons name="chevron-forward" size={18} color="#E2E8F0" />
+              </Pressable>
+            )}
+            style={{ maxHeight: 400 }}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <View style={styles.container}>
@@ -133,30 +194,30 @@ export default function RegisterScreen() {
               
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Província</Text>
-                <View style={styles.inputContainer}>
+                <Pressable 
+                  style={styles.inputContainer} 
+                  onPress={() => setShowProvinciaModal(true)}
+                >
                   <Ionicons name="map-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ex: Luanda"
-                    placeholderTextColor="#C0C0C0"
-                    value={provincia}
-                    onChangeText={setProvincia}
-                  />
-                </View>
+                  <Text style={[styles.input, !provincia && { color: '#C0C0C0' }]}>
+                    {provincia || 'Selecionar Província'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
+                </Pressable>
               </View>
               
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Município</Text>
-                <View style={styles.inputContainer}>
+                <Pressable 
+                  style={styles.inputContainer} 
+                  onPress={() => setShowMunicipioModal(true)}
+                >
                   <Ionicons name="business-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ex: Belas"
-                    placeholderTextColor="#C0C0C0"
-                    value={municipio}
-                    onChangeText={setMunicipio}
-                  />
-                </View>
+                  <Text style={[styles.input, !municipio && { color: '#C0C0C0' }]}>
+                    {municipio || 'Selecionar Município'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
+                </Pressable>
               </View>
             </View>
 
@@ -180,6 +241,25 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {renderPickerModal(
+        showProvinciaModal, 
+        () => setShowProvinciaModal(false), 
+        PROVINCIAS, 
+        (val) => {
+          setProvincia(val);
+          setMunicipio(MUNICIPIOS[val] ? MUNICIPIOS[val][0] : val);
+        }, 
+        'Selecionar Província'
+      )}
+
+      {renderPickerModal(
+        showMunicipioModal, 
+        () => setShowMunicipioModal(false), 
+        getMunicipios(), 
+        setMunicipio, 
+        'Selecionar Município'
+      )}
     </View>
   );
 }
@@ -227,4 +307,42 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: '#9CA3AF' },
   footerLink: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#FF8C00' },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Nunito_700Bold',
+    color: '#1A1A2E',
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  pickerItemText: {
+    fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
+    color: '#1A1A2E',
+  },
 });

@@ -147,7 +147,7 @@ export default function ChildStatsScreen() {
             <Ionicons name="person" size={50} color="#fff" />
           </View>
           <Text style={styles.childName}>{nome}</Text>
-          <Text style={styles.childLevel}>Nível {nivel}</Text>
+          <Text style={styles.childLevel}>{idade} anos</Text>
         </View>
 
         {/* Exportar Relatório */}
