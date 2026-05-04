@@ -122,16 +122,16 @@ export default function ChildDashboard() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   const TOUR_STEPS: TourStep[] = [
-    { name: 'header', title: 'O teu Perfil', text: 'Aqui podes ver o teu Nível e consultar o teu perfil.' },
-    { name: 'menuAprender', title: 'Aprender', text: 'Temos vídeo aulas e quizzes para aprenderes a gerir bem o dinheiro!' },
-    { name: 'menuTarefas', title: 'Aba das Tarefas', text: 'Os teus pais enviam-te tarefas aqui. Cumpra-as para ganhares o teu dinheiro.' },
-    { name: 'menuMissoes', title: 'Aba de Missões', text: 'Usa as Missões para juntares dinheiro para algo que queres muito!' },
-    { name: 'menuAjudar', title: 'Causas para Ajudar', text: 'Aqui encontras causas para as quais podes doar e ajudar o mundo.' },
-    { name: 'menuLoja', title: 'Loja de Mascotes', text: 'Aqui podes usar os teus pontos para personalizares a tua mascote.' },
-    { name: 'poteGeral', title: 'Saldo Geral', text: 'Este Pote mostra a soma de todo o teu dinheiro.' },
-    { name: 'potePoupar', title: 'Poupar', text: 'Tudo o que ganhas nas tarefas de Poupança vem parar a este Pote para o futuro.' },
-    { name: 'poteGastar', title: 'Gastar', text: 'Uau! O teu dinheiro para usares livremente no teu dia-a-dia está aqui.' },
-    { name: 'poteAjudar', title: 'Ajudar os Outros', text: 'Aqui fica a carteira reservada para doares a quem precisa.' },
+    { name: 'header', title: 'O teu Perfil', text: 'Aqui podes ver o teu Nível e consultar o teu perfil.', audio: 'tour_perfil' },
+    { name: 'menuAprender', title: 'Aprender', text: 'Temos vídeo aulas e quizzes para aprenderes a gerir bem o dinheiro!', audio: 'tour_aprender' },
+    { name: 'menuTarefas', title: 'Aba das Tarefas', text: 'Os teus pais enviam-te tarefas aqui. Cumpra-as para ganhares o teu dinheiro.', audio: 'tour_tarefas' },
+    { name: 'menuMissoes', title: 'Aba de Missões', text: 'Usa as Missões para juntares dinheiro para algo que queres muito!', audio: 'tour_missoes' },
+    { name: 'menuAjudar', title: 'Causas para Ajudar', text: 'Aqui encontras causas para as quais podes doar e ajudar o mundo.', audio: 'tour_ajudar' },
+    { name: 'menuLoja', title: 'Loja de Mascotes', text: 'Aqui podes usar os teus pontos para personalizares a tua mascote.', audio: 'tour_loja' },
+    { name: 'poteGeral', title: 'Saldo Geral', text: 'Este Pote mostra a soma de todo o teu dinheiro.', audio: 'tour_saldo_geral' },
+    { name: 'potePoupar', title: 'Poupar', text: 'Tudo o que ganhas nas tarefas de Poupança vem parar a este Pote para o futuro.', audio: 'tour_poupar' },
+    { name: 'poteGastar', title: 'Gastar', text: 'Uau! O teu dinheiro para usares livremente no teu dia-a-dia está aqui.', audio: 'tour_gastar' },
+    { name: 'poteAjudar', title: 'Ajudar os Outros', text: 'Aqui fica a carteira reservada para doares a quem precisa.', audio: 'tour_ajudar_pote' },
   ];
 
   useEffect(() => {

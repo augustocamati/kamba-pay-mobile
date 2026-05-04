@@ -14,6 +14,18 @@ const SOUNDS = {
   onboarding_4: require('../assets/sounds/cria missões.wav'),
   onboarding_5: require('../assets/sounds/temos videoaulas.wav'),
   onboarding_6: require('../assets/sounds/pronto para cmc.wav'),
+
+  // Tour local sounds
+  tour_perfil: require('../assets/sounds/o teu nivel e o teu perfil.wav'),
+  tour_aprender: require('../assets/sounds/acessar ao aprender.wav'),
+  tour_tarefas: require('../assets/sounds/botao tarefas.wav'),
+  tour_missoes: require('../assets/sounds/botao missoes.wav'),
+  tour_ajudar: require('../assets/sounds/botao camonahas.wav'),
+  tour_loja: require('../assets/sounds/loja.wav'),
+  tour_saldo_geral: require('../assets/sounds/saldo total.wav'),
+  tour_poupar: require('../assets/sounds/pote dinheiro.wav'),
+  tour_gastar: require('../assets/sounds/potegastra.wav'),
+  tour_ajudar_pote: require('../assets/sounds/pote ajudar.wav'),
 };
 
 class SoundManager {

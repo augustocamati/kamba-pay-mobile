@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Platform } from 'react-native';
 import Svg, { Defs, Mask, Rect as SvgRect } from 'react-native-svg';
+import { soundManager } from '../lib/sound-manager';
 
 export interface TourStep {
   name: string;
   title: string;
   text: string;
+  audio?: string;
 }
 
 interface SpotlightTourProps {
@@ -21,6 +23,18 @@ interface SpotlightTourProps {
 const { width, height } = Dimensions.get('window');
 
 export default function SpotlightTour({ steps, currentStep, layouts, onNext, onPrev, onFinish, visible }: SpotlightTourProps) {
+  React.useEffect(() => {
+    if (visible) {
+      soundManager.loadAll();
+    }
+  }, [visible]);
+
+  React.useEffect(() => {
+    if (visible && steps[currentStep]?.audio) {
+      soundManager.play(steps[currentStep].audio as any);
+    }
+  }, [visible, currentStep]);
+
   if (!visible || steps.length === 0) return null;
 
   const step = steps[currentStep];
