@@ -24,7 +24,7 @@ export default function FamilyScreen() {
           </View>
           <View style={{ flex: 1, marginLeft: 16 }}>
             <Text style={styles.childName}>{crianca.nome}</Text>
-            <Text style={styles.childAge}>{crianca.idade} anos • Nível {crianca.nivel}</Text>
+            <Text style={styles.childAge}>{crianca.idade} anos</Text>
           </View>
           <Feather name="edit-2" size={18} color="#94a3b8" />
         </TouchableOpacity>

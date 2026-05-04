@@ -4,6 +4,8 @@ import {
   ActivityIndicator, PanResponder, Animated as RNAnimated,
   Modal, Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +38,7 @@ function playHapticFeedback(type: 'correct' | 'wrong') {
 
 // ── Mascot bubble component ──────────────────────────────────────────────────
 function MascotBubble({ message, emoji, type }: { message: string; emoji: string; type?: 'correct' | 'wrong' | 'neutral' }) {
+  const { activeMascot } = useMascot();
   const bgColor = type === 'correct' ? '#DCFCE7' : type === 'wrong' ? '#FEE2E2' : '#EDE9FE';
   const borderColor = type === 'correct' ? '#86EFAC' : type === 'wrong' ? '#FCA5A5' : '#C4B5FD';
   const textColor = type === 'correct' ? '#15803D' : type === 'wrong' ? '#DC2626' : '#5B21B6';
@@ -43,7 +46,15 @@ function MascotBubble({ message, emoji, type }: { message: string; emoji: string
   return (
     <Animated.View entering={BounceIn} style={[styles.mascotRow]}>
       <View style={styles.mascotAvatarBox}>
-        <Text style={{ fontSize: 36 }}>{emoji}</Text>
+        {activeMascot?.imagem_url && MASCOT_ASSETS[activeMascot.imagem_url] ? (
+          <Image 
+            source={MASCOT_ASSETS[activeMascot.imagem_url]} 
+            style={{ width: 50, height: 50 }} 
+            contentFit="contain" 
+          />
+        ) : (
+          <Text style={{ fontSize: 36 }}>{emoji}</Text>
+        )}
       </View>
       <View style={[styles.speechBubble, { backgroundColor: bgColor, borderColor }]}>
         <Text style={[styles.speechText, { color: textColor }]}>{message}</Text>
@@ -195,6 +206,7 @@ function ResultPopup({
   visible: boolean; isCorrect: boolean; message: string; mascotEmoji: string;
   xpGained: number; onNext: () => void; onHome: () => void; isLast: boolean;
 }) {
+  const { activeMascot } = useMascot();
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.popupOverlay}>
@@ -207,7 +219,15 @@ function ResultPopup({
           {/* Mascot message */}
           <View style={styles.popupMascotRow}>
             <View style={styles.resultMascotBg}>
-                <Text style={{ fontSize: 44 }}>{mascotEmoji}</Text>
+                {activeMascot?.imagem_url && MASCOT_ASSETS[activeMascot.imagem_url] ? (
+                  <Image 
+                    source={MASCOT_ASSETS[activeMascot.imagem_url]} 
+                    style={{ width: 60, height: 60 }} 
+                    contentFit="contain" 
+                  />
+                ) : (
+                  <Text style={{ fontSize: 44 }}>{mascotEmoji}</Text>
+                )}
             </View>
             <View style={[styles.popupBubble, { backgroundColor: isCorrect ? '#DCFCE7' : '#FEE2E2' }]}>
               <Text style={[styles.popupBubbleText, { color: isCorrect ? '#15803D' : '#DC2626' }]}>
@@ -380,7 +400,15 @@ export default function QuizScreen() {
       return (
         <LinearGradient colors={['#1E1145', '#2D1B69']} style={styles.container}>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 48 }}>{activeMascot?.emoji || '🤖'}</Text>
+            {activeMascot?.imagem_url && MASCOT_ASSETS[activeMascot.imagem_url] ? (
+              <Image 
+                source={MASCOT_ASSETS[activeMascot.imagem_url]} 
+                style={{ width: 100, height: 100 }} 
+                contentFit="contain" 
+              />
+            ) : (
+              <Text style={{ fontSize: 48 }}>{activeMascot?.emoji || '🤖'}</Text>
+            )}
             <ActivityIndicator size="large" color="#C4B5FD" style={{ marginTop: 16 }} />
             <Text style={{ color: '#C4B5FD', marginTop: 12, fontSize: 15 }}>
               A preparar o desafio...
@@ -422,7 +450,15 @@ export default function QuizScreen() {
 
             {/* Mascot */}
             <View style={styles.summaryMascotRow}>
-              <Text style={{ fontSize: 40 }}>{activeMascot?.emoji || '🤖'}</Text>
+              {activeMascot?.imagem_url && MASCOT_ASSETS[activeMascot.imagem_url] ? (
+                <Image 
+                  source={MASCOT_ASSETS[activeMascot.imagem_url]} 
+                  style={{ width: 60, height: 60 }} 
+                  contentFit="contain" 
+                />
+              ) : (
+                <Text style={{ fontSize: 40 }}>{activeMascot?.emoji || '🤖'}</Text>
+              )}
               <View style={styles.summaryBubble}>
                 <Text style={styles.summaryBubbleText}>
                   {perfect

@@ -1,0 +1,60 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="headGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00d9ff" />
+      <stop offset="100%" stop-color="#d946ef" />
+    </linearGradient>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d9ff" />
+      <stop offset="100%" stop-color="#d946ef" />
+    </linearGradient>
+  </defs>
+
+  <!-- Antenna -->
+  <g>
+    <line x1="100" y1="30" x2="100" y2="15" stroke="#00d9ff" stroke-width="3" stroke-linecap="round" />
+    <circle cx="100" cy="12" r="5" fill="#ffca28" />
+  </g>
+
+  <!-- Head -->
+  <g>
+    <circle cx="100" cy="70" r="40" fill="url(#headGradient)" />
+    <ellipse cx="100" cy="70" rx="32" ry="18" fill="rgba(255,255,255,0.9)" />
+    
+    <!-- Eyes -->
+    <g>
+      <circle cx="88" cy="68" r="6" fill="#0d0721" />
+      <circle cx="112" cy="68" r="6" fill="#0d0721" />
+      <circle cx="90" cy="66" r="2" fill="white" opacity="0.8" />
+      <circle cx="114" cy="66" r="2" fill="white" opacity="0.8" />
+    </g>
+
+    <!-- Mouth happy -->
+    <path d="M 88 80 Q 100 88 112 80" stroke="#0d0721" stroke-width="3" fill="none" stroke-linecap="round" />
+  </g>
+
+  <!-- Body -->
+  <g>
+    <rect x="75" y="105" width="50" height="55" rx="15" fill="url(#bodyGradient)" />
+    <rect x="85" y="115" width="30" height="30" rx="8" fill="rgba(255,255,255,0.3)" />
+    <circle cx="100" cy="130" r="6" fill="#ffca28" />
+  </g>
+
+  <!-- Arms -->
+  <g>
+    <rect x="60" y="110" width="15" height="35" rx="8" fill="#00d9ff" />
+    <circle cx="67.5" cy="145" r="8" fill="#ffca28" />
+  </g>
+  <g>
+    <rect x="125" y="110" width="15" height="35" rx="8" fill="#00d9ff" />
+    <circle cx="132.5" cy="145" r="8" fill="#ffca28" />
+  </g>
+
+  <!-- Legs -->
+  <g>
+    <rect x="80" y="160" width="15" height="30" rx="8" fill="#d946ef" />
+    <rect x="105" y="160" width="15" height="30" rx="8" fill="#d946ef" />
+    <ellipse cx="87.5" cy="190" rx="10" ry="6" fill="#ff0080" />
+    <ellipse cx="112.5" cy="190" rx="10" ry="6" fill="#ff0080" />
+  </g>
+</svg>

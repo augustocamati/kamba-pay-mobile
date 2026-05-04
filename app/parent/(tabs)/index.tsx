@@ -8,10 +8,11 @@ import {
   Modal,
   Alert,
   Linking,
-  Image,
   StyleSheet,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -316,7 +317,15 @@ export default function ParentDashboard() {
                   style={styles.childCardInner}
                 >
                    <View style={styles.childAvatarMini}>
-                      <Ionicons name="person" size={24} color="#fff" />
+                      {dep.mascote?.imagem_url && MASCOT_ASSETS[dep.mascote.imagem_url] ? (
+                        <Image 
+                          source={MASCOT_ASSETS[dep.mascote.imagem_url]} 
+                          style={{ width: 40, height: 40 }} 
+                          contentFit="contain" 
+                        />
+                      ) : (
+                        <Ionicons name="person" size={24} color="#fff" />
+                      )}
                    </View>
                    <Text style={styles.childCardName}>{dep.nome}</Text>
                    <Text style={styles.childCardBalance}>{Number(dep.potes.total || 0).toFixed(2)} Kz</Text>

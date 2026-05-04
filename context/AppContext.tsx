@@ -197,7 +197,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             paiId: user.id,
             potes: d.potes,
             avatar: { id: '', cabelo: 'padrao', roupa: 'padrao', acessorio: '', cor_pele: 'marrom', expressao: 'feliz' },
-            tarefas: [], missoes: [], historico: []
+            tarefas: [], missoes: [], historico: [],
+            mascote: d.mascote
           }));
           setDependentes(deps);
           if (deps.length > 0) {
@@ -238,7 +239,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             paiId: '',
             potes: c.potes || fallbackCrianca.potes,
             avatar: c.avatar || fallbackCrianca.avatar,
-            tarefas: [], missoes: [], historico: []
+            tarefas: [], missoes: [], historico: [],
+            mascote: c.mascote
           });
         }
 

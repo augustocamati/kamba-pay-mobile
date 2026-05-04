@@ -1,7 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { Avatar } from '../types';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 
 interface AvatarDisplayProps {
   avatar: Avatar;
@@ -9,15 +11,16 @@ interface AvatarDisplayProps {
   nome: string;
   size?: 'small' | 'medium' | 'large';
   showLevel?: boolean;
+  mascote_url?: string;
 }
 
 const SIZES = {
-  small:  { container: 48, emoji: 22, badge: 20, badgeText: 9 },
-  medium: { container: 72, emoji: 34, badge: 24, badgeText: 11 },
-  large:  { container: 112, emoji: 56, badge: 30, badgeText: 13 },
+  small:  { container: 48, emoji: 22, badge: 20, badgeText: 9, img: 34 },
+  medium: { container: 72, emoji: 34, badge: 24, badgeText: 11, img: 54 },
+  large:  { container: 112, emoji: 56, badge: 30, badgeText: 13, img: 84 },
 };
 
-export function AvatarDisplay({ avatar, nivel, nome, size = 'medium', showLevel = true }: AvatarDisplayProps) {
+export function AvatarDisplay({ avatar, nivel, nome, size = 'medium', showLevel = true, mascote_url }: AvatarDisplayProps) {
   const getAvatarEmoji = () => {
     const map: Record<string, string> = {
       'marrom-feliz': '👧🏾',
@@ -39,6 +42,7 @@ export function AvatarDisplay({ avatar, nivel, nome, size = 'medium', showLevel 
   };
 
   const s = SIZES[size];
+  const finalMascoteUrl = mascote_url || (avatar as any).mascote_url;
 
   return (
     <View style={{ width: s.container, height: s.container }}>
@@ -49,11 +53,21 @@ export function AvatarDisplay({ avatar, nivel, nome, size = 'medium', showLevel 
         end={{ x: 1, y: 1 }}
       >
         <View style={[styles.inner, { borderRadius: s.container / 3 - 4 }]}>
-          <Text style={{ fontSize: s.emoji }}>{getAvatarEmoji()}</Text>
-          {!!avatar.acessorio && (
-            <Text style={[styles.acessorio, { fontSize: s.emoji * 0.4 }]}>
-              {getAcessorioEmoji()}
-            </Text>
+          {finalMascoteUrl && MASCOT_ASSETS[finalMascoteUrl] ? (
+            <Image 
+              source={MASCOT_ASSETS[finalMascoteUrl]} 
+              style={{ width: s.img, height: s.img }}
+              contentFit="contain"
+            />
+          ) : (
+            <>
+              <Text style={{ fontSize: s.emoji }}>{getAvatarEmoji()}</Text>
+              {!!avatar.acessorio && (
+                <Text style={[styles.acessorio, { fontSize: s.emoji * 0.4 }]}>
+                  {getAcessorioEmoji()}
+                </Text>
+              )}
+            </>
           )}
         </View>
       </LinearGradient>

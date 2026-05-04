@@ -10,6 +10,8 @@ import { adminService } from '@/lib/api';
 import { 
   Smile, Pencil, Trash2, X, Plus, Save, Palette, MessageSquare, Star, LayoutDashboard
 } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 
 interface AdminMascote {
   id_mascote: number;
@@ -18,6 +20,7 @@ interface AdminMascote {
   descricao: string;
   tipo: string;
   emoji: string;
+  imagem_url?: string;
   bg_color: string;
   preco: number;
   ordem: number;
@@ -34,6 +37,7 @@ const DEFAULT_FORM: Partial<AdminMascote> = {
   descricao: '',
   tipo: '',
   emoji: '🤖',
+  imagem_url: '',
   bg_color: '#DBEAFE',
   preco: 0,
   ordem: 0,
@@ -159,7 +163,15 @@ export default function AdminMascotes() {
               <View style={styles.card}>
                 <View style={styles.cardTop}>
                   <View style={[styles.emojiWrap, { backgroundColor: m.bg_color || 'rgba(255,255,255,0.05)' }]}>
-                    <Text style={styles.emojiText}>{m.emoji}</Text>
+                    {m.imagem_url && MASCOT_ASSETS[m.imagem_url] ? (
+                      <Image 
+                        source={MASCOT_ASSETS[m.imagem_url]} 
+                        style={{ width: 44, height: 44 }} 
+                        contentFit="contain"
+                      />
+                    ) : (
+                      <Text style={styles.emojiText}>{m.emoji}</Text>
+                    )}
                   </View>
                   <View style={styles.cardStatus}>
                     <View style={[styles.statusBadge, { backgroundColor: m.ativo ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)' }]}>
@@ -243,6 +255,19 @@ export default function AdminMascotes() {
                   />
                 </Field>
               </View>
+
+              <Field label="URL do SVG (Asset) *">
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ex: kamba_azul.svg"
+                  placeholderTextColor="#4A5F8A"
+                  value={form.imagem_url}
+                  onChangeText={v => setForm(p => ({ ...p, imagem_url: v }))}
+                />
+                <Text style={{ fontSize: 10, color: '#8FA1C7', marginTop: 4 }}>
+                  Mapeie para um dos ficheiros em assets/images/personagens
+                </Text>
+              </Field>
 
               <Field label="Tipo / Categoria">
                 <TextInput

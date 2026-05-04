@@ -4,6 +4,8 @@ import {
 } from 'react-native';
 import { useMascot } from '@/lib/mascot-context';
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 
 interface MascotCompanionProps {
   position?: 'bottom-right' | 'bottom-left';
@@ -75,7 +77,15 @@ export function MascotCompanion({ position = 'bottom-right', onPress, showShopHi
       )}
       <RNAnimated.View style={{ transform: [{ translateY: bounce }, { scale }] }}>
         <Pressable style={styles.mascotBtn} onPress={handlePress}>
-          <Text style={{ fontSize: 40 }}>{mascot.emoji}</Text>
+          {mascot.imagem_url && MASCOT_ASSETS[mascot.imagem_url] ? (
+            <Image 
+              source={MASCOT_ASSETS[mascot.imagem_url]} 
+              style={{ width: 50, height: 50 }}
+              contentFit="contain"
+            />
+          ) : (
+            <Text style={{ fontSize: 40 }}>{mascot.emoji}</Text>
+          )}
         </Pressable>
       </RNAnimated.View>
     </View>

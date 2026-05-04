@@ -12,6 +12,13 @@ export interface Usuario {
   criancas?: Crianca[];
 }
 
+export interface Mascote {
+  id: string;
+  nome: string;
+  emoji: string;
+  imagem_url?: string;
+}
+
 export interface Crianca {
   id: string;
   nome: string;
@@ -24,6 +31,7 @@ export interface Crianca {
   tarefas: Tarefa[];
   missoes: Missao[];
   historico: HistoricoTransacao[];
+  mascote?: Mascote;
 }
 
 export interface Avatar {

@@ -11,6 +11,8 @@ import { router } from 'expo-router';
 import { useApp } from '@/context/AppContext';
 import { useMascot, Mascot } from '@/lib/mascot-context';
 import { useSound } from '@/lib/sound-context';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;
@@ -94,7 +96,15 @@ export default function ShopScreen() {
         {activeMascot && (
           <Animated.View entering={FadeInDown} style={styles.activeBanner}>
             <View style={[styles.activeMascotEmoji, { backgroundColor: activeMascot.bg_color || '#DDD6FE' }]}>
-              <Text style={{ fontSize: 48 }}>{activeMascot.emoji}</Text>
+              {activeMascot.imagem_url && MASCOT_ASSETS[activeMascot.imagem_url] ? (
+                <Image 
+                  source={MASCOT_ASSETS[activeMascot.imagem_url]} 
+                  style={{ width: 70, height: 70 }} 
+                  contentFit="contain" 
+                />
+              ) : (
+                <Text style={{ fontSize: 48 }}>{activeMascot.emoji}</Text>
+              )}
             </View>
             <View style={{ flex: 1, marginLeft: 14 }}>
               <View style={styles.activeRow}>
@@ -144,7 +154,15 @@ export default function ShopScreen() {
                       </View>
                     )}
                     <View style={[styles.emojiBox, { backgroundColor: mascot.bg_color || '#EDE9FE' }]}>
-                      <Text style={{ fontSize: 52 }}>{mascot.emoji}</Text>
+                      {mascot.imagem_url && MASCOT_ASSETS[mascot.imagem_url] ? (
+                        <Image 
+                          source={MASCOT_ASSETS[mascot.imagem_url]} 
+                          style={{ width: '80%', height: '80%' }} 
+                          contentFit="contain" 
+                        />
+                      ) : (
+                        <Text style={{ fontSize: 52 }}>{mascot.emoji}</Text>
+                      )}
                       {!isUnlocked && (
                         <View style={styles.lockOverlay}>
                           <Ionicons name="lock-closed" size={22} color="#fff" />
@@ -187,7 +205,15 @@ export default function ShopScreen() {
               colors={purchaseModal?.bg_color ? [purchaseModal.bg_color, '#fff'] : ['#F3F4F6', '#fff']}
               style={styles.modalEmojiBox}
             >
-              <Text style={{ fontSize: 68 }}>{purchaseModal?.emoji}</Text>
+              {purchaseModal?.imagem_url && MASCOT_ASSETS[purchaseModal.imagem_url] ? (
+                <Image 
+                  source={MASCOT_ASSETS[purchaseModal.imagem_url]} 
+                  style={{ width: 100, height: 100 }} 
+                  contentFit="contain" 
+                />
+              ) : (
+                <Text style={{ fontSize: 68 }}>{purchaseModal?.emoji}</Text>
+              )}
             </LinearGradient>
             <Text style={styles.modalTitle}>Conhece o {purchaseModal?.nome}?</Text>
             <Text style={styles.modalDesc}>{purchaseModal?.descricao}</Text>
@@ -248,7 +274,15 @@ export default function ShopScreen() {
                 </LinearGradient>
             </View>
             <View style={[styles.successEmojiBg, { backgroundColor: successModal?.bg_color || '#F3E8FF' }]}>
-              <Text style={{ fontSize: 80 }}>{successModal?.emoji}</Text>
+              {successModal?.imagem_url && MASCOT_ASSETS[successModal.imagem_url] ? (
+                <Image 
+                  source={MASCOT_ASSETS[successModal.imagem_url]} 
+                  style={{ width: 110, height: 110 }} 
+                  contentFit="contain" 
+                />
+              ) : (
+                <Text style={{ fontSize: 80 }}>{successModal?.emoji}</Text>
+              )}
             </View>
             <Text style={styles.successTitle}>Novo Amigo! 🎉</Text>
             <Text style={styles.successDesc}>

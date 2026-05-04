@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { BounceIn, ZoomIn } from 'react-native-reanimated';
 import { useMascot } from '@/lib/mascot-context';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 
 interface ActionSuccessPopupProps {
   visible: boolean;
@@ -45,7 +47,15 @@ export function ActionSuccessPopup({
 
           {/* Mascot */}
           <View style={[styles.mascotBg, { backgroundColor: activeMascot?.bg_color || '#F3E8FF' }]}>
-            <Text style={{ fontSize: 72 }}>{activeMascot?.emoji || '🤖'}</Text>
+            {activeMascot?.imagem_url && MASCOT_ASSETS[activeMascot.imagem_url] ? (
+              <Image 
+                source={MASCOT_ASSETS[activeMascot.imagem_url]} 
+                style={{ width: 100, height: 100 }} 
+                contentFit="contain" 
+              />
+            ) : (
+              <Text style={{ fontSize: 72 }}>{activeMascot?.emoji || '🤖'}</Text>
+            )}
           </View>
 
           <Text style={styles.title}>{title}</Text>

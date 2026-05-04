@@ -10,6 +10,7 @@ export interface Mascot {
   descricao: string;
   tipo: string;
   emoji: string;
+  imagem_url?: string;
   bg_color: string;
   preco: number;
   ativo: boolean;
@@ -42,7 +43,11 @@ export function MascotProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       const data = await mascoteService.list();
-      setMascotes(data.mascotes);
+      if (data && Array.isArray(data.mascotes)) {
+        setMascotes(data.mascotes);
+      } else {
+        console.error('Invalid mascot data received:', data);
+      }
     } catch (e) {
       console.error('Failed to load mascots from API', e);
     } finally {

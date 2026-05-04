@@ -7,6 +7,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { parentService } from '../../../lib/api';
 import { useApp } from '../../../context/AppContext';
 import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 
 export default function ChildStatsScreen() {
   const insets = useSafeAreaInsets();
@@ -144,7 +146,15 @@ export default function ChildStatsScreen() {
             <Ionicons name="pencil" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={50} color="#fff" />
+            {child?.mascote?.imagem_url && MASCOT_ASSETS[child.mascote.imagem_url] ? (
+              <Image 
+                source={MASCOT_ASSETS[child.mascote.imagem_url]} 
+                style={{ width: 80, height: 80 }} 
+                contentFit="contain" 
+              />
+            ) : (
+              <Ionicons name="person" size={50} color="#fff" />
+            )}
           </View>
           <Text style={styles.childName}>{nome}</Text>
           <Text style={styles.childLevel}>{idade} anos</Text>
