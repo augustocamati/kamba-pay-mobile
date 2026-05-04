@@ -197,25 +197,25 @@ export const adminService = {
 
   // Quizzes
   getQuizzes: () => api.get('/admin/quizzes').then(res => res.data),
-  createQuiz: (data: any) => {
-    const isFormData = data instanceof FormData;
-    return api.post('/admin/quizzes', data, {
-      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
-    }).then(res => res.data);
-  },
-  updateQuiz: (id: string, data: any) => {
-    const isFormData = data instanceof FormData;
-    return api.put(`/admin/quizzes/${id}`, data, {
-      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
-    }).then(res => res.data);
-  },
+  createQuiz: (data: any) => api.post('/admin/quizzes', data).then(res => res.data),
+  updateQuiz: (id: string, data: any) => api.put(`/admin/quizzes/${id}`, data).then(res => res.data),
   deleteQuiz: (id: string) => api.delete(`/admin/quizzes/${id}`).then(res => res.data),
 
   // Vídeos (Conteúdo)
   getVideos: () => api.get('/admin/videos').then(res => res.data),
   getVideosStats: () => api.get('/admin/videos/estatisticas').then(res => res.data),
-  createVideo: (data: any) => api.post('/admin/videos', data).then(res => res.data),
-  updateVideo: (id: string, data: any) => api.put(`/admin/videos/${id}`, data).then(res => res.data),
+  createVideo: (data: any) => {
+    const isFormData = data instanceof FormData;
+    return api.post('/admin/videos', data, {
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    }).then(res => res.data);
+  },
+  updateVideo: (id: string, data: any) => {
+    const isFormData = data instanceof FormData;
+    return api.put(`/admin/videos/${id}`, data, {
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' }
+    }).then(res => res.data);
+  },
   deleteVideo: (id: string) => api.delete(`/admin/videos/${id}`).then(res => res.data),
 
   // Campanhas

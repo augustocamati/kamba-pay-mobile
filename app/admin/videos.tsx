@@ -8,7 +8,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../lib/api';
-import { Play, Eye, Pencil, Trash2, X, UploadCloud, Image as ImageIcon, Clapperboard, BrainCircuit, Check } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Play, Eye, Pencil, Trash2, X, UploadCloud, Image as ImageIcon, Clapperboard, BrainCircuit, Check, Video } from 'lucide-react-native';
 
 interface AdminVideo {
   id: string; 
@@ -36,6 +37,8 @@ type FormState = {
   categoria: string; 
   duracao: string;
   id_missao: number | null;
+  localVideoUri: string | null;
+  localThumbUri: string | null;
 };
 
 export default function AdminVideos() {
@@ -45,7 +48,8 @@ export default function AdminVideos() {
   const [modal, setModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({ 
-    titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '', id_missao: null 
+    titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '', id_missao: null,
+    localVideoUri: null, localThumbUri: null
   });
 
   // Queries
@@ -90,7 +94,7 @@ export default function AdminVideos() {
 
   const openAdd = () => { 
     setEditId(null); 
-    setForm({ titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '', id_missao: null }); 
+    setForm({ titulo: '', descricao: '', url: '', thumbnail: '', categoria: 'Poupar', duracao: '', id_missao: null, localVideoUri: null, localThumbUri: null }); 
     setModal(true); 
   };
 
@@ -103,25 +107,89 @@ export default function AdminVideos() {
       thumbnail: v.thumbnail, 
       categoria: v.categoria, 
       duracao: v.duracao,
-      id_missao: v.id_missao || null
+      id_missao: v.id_missao || null,
+      localVideoUri: null,
+      localThumbUri: null
     });
     setModal(true);
   };
 
+  const pickVideo = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return Alert.alert('Permissão', 'Precisamos de acesso à galeria.');
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setForm(p => ({ ...p, localVideoUri: result.assets[0].uri }));
+    }
+  };
+
+  const pickThumbnail = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return Alert.alert('Permissão', 'Precisamos de acesso à galeria.');
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setForm(p => ({ ...p, localThumbUri: result.assets[0].uri }));
+    }
+  };
+
   const save = () => {
-    if (!form.titulo || !form.url) {
-        return Alert.alert('Aviso', 'Título e URL são obrigatórios.');
+    if (!form.titulo || (!form.url && !form.localVideoUri)) {
+        return Alert.alert('Aviso', 'Título e URL (ou upload de vídeo) são obrigatórios.');
     }
     
-    // Mapear categoria frontend para tipo backend se necessário
-    // Backend espera: 'video', 'artigo', 'infografico'. 
-    // Aqui usamos 'video' fixo por enquanto.
-    const payload = {
-      ...form,
+    let payload: any = {
+      titulo: form.titulo,
+      descricao: form.descricao,
       tipo: 'video',
-      thumbnail_url: form.thumbnail,
+      categoria: form.categoria,
+      duracao: form.duracao,
       id_missao: form.id_missao
     };
+
+    if (form.localVideoUri || form.localThumbUri) {
+      const formData = new FormData();
+      
+      if (form.localVideoUri) {
+        formData.append('video', {
+          uri: form.localVideoUri,
+          name: `video_${Date.now()}.mp4`,
+          type: 'video/mp4',
+        } as any);
+      } else {
+        payload.url = form.url;
+      }
+
+      if (form.localThumbUri) {
+        formData.append('thumbnail', {
+          uri: form.localThumbUri,
+          name: `thumb_${Date.now()}.jpg`,
+          type: 'image/jpeg',
+        } as any);
+      } else {
+        payload.thumbnail_url = form.thumbnail;
+      }
+
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== null) formData.append(key, String(payload[key]));
+      });
+      
+      payload = formData;
+    } else {
+      payload.url = form.url;
+      payload.thumbnail_url = form.thumbnail;
+    }
 
     if (editId) {
       updateMutation.mutate({ id: editId, data: payload });
@@ -252,20 +320,58 @@ export default function AdminVideos() {
                   onChangeText={v => setForm(p => ({ ...p, descricao: v }))} />
               </Field>
 
-              {/* Video URL */}
-              <Field label="URL do Vídeo *">
-                <TextInput style={styles.input}
-                  placeholder="URL do vídeo (YouTube, Vimeo, etc.)"
-                  placeholderTextColor="#4A5F8A" value={form.url}
-                  onChangeText={v => setForm(p => ({ ...p, url: v }))} />
+              {/* Video URL or Upload */}
+              <Field label="Vídeo (URL ou Upload) *">
+                <View style={{ gap: 10 }}>
+                  <TextInput style={styles.input}
+                    placeholder="URL do vídeo (YouTube, Vimeo, etc.)"
+                    placeholderTextColor="#4A5F8A" value={form.url}
+                    onChangeText={v => setForm(p => ({ ...p, url: v, localVideoUri: null }))} />
+                  
+                  <TouchableOpacity style={styles.mediaUploadBtn} onPress={pickVideo}>
+                    {form.localVideoUri ? (
+                      <View style={styles.mediaPreview}>
+                        <Video size={20} color="#FF8C00" />
+                        <Text style={styles.mediaPreviewText} numberOfLines={1}>Ficheiro Selecionado</Text>
+                        <TouchableOpacity onPress={() => setForm(p => ({ ...p, localVideoUri: null }))}>
+                          <X size={16} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.mediaPlaceholder}>
+                        <UploadCloud size={18} color="#4A5F8A" />
+                        <Text style={styles.mediaPlaceholderText}>Fazer Upload de Vídeo</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </Field>
 
-              {/* Thumbnail */}
-              <Field label="Thumbnail URL">
-                <TextInput style={styles.input}
-                  placeholder="URL da imagem de capa..."
-                  placeholderTextColor="#4A5F8A" value={form.thumbnail}
-                  onChangeText={v => setForm(p => ({ ...p, thumbnail: v }))} />
+              {/* Thumbnail URL or Upload */}
+              <Field label="Thumbnail (URL ou Upload)">
+                <View style={{ gap: 10 }}>
+                  <TextInput style={styles.input}
+                    placeholder="URL da imagem de capa..."
+                    placeholderTextColor="#4A5F8A" value={form.thumbnail}
+                    onChangeText={v => setForm(p => ({ ...p, thumbnail: v, localThumbUri: null }))} />
+                  
+                  <TouchableOpacity style={styles.mediaUploadBtn} onPress={pickThumbnail}>
+                    {form.localThumbUri ? (
+                      <View style={styles.mediaPreview}>
+                        <ImageIcon size={20} color="#FF8C00" />
+                        <Text style={styles.mediaPreviewText} numberOfLines={1}>Capa Selecionada</Text>
+                        <TouchableOpacity onPress={() => setForm(p => ({ ...p, localThumbUri: null }))}>
+                          <X size={16} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.mediaPlaceholder}>
+                        <ImageIcon size={18} color="#4A5F8A" />
+                        <Text style={styles.mediaPlaceholderText}>Fazer Upload de Capa</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </Field>
 
               <View style={styles.row2}>
@@ -444,6 +550,15 @@ const styles = StyleSheet.create({
   btnCancelText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
   btnSave: { flex: 2, padding: 14, borderRadius: 12, backgroundColor: S.orange, alignItems: 'center' },
   btnSaveText: { color: '#fff', fontFamily: 'Nunito_700Bold', fontSize: 14 },
+
+  mediaUploadBtn: {
+    backgroundColor: S.sidebar, borderRadius: 10, borderWidth: 1, borderColor: S.border,
+    padding: 12, borderStyle: 'dashed'
+  },
+  mediaPlaceholder: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  mediaPlaceholderText: { color: S.muted, fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  mediaPreview: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,140,0,0.1)', padding: 8, borderRadius: 8, gap: 10 },
+  mediaPreviewText: { color: S.orange, fontFamily: 'Nunito_700Bold', fontSize: 13, flex: 1 },
 
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: S.sub, fontFamily: 'Nunito_600SemiBold', marginTop: 12 },
