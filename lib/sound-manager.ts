@@ -4,7 +4,7 @@ const SOUNDS = {
   click: 'https://cdn.pixabay.com/audio/2025/06/01/audio_d2ccbb367a.mp3',
   correct: 'https://cdn.pixabay.com/audio/2025/10/21/audio_65cfef2766.mp3',
   wrong: 'https://cdn.pixabay.com/audio/2022/11/21/audio_136661e554.mp3',
-  success: 'https://cdn.pixabay.com/audio/2025/11/24/audio_a78d073adb.mp3',
+  success: 'https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3',
   bg_music: 'https://cdn.pixabay.com/audio/2026/04/01/audio_7efa637601.mp3',
   
   // Onboarding local sounds
