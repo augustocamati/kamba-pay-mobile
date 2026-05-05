@@ -167,7 +167,7 @@ export default function ChildMissionsScreen() {
         })}
       </ScrollView>
 
-      <MascotCompanion position="bottom-right" />
+      <MascotCompanion position="bottom-right" screen="missions" />
 
       <ActionSuccessPopup
         visible={showSuccess}

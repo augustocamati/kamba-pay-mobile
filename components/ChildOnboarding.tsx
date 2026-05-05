@@ -235,7 +235,9 @@ export default function ChildOnboarding({ onFinish, childName }: ChildOnboarding
   React.useEffect(() => {
     const slide = SLIDES[current];
     if (slide.audio) {
-      soundManager.play(slide.audio as any);
+      soundManager.stopAll().then(() => {
+        soundManager.play(slide.audio as any);
+      });
     }
   }, [current]);
 

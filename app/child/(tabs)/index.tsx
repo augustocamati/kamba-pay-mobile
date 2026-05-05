@@ -127,7 +127,7 @@ export default function ChildDashboard() {
     { name: 'menuTarefas', title: 'Aba das Tarefas', text: 'Os teus pais enviam-te tarefas aqui. Cumpra-as para ganhares o teu dinheiro.', audio: 'tour_tarefas' },
     { name: 'menuMissoes', title: 'Aba de Missões', text: 'Usa as Missões para juntares dinheiro para algo que queres muito!', audio: 'tour_missoes' },
     { name: 'menuAjudar', title: 'Causas para Ajudar', text: 'Aqui encontras causas para as quais podes doar e ajudar o mundo.', audio: 'tour_ajudar' },
-    { name: 'menuLoja', title: 'Loja de Mascotes', text: 'Aqui podes usar os teus pontos para personalizares a tua mascote.', audio: 'tour_loja' },
+    { name: 'menuLoja', title: 'Loja de Personagens', text: 'Aqui podes usar os teus pontos para personalizares o teu personagem.', audio: 'tour_loja' },
     { name: 'poteGeral', title: 'Saldo Geral', text: 'Este Pote mostra a soma de todo o teu dinheiro.', audio: 'tour_saldo_geral' },
     { name: 'potePoupar', title: 'Poupar', text: 'Tudo o que ganhas nas tarefas de Poupança vem parar a este Pote para o futuro.', audio: 'tour_poupar' },
     { name: 'poteGastar', title: 'Gastar', text: 'Uau! O teu dinheiro para usares livremente no teu dia-a-dia está aqui.', audio: 'tour_gastar' },
@@ -361,7 +361,7 @@ export default function ChildDashboard() {
                     <View style={s.tileIconBox}>
                       <Ionicons name="storefront-outline" size={30} color="#fff" />
                     </View>
-                    <Text style={s.tileLabel}>Loja de Mascotes</Text>
+                    <Text style={s.tileLabel}>Loja de Personagens</Text>
                   </Pressable>
                 </View>
               </View>
@@ -406,6 +406,7 @@ export default function ChildDashboard() {
       {!showTour && !showSlides && (
         <MascotCompanion
           position="bottom-right"
+          screen="home"
           onPress={() => router.push('/child/(tabs)/school' as any)}
         />
       )}

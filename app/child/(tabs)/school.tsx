@@ -134,7 +134,7 @@ export default function ChildSchoolScreen() {
         )}
       </ScrollView>
 
-      <MascotCompanion position="bottom-right" />
+      <MascotCompanion position="bottom-right" screen="school" />
     </View>
   );
 }

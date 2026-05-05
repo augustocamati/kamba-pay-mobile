@@ -161,7 +161,7 @@ export default function ChildTasksScreen() {
         }}
       />
 
-      <MascotCompanion position="bottom-right" />
+      <MascotCompanion position="bottom-right" screen="tasks" />
     </View>
   );
 }

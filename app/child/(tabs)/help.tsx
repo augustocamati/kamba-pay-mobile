@@ -182,7 +182,7 @@ export default function ChildHelpScreen() {
         </View>
       </Modal>
 
-      <MascotCompanion position="bottom-right" />
+      <MascotCompanion position="bottom-right" screen="help" />
 
       <ActionSuccessPopup
         visible={showSuccess}

@@ -68,9 +68,9 @@ export default function AdminMascotes() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'mascotes'] });
       setModal(false);
-      Alert.alert('Sucesso', 'Mascote criado com sucesso');
+      Alert.alert('Sucesso', 'Personagem criado com sucesso');
     },
-    onError: () => Alert.alert('Erro', 'Falha ao criar mascote'),
+    onError: () => Alert.alert('Erro', 'Falha ao criar personagem'),
   });
 
   const updateMutation = useMutation({
@@ -78,18 +78,18 @@ export default function AdminMascotes() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'mascotes'] });
       setModal(false);
-      Alert.alert('Sucesso', 'Mascote atualizado com sucesso');
+      Alert.alert('Sucesso', 'Personagem atualizado com sucesso');
     },
-    onError: () => Alert.alert('Erro', 'Falha ao atualizar mascote'),
+    onError: () => Alert.alert('Erro', 'Falha ao atualizar personagem'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => adminService.deleteMascote(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'mascotes'] });
-      Alert.alert('Sucesso', 'Mascote removido com sucesso');
+      Alert.alert('Sucesso', 'Personagem removido com sucesso');
     },
-    onError: () => Alert.alert('Erro', 'Falha ao remover mascote'),
+    onError: () => Alert.alert('Erro', 'Falha ao remover personagem'),
   });
 
   const openAdd = () => {
@@ -123,7 +123,7 @@ export default function AdminMascotes() {
   };
 
   const handleDelete = (id: number) => {
-    Alert.alert('Eliminar Mascote', 'Tem a certeza que deseja eliminar este mascote?', [
+    Alert.alert('Eliminar Personagem', 'Tem a certeza que deseja eliminar este personagem?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Eliminar', style: 'destructive', onPress: () => deleteMutation.mutate(id) },
     ]);
@@ -134,7 +134,7 @@ export default function AdminMascotes() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.pageTitle}>Gestão de Mascotes</Text>
+          <Text style={styles.pageTitle}>Gestão de Personagens</Text>
           <Text style={styles.pageSub}>Total: {mascotes?.length || 0} personagens cadastrados</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={openAdd} activeOpacity={0.85}>
@@ -148,7 +148,7 @@ export default function AdminMascotes() {
       {isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#FF8C00" />
-          <Text style={styles.loadingText}>Carregando mascotes...</Text>
+          <Text style={styles.loadingText}>Carregando personagens...</Text>
         </View>
       ) : (
         <FlatList
@@ -217,7 +217,7 @@ export default function AdminMascotes() {
           ListEmptyComponent={() => (
             <View style={styles.empty}>
               <Smile size={48} color="#4A5F8A" style={{ marginBottom: 12 }} />
-              <Text style={styles.emptyText}>Nenhum mascote cadastrado</Text>
+              <Text style={styles.emptyText}>Nenhum personagem cadastrado</Text>
             </View>
           )}
         />
@@ -228,7 +228,7 @@ export default function AdminMascotes() {
         <View style={styles.overlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editId ? 'Editar Mascote' : 'Adicionar Novo Mascote'}</Text>
+              <Text style={styles.modalTitle}>{editId ? 'Editar Personagem' : 'Adicionar Novo Personagem'}</Text>
               <TouchableOpacity onPress={() => setModal(false)} style={styles.closeBtn}>
                 <X size={20} color="#8FA1C7" />
               </TouchableOpacity>
@@ -292,7 +292,7 @@ export default function AdminMascotes() {
               <Field label="Descrição">
                 <TextInput
                   style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
-                  placeholder="Conte um pouco sobre este mascote..."
+                  placeholder="Conte um pouco sobre este personagem..."
                   placeholderTextColor="#4A5F8A"
                   multiline
                   value={form.descricao}
@@ -398,7 +398,7 @@ export default function AdminMascotes() {
                   ) : (
                     <Save size={16} color="#fff" />
                   )}
-                  <Text style={styles.btnSaveText}>{editId ? 'Salvar Alterações' : 'Salvar Mascote'}</Text>
+                  <Text style={styles.btnSaveText}>{editId ? 'Salvar Alterações' : 'Salvar Personagem'}</Text>
                 </View>
               </TouchableOpacity>
             </View>

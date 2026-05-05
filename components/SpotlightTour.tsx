@@ -31,7 +31,9 @@ export default function SpotlightTour({ steps, currentStep, layouts, onNext, onP
 
   React.useEffect(() => {
     if (visible && steps[currentStep]?.audio) {
-      soundManager.play(steps[currentStep].audio as any);
+      soundManager.stopAll().then(() => {
+        soundManager.play(steps[currentStep].audio as any);
+      });
     }
   }, [visible, currentStep]);
 

@@ -95,6 +95,20 @@ class SoundManager {
     }
   }
 
+  async stopAll() {
+    try {
+      const allSounds = Array.from(this.sounds.values());
+      await Promise.all(allSounds.map(async (sound) => {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.stopAsync();
+        }
+      }));
+    } catch (e) {
+      console.warn('Error stopping all sounds:', e);
+    }
+  }
+
   setMute(muted: boolean) {
     this.isMuted = muted;
     if (muted) this.stopBgMusic();

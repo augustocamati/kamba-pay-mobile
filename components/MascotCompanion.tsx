@@ -11,14 +11,15 @@ interface MascotCompanionProps {
   position?: 'bottom-right' | 'bottom-left';
   onPress?: () => void;
   showShopHint?: boolean;
+  screen?: 'home' | 'missions' | 'school' | 'tasks' | 'shop' | 'help';
 }
 
 /**
  * Floating mascot companion that appears in the corner of child screens.
  * Bounces gently and shows speech bubbles.
  */
-export function MascotCompanion({ position = 'bottom-right', onPress, showShopHint = false }: MascotCompanionProps) {
-  const { activeMascot, getRandomMessage } = useMascot();
+export function MascotCompanion({ position = 'bottom-right', onPress, showShopHint = false, screen = 'home' }: MascotCompanionProps) {
+  const { activeMascot, getRandomMessage, getRandomContextMessage } = useMascot();
   const mascot = activeMascot;
 
   const bounce = useRef(new RNAnimated.Value(0)).current;
@@ -38,14 +39,14 @@ export function MascotCompanion({ position = 'bottom-right', onPress, showShopHi
     return () => anim.stop();
   }, []);
 
-  // Show greeting bubble after a second, then hide it
+  // Show context message bubble after a second, then hide it
   useEffect(() => {
-    const msg = getRandomMessage('greeting');
+    const msg = getRandomContextMessage(screen);
     setBubbleMsg(msg);
     const showTimer = setTimeout(() => setShowBubble(true), 1200);
-    const hideTimer = setTimeout(() => setShowBubble(false), 5000);
+    const hideTimer = setTimeout(() => setShowBubble(false), 6000);
     return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
-  }, []);
+  }, [screen]);
 
   const handlePress = () => {
     RNAnimated.sequence([
@@ -55,9 +56,9 @@ export function MascotCompanion({ position = 'bottom-right', onPress, showShopHi
     ]).start();
 
     // Show a new message
-    setBubbleMsg(getRandomMessage('greeting'));
+    setBubbleMsg(getRandomContextMessage(screen));
     setShowBubble(true);
-    setTimeout(() => setShowBubble(false), 3500);
+    setTimeout(() => setShowBubble(false), 4500);
 
     onPress?.();
   };

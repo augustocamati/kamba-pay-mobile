@@ -45,7 +45,7 @@ export default function AdminTabLayout() {
       />
       <Tabs.Screen
         name="mascotes"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon IconComponent={Smile} label="Mascotes" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon IconComponent={Smile} label="Personagens" focused={focused} /> }}
       />
       <Tabs.Screen
         name="campaigns"

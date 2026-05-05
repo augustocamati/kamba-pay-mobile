@@ -13,6 +13,7 @@ import { useMascot, Mascot } from '@/lib/mascot-context';
 import { useSound } from '@/lib/sound-context';
 import { Image } from 'expo-image';
 import { MASCOT_ASSETS } from '@/lib/mascot-assets';
+import { MascotCompanion } from '@/components/MascotCompanion';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;
@@ -119,7 +120,7 @@ export default function ShopScreen() {
           </Animated.View>
         )}
 
-        <Text style={styles.sectionTitle}>Mascotes Disponíveis</Text>
+        <Text style={styles.sectionTitle}>Personagens Disponíveis</Text>
 
         {/* Grid of mascots */}
         {mascotes.length === 0 ? (
@@ -196,6 +197,8 @@ export default function ShopScreen() {
         )}
 
       </ScrollView>
+
+      <MascotCompanion position="bottom-left" screen="shop" />
 
       {/* Purchase Confirmation Modal */}
       <Modal visible={!!purchaseModal} transparent animationType="fade">
