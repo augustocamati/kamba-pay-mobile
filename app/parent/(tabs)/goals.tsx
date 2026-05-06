@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../../../context/AppContext';
 import { NovaMissaoModal } from '../../../components/NovaMissaoModal';
 import { missionService } from '../../../lib/api';
+import { formatCurrency } from '@/lib/format';
 
 // ─── Mission type chips ────────────────────────────────────────────────────────
 const MISSION_TYPES = [
@@ -201,11 +202,11 @@ export default function GoalsScreen() {
         {/* Footer */}
         <View style={styles.cardFooter}>
           <Text style={styles.footerText}>
-            {missao.progresso_atual.toLocaleString()} / {missao.objetivo_valor.toLocaleString()} Kz
+            {formatCurrency(missao.progresso_atual)} / {formatCurrency(missao.objetivo_valor)} Kz
           </Text>
           {missao.recompensa > 0 && (
             <View style={styles.rewardBadge}>
-              <Text style={styles.rewardText}>+{missao.recompensa} Kz</Text>
+              <Text style={styles.rewardText}>+{formatCurrency(missao.recompensa)} Kz</Text>
             </View>
           )}
         </View>

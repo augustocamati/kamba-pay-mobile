@@ -9,6 +9,7 @@ import { useApp } from '../../../context/AppContext';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { MASCOT_ASSETS } from '@/lib/mascot-assets';
+import { formatCurrency } from '@/lib/format';
 
 export default function ChildStatsScreen() {
   const insets = useSafeAreaInsets();
@@ -90,13 +91,13 @@ export default function ChildStatsScreen() {
 
     const mensagem =
       `📊 *Relatório Kamba Kid Pay - ${nome}*\n\n` +
-      `💰 Saldo Total: ${totalSaldo.toLocaleString()} Kz\n` +
+      `💰 Saldo Total: ${formatCurrency(totalSaldo)} Kz\n` +
       `✅ Tarefas Concluídas: ${tarefasConcluidas}\n` +
       `💚 Taxa de Poupança: ${taxaPoupanca}%\n\n` +
       `📦 Distribuição:\n` +
-      `• Gastar: ${potes.saldo_gastar.toLocaleString()} Kz\n` +
-      `• Poupar: ${potes.saldo_poupar.toLocaleString()} Kz\n` +
-      `• Ajudar: ${potes.saldo_ajudar.toLocaleString()} Kz\n\n` +
+      `• Gastar: ${formatCurrency(potes.saldo_gastar)} Kz\n` +
+      `• Poupar: ${formatCurrency(potes.saldo_poupar)} Kz\n` +
+      `• Ajudar: ${formatCurrency(potes.saldo_ajudar)} Kz\n\n` +
       `Continue incentivando a educação financeira! 🎯`;
 
     const encoded = encodeURIComponent(mensagem);
@@ -180,12 +181,12 @@ export default function ChildStatsScreen() {
         <View style={styles.statsRow}>
           <View style={[styles.statBox, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
             <Ionicons name="wallet" size={24} color="#3b82f6" />
-            <Text style={styles.statValue}>{totalSaldo.toLocaleString()} Kz</Text>
+            <Text style={styles.statValue}>{formatCurrency(totalSaldo)} Kz</Text>
             <Text style={styles.statLabel}>Saldo Total</Text>
           </View>
           <View style={[styles.statBox, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
             <Ionicons name="trending-up" size={24} color="#22c55e" />
-            <Text style={styles.statValue}>{potes.saldo_poupar?.toLocaleString()} Kz</Text>
+            <Text style={styles.statValue}>{formatCurrency(potes.saldo_poupar || 0)} Kz</Text>
             <Text style={styles.statLabel}>Poupado</Text>
           </View>
         </View>
@@ -221,7 +222,7 @@ export default function ChildStatsScreen() {
               <View key={p.label} style={styles.poteItem}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                   <Text style={styles.poteName}>{p.label}</Text>
-                  <Text style={styles.poteValue}>{p.value?.toLocaleString() || 0} Kz</Text>
+                  <Text style={styles.poteValue}>{formatCurrency(p.value || 0)} Kz</Text>
                 </View>
                 <View style={styles.progressTrack}>
                   <View style={[styles.progressBar, { 
@@ -249,7 +250,7 @@ export default function ChildStatsScreen() {
                   <Text style={styles.activityDate}>{new Date(item.data).toLocaleDateString('pt-AO')}</Text>
                 </View>
                 <Text style={[styles.activityAmt, { color: item.valor > 0 ? '#22c55e' : '#fff' }]}>
-                  {item.valor > 0 ? '+' : ''}{item.valor?.toLocaleString()} Kz
+                  {item.valor > 0 ? '+' : ''}{formatCurrency(item.valor)} Kz
                 </Text>
               </View>
             ))}

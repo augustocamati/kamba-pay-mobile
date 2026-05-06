@@ -6,6 +6,8 @@ import { useApp } from '@/context/AppContext';
 import { router } from 'expo-router';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
+import { useSound } from '@/lib/sound-context';
+import { formatCurrency } from '@/lib/format';
 import { useEffect } from 'react';
 
 const CATEGORIES = [
@@ -20,6 +22,7 @@ const CATEGORIES = [
 export default function ChildMissionsScreen() {
   const insets = useSafeAreaInsets();
   const { missoes, updateMissionProgress, crianca } = useApp();
+  const { playSound } = useSound();
   const [activeTab, setActiveTab] = useState('todas');
   const [showSuccess, setShowSuccess] = useState(false);
   const [completedMission, setCompletedMission] = useState<string | null>(null);
@@ -61,6 +64,7 @@ export default function ChildMissionsScreen() {
     setIsSubmitting(true);
     try {
       await updateMissionProgress(mission.id, amount);
+      playSound('success');
       setMissionModal({ visible: false, mission: null });
       setProgressAmount('');
       Alert.alert('Incrível! 🌟', 'Progresso adicionado com sucesso!');
@@ -134,7 +138,7 @@ export default function ChildMissionsScreen() {
 
               <View style={styles.progressHeader}>
                 <Text style={styles.progressText}>
-                  {Number(mission.progresso_atual || 0).toFixed(2)} / {Number(mission.objetivo_valor || 0).toFixed(2)} Kz
+                  {formatCurrency(mission.progresso_atual || 0)} / {formatCurrency(mission.objetivo_valor || 0)} Kz
                 </Text>
                 <Text style={styles.percentText}>{percent}%</Text>
               </View>
@@ -146,7 +150,7 @@ export default function ChildMissionsScreen() {
               {missing > 0 ? (
                 <>
                   <Text style={styles.missingHint}>
-                    Faltam {Number(missing || 0).toFixed(2)} Kz para completar
+                    Faltam {formatCurrency(missing || 0)} Kz para completar
                   </Text>
                   <Pressable 
                     style={styles.contributeBtn} 

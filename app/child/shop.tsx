@@ -14,6 +14,7 @@ import { useSound } from '@/lib/sound-context';
 import { Image } from 'expo-image';
 import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 import { MascotCompanion } from '@/components/MascotCompanion';
+import { formatCurrency } from '@/lib/format';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;
@@ -28,8 +29,7 @@ export default function ShopScreen() {
   const [purchaseModal, setPurchaseModal] = useState<Mascot | null>(null);
   const [successModal, setSuccessModal] = useState<Mascot | null>(null);
   const [buying, setBuying] = useState(false);
-
-  const saldoGastar = Number(crianca.potes.saldo_gastar || 0).toFixed(2);
+  const saldoGastar = formatCurrency(crianca.potes.saldo_gastar || 0);
   const totalXP = crianca.xp || 0;
 
   const handleCardPress = (mascot: Mascot) => {

@@ -8,6 +8,7 @@ import { useApp } from '@/context/AppContext';
 import Colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 import { MascotCompanion } from '@/components/MascotCompanion';
+import { formatCurrency } from '@/lib/format';
 
 type FilterType = 'all' | 'pendente' | 'aguardando_aprovacao' | 'aprovada' | 'rejeitada';
 
@@ -143,7 +144,7 @@ export default function ChildTasksScreen() {
                 </View>
 
                 <View style={styles.rewardContainer}>
-                  <Text style={styles.rewardValue}>{item.recompensa.toLocaleString()}</Text>
+                  <Text style={styles.rewardValue}>{formatCurrency(item.recompensa)}</Text>
                   <Text style={styles.rewardCurrency}>Kz</Text>
                 </View>
               </View>

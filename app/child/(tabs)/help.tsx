@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
 import { useSound } from '@/lib/sound-context';
+import { formatCurrency } from '@/lib/format';
 
 export default function ChildHelpScreen() {
   const insets = useSafeAreaInsets();
@@ -70,7 +71,7 @@ export default function ChildHelpScreen() {
         <View style={styles.balanceCard}>
           <View>
             <Text style={styles.balanceLabel}>Pote Ajudar Disponível</Text>
-            <Text style={styles.balanceValue}>{Number(crianca.potes.saldo_ajudar || 0).toFixed(2)} Kz</Text>
+            <Text style={styles.balanceValue}>{formatCurrency(crianca.potes.saldo_ajudar || 0)} Kz</Text>
           </View>
           <Ionicons name="heart" size={60} color="rgba(255,255,255,0.3)" />
         </View>
@@ -108,7 +109,7 @@ export default function ChildHelpScreen() {
                   <View style={[styles.progressHeader, { marginTop: 16 }]}>
                     <Text style={styles.progressLabel}>Arrecadado</Text>
                     <Text style={styles.progressValue}>
-                      {Number(valorArrecadado || 0).toFixed(2)} / {Number(metaValor || 0).toFixed(2)} Kz
+                      {formatCurrency(valorArrecadado || 0)} / {formatCurrency(metaValor || 0)} Kz
                     </Text>
                   </View>
                   <View style={styles.progressTrack}>
@@ -145,7 +146,7 @@ export default function ChildHelpScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Escolher valor da doação</Text>
             <Text style={styles.modalCampanha}>{selectedCampanha?.titulo}</Text>
-            <Text style={styles.modalSaldo}>Saldo no pote Ajudar: {Number(crianca.potes.saldo_ajudar || 0).toFixed(2)} Kz</Text>
+            <Text style={styles.modalSaldo}>Saldo no pote Ajudar: {formatCurrency(crianca.potes.saldo_ajudar || 0)} Kz</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Quanto queres doar? (Kz)"
@@ -188,7 +189,7 @@ export default function ChildHelpScreen() {
         visible={showSuccess}
         onClose={() => setShowSuccess(false)}
         title="Missão Cumprida! ❤️"
-        description={`Fizeste uma doação de ${lastValor.toFixed(2)} Kz. Obrigado por ajudares o mundo!`}
+        description={`Fizeste uma doação de ${formatCurrency(lastValor)} Kz. Obrigado por ajudares o mundo!`}
         icon="heart"
         buttonText="De nada! 😊"
       />

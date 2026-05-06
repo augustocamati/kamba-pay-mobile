@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
 import { API_HOST } from '@/lib/api';
 import Colors from '@/constants/colors';
+import { formatCurrency } from '@/lib/format';
 
 export default function ChildTaskDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -70,10 +71,10 @@ export default function ChildTaskDetails() {
 
           <View style={styles.rewardBox}>
              <MaterialCommunityIcons name="cash" size={24} color="#FF8C00" />
-             <View>
-                <Text style={styles.rewardLabel}>Recompensa</Text>
-                <Text style={styles.rewardValue}>{tarea.recompensa.toLocaleString()} Kz</Text>
-             </View>
+              <View>
+                 <Text style={styles.rewardLabel}>Recompensa</Text>
+                 <Text style={styles.rewardValue}>{formatCurrency(tarea.recompensa)} Kz</Text>
+              </View>
           </View>
           
           {tarea.status === 'rejeitada' && tarea.motivo_rejeicao && (

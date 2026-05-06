@@ -11,6 +11,7 @@ import { Users, TrendingUp, Wallet, Award, MapPin, Zap, UserCheck } from 'lucide
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { adminService } from '@/lib/api';
+import { formatCurrency } from '@/lib/format';
 
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;
@@ -228,7 +229,7 @@ export default function AdminDashboard() {
                 change="Total" color="#F59E0B" colorSoft="rgba(245,158,11,0.15)"
               />
               <KpiCard
-                Icon={Wallet} label="Doações (Kz)" value={resumo.total_doacoes.toLocaleString()}
+                Icon={Wallet} label="Doações (Kz)" value={formatCurrency(resumo.total_doacoes)}
                 change="Total" color="#22C55E" colorSoft="rgba(34,197,94,0.15)"
               />
               <KpiCard

@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { ActionSuccessPopup } from '@/components/ActionSuccessPopup';
 import { useSound } from '@/lib/sound-context';
+import { formatCurrency } from '@/lib/format';
 
 
 export default function SubmitTaskScreen() {
@@ -113,7 +114,7 @@ export default function SubmitTaskScreen() {
           )}
           <View style={styles.rewardBadge}>
             <MaterialCommunityIcons name="cash" size={18} color="#FF8C00" />
-            <Text style={styles.rewardText}>{task.recompensa.toLocaleString()} Kz</Text>
+            <Text style={styles.rewardText}>{formatCurrency(task.recompensa)} Kz</Text>
           </View>
         </View>
 

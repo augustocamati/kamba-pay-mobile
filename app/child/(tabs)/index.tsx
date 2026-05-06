@@ -21,6 +21,7 @@ import ChildOnboarding from '@/components/ChildOnboarding';
 import SpotlightTour, { TourStep } from '@/components/SpotlightTour';
 import { MascotCompanion } from '@/components/MascotCompanion';
 import { useSound } from '@/lib/sound-context';
+import { formatCurrency } from '@/lib/format';
 
 const { width, height } = Dimensions.get('window');
 const TILE_GAP = 10;
@@ -219,10 +220,10 @@ export default function ChildDashboard() {
   }
 
   const name = user?.name || crianca.nome;
-  const saldoGeral = Number(crianca.potes.total || 0).toFixed(2);
-  const saldoPoupar = Number(crianca.potes.saldo_poupar || 0).toFixed(2);
-  const saldoGastar = Number(crianca.potes.saldo_gastar || 0).toFixed(2);
-  const saldoAjudar = Number(crianca.potes.saldo_ajudar || 0).toFixed(2);
+  const saldoGeral = formatCurrency(crianca.potes.total || 0);
+  const saldoPoupar = formatCurrency(crianca.potes.saldo_poupar || 0);
+  const saldoGastar = formatCurrency(crianca.potes.saldo_gastar || 0);
+  const saldoAjudar = formatCurrency(crianca.potes.saldo_ajudar || 0);
   const webTop = Platform.OS === 'web' ? 67 : 0;
 
   const handleSparkle = () => {

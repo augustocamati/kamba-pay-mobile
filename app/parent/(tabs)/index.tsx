@@ -19,6 +19,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/lib/auth-context';
 import { useApp } from '@/context/AppContext';
 import { API_HOST } from '@/lib/api';
+import { formatCurrency } from '@/lib/format';
 import { NovaTarefaModal } from '../../../components/NovaTarefaModal';
 import { NovaMissaoModal } from '../../../components/NovaMissaoModal';
 import { AdicionarDependente } from '../../../components/AdicionarDependente';
@@ -225,7 +226,7 @@ export default function ParentDashboard() {
                 <Text style={{ fontSize: 18 }}>💰</Text>
               </View>
             </View>
-            <Text style={styles.summaryCardValue}>{Number(crianca.potes.total || 0).toFixed(2)} Kz</Text>
+            <Text style={styles.summaryCardValue}>{formatCurrency(crianca.potes.total || 0)} Kz</Text>
           
           </View>
 
@@ -289,7 +290,7 @@ export default function ParentDashboard() {
               <View key={index} style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                   <Text style={styles.barMonth}>{data.month}</Text>
-                  <Text style={styles.barTotal}>{Number(total || 0).toFixed(2)} Kz</Text>
+                  <Text style={styles.barTotal}>{formatCurrency(total || 0)} Kz</Text>
                 </View>
                 <View style={styles.barContainer}>
                   <View style={[styles.barSegment, { flex: savedPct, backgroundColor: '#4ade80' }]} />
@@ -328,7 +329,7 @@ export default function ParentDashboard() {
                       )}
                    </View>
                    <Text style={styles.childCardName}>{dep.nome}</Text>
-                   <Text style={styles.childCardBalance}>{Number(dep.potes.total || 0).toFixed(2)} Kz</Text>
+                   <Text style={styles.childCardBalance}>{formatCurrency(dep.potes.total || 0)} Kz</Text>
                    <View style={styles.childCardLevel}>
                       <Text style={styles.childLevelText}>{dep.idade} anos</Text>
                    </View>
@@ -438,7 +439,7 @@ export default function ParentDashboard() {
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={styles.rewardBadge}>
-                      <Text style={styles.rewardBadgeText}>{tarefa.recompensa} Kz</Text>
+                      <Text style={styles.rewardBadgeText}>{formatCurrency(tarefa.recompensa)} Kz</Text>
                     </View>
                     <Ionicons name="time" size={16} color="#fb923c" />
                   </View>

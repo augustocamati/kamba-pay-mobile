@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../../../context/AppContext';
 import { CriarCampanha } from '../../../components/CriarCampanha';
+import { formatCurrency } from '@/lib/format';
 
 export default function CampaignsScreen() {
   const insets = useSafeAreaInsets();
@@ -89,8 +90,8 @@ export default function CampaignsScreen() {
                   </View>
 
                   <View style={styles.cardFooter}>
-                    <Text style={styles.footerText}>Meta: {metaValor.toLocaleString()} Kz</Text>
-                    <Text style={styles.raisedText}>{valorArrecadado.toLocaleString()} Kz arrecadados</Text>
+                    <Text style={styles.footerText}>Meta: {formatCurrency(metaValor)} Kz</Text>
+                    <Text style={styles.raisedText}>{formatCurrency(valorArrecadado)} Kz arrecadados</Text>
                   </View>
                 </View>
               </View>

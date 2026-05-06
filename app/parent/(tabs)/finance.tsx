@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../../../context/AppContext';
 import { parentService } from '../../../lib/api';
+import { formatCurrency } from '@/lib/format';
 
 export default function FinanceScreen() {
   const insets = useSafeAreaInsets();
@@ -78,7 +79,7 @@ export default function FinanceScreen() {
 
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Saldo Total — {selectedChild?.nome || crianca.nome}</Text>
-          <Text style={styles.balanceValue}>{(potes.total || 0).toLocaleString()} Kz</Text>
+          <Text style={styles.balanceValue}>{formatCurrency(potes.total || 0)} Kz</Text>
           <View style={styles.potesRow}>
             {[
               { label: 'Gastar', key: 'saldo_gastar', color: '#fb923c' },
@@ -88,7 +89,7 @@ export default function FinanceScreen() {
               <View key={p.label} style={styles.poteItem}>
                 <View style={[styles.poteDot, { backgroundColor: p.color }]} />
                 <Text style={styles.poteLabel}>{p.label}:</Text>
-                <Text style={styles.poteValue}>{((potes as any)[p.key] || 0).toLocaleString()} Kz</Text>
+                <Text style={styles.poteValue}>{formatCurrency((potes as any)[p.key] || 0)} Kz</Text>
               </View>
             ))}
           </View>
@@ -122,7 +123,7 @@ export default function FinanceScreen() {
                 </Text>
               </View>
               <Text style={[styles.historyValue, { color: item.valor > 0 ? '#4ade80' : '#ef4444' }]}>
-                {item.valor > 0 ? '+' : ''}{(item.valor || 0).toLocaleString()} Kz
+                {item.valor > 0 ? '+' : ''}{formatCurrency(item.valor || 0)} Kz
               </Text>
             </View>
           ))
