@@ -15,8 +15,8 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Video, ResizeMode } from 'expo-av';
 import { useAuth } from '@/lib/auth-context';
+import { MASCOT_ASSETS } from '@/lib/mascot-assets';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   FadeInDown,
@@ -32,161 +32,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 
 const { width, height } = Dimensions.get('window');
-
-// ─── Bear mascot drawn from primitive Views ───────────────────────────────────
-function BearMascot({ happy }: { happy?: boolean }) {
-  return (
-    <View style={bear.root}>
-      {/* Ears */}
-      <View style={bear.earLeft} />
-      <View style={bear.earRight} />
-      {/* Inner ears */}
-      <View style={bear.innerEarLeft} />
-      <View style={bear.innerEarRight} />
-      {/* Head */}
-      <View style={bear.head}>
-        {/* Eyes */}
-        <View style={bear.eyeRow}>
-          <View style={bear.eye}>
-            <View style={bear.pupil} />
-          </View>
-          <View style={bear.eye}>
-            <View style={bear.pupil} />
-          </View>
-        </View>
-        {/* Snout */}
-        <View style={bear.snout}>
-          <View style={bear.nose} />
-          {happy ? (
-            <View style={bear.smileHappy} />
-          ) : (
-            <View style={bear.smile} />
-          )}
-        </View>
-      </View>
-      {/* Body */}
-      <View style={bear.body}>
-        {/* Tummy */}
-        <View style={bear.tummy} />
-        {/* Arms */}
-        <View style={bear.armLeft} />
-        <View style={bear.armRight} />
-        {/* Legs */}
-        <View style={bear.legRow}>
-          <View style={bear.leg}>
-            <View style={bear.paw} />
-          </View>
-          <View style={bear.leg}>
-            <View style={bear.paw} />
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const BEAR_ORANGE = '#D4710A';
-const BEAR_LIGHT = '#E8943A';
-const BEAR_CREAM = '#F7E0C0';
-
-const bear = StyleSheet.create({
-  root: { alignItems: 'center', width: 140 },
-  earLeft: {
-    position: 'absolute', top: 2, left: 16,
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: BEAR_ORANGE, zIndex: 0,
-  },
-  earRight: {
-    position: 'absolute', top: 2, right: 16,
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: BEAR_ORANGE, zIndex: 0,
-  },
-  innerEarLeft: {
-    position: 'absolute', top: 8, left: 24,
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#F4A956', zIndex: 1,
-  },
-  innerEarRight: {
-    position: 'absolute', top: 8, right: 24,
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#F4A956', zIndex: 1,
-  },
-  head: {
-    width: 90, height: 80, borderRadius: 45,
-    backgroundColor: BEAR_LIGHT,
-    alignItems: 'center', justifyContent: 'center',
-    zIndex: 2, marginTop: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15, shadowRadius: 4, elevation: 4,
-  },
-  eyeRow: {
-    flexDirection: 'row', gap: 18, marginBottom: 6, marginTop: -6,
-  },
-  eye: {
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#3B2008',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  pupil: {
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: '#FFF', position: 'absolute', top: 2, right: 2,
-  },
-  snout: {
-    width: 40, height: 26, borderRadius: 20,
-    backgroundColor: BEAR_CREAM,
-    alignItems: 'center', justifyContent: 'flex-start',
-    paddingTop: 4,
-  },
-  nose: {
-    width: 12, height: 8, borderRadius: 6,
-    backgroundColor: '#3B2008', marginBottom: 2,
-  },
-  smile: {
-    width: 18, height: 8,
-    borderBottomLeftRadius: 10, borderBottomRightRadius: 10,
-    borderLeftWidth: 2, borderRightWidth: 2, borderBottomWidth: 2,
-    borderColor: '#3B2008',
-  },
-  smileHappy: {
-    width: 22, height: 10,
-    borderBottomLeftRadius: 12, borderBottomRightRadius: 12,
-    borderLeftWidth: 2.5, borderRightWidth: 2.5, borderBottomWidth: 2.5,
-    borderColor: '#3B2008',
-  },
-  body: {
-    width: 80, height: 70, borderRadius: 40,
-    backgroundColor: BEAR_ORANGE,
-    alignItems: 'center', justifyContent: 'center',
-    marginTop: -8, zIndex: 1,
-  },
-  tummy: {
-    width: 46, height: 44, borderRadius: 23,
-    backgroundColor: BEAR_CREAM,
-  },
-  armLeft: {
-    position: 'absolute', left: -8, top: 10,
-    width: 24, height: 40, borderRadius: 12,
-    backgroundColor: BEAR_ORANGE,
-  },
-  armRight: {
-    position: 'absolute', right: -8, top: 10,
-    width: 24, height: 40, borderRadius: 12,
-    backgroundColor: BEAR_ORANGE,
-  },
-  legRow: {
-    position: 'absolute', bottom: -18,
-    flexDirection: 'row', gap: 10,
-  },
-  leg: {
-    width: 26, height: 36, borderRadius: 13,
-    backgroundColor: BEAR_ORANGE,
-    alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 2,
-  },
-  paw: {
-    width: 22, height: 14, borderRadius: 11,
-    backgroundColor: BEAR_LIGHT,
-  },
-});
 
 // ─── Speech bubble ─────────────────────────────────────────────────────────────
 function SpeechBubble({ text }: { text: string }) {
@@ -409,14 +254,11 @@ export default function LoginChildScreen() {
             <SpeechBubble text={bubbleText} />
             <View style={{ height: 12 }} />
             <View style={styles.mascotStrip}>
-              <View style={styles.videoContainer}>
-                <Video
-                  source={require('@/assets/videos/personagem2.mp4')}
-                  style={styles.mascotVideo}
-                  resizeMode={ResizeMode.CONTAIN}
-                  shouldPlay
-                  isLooping
-                  isMuted
+              <View style={styles.mascotImageContainer}>
+                <Image
+                  source={MASCOT_ASSETS['kamba_azul.svg']}
+                  style={styles.mascotImage}
+                  contentFit="contain"
                 />
               </View>
             </View>
@@ -492,13 +334,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#F0F0F0',
   },
-  videoContainer: {
+  mascotImageContainer: {
     width: 280,
     height: 280,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mascotVideo: {
+  mascotImage: {
     width: '100%',
     height: '100%',
   },

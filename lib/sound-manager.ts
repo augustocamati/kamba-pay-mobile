@@ -8,8 +8,8 @@ const SOUNDS = {
   bg_music: 'https://cdn.pixabay.com/audio/2026/04/01/audio_7efa637601.mp3',
   
   // Onboarding local sounds
-  onboarding_1: require('../assets/sounds/olá futuro camp.wav'),
-  onboarding_2: require('../assets/sounds/tarefas.wav'),
+  onboarding_1: require('../assets/sounds/olá futuro camp.aac'),
+  onboarding_2: require('../assets/sounds/tarefas.aac'),
   onboarding_3: require('../assets/sounds/os teus 3 potes.wav'),
   onboarding_4: require('../assets/sounds/cria missões.wav'),
   onboarding_5: require('../assets/sounds/temos videoaulas.wav'),
